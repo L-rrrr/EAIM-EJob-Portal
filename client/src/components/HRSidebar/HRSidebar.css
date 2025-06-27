@@ -1,0 +1,289 @@
+:root {
+  --alert-circle-color: rgb(196, 0, 0);
+}
+
+.sidebar {
+  width: 260px;
+  background-color: #f5f5f5;
+  border-right: 1px solid #ddd;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 80vh;
+  color: #000;
+  position: relative;
+  z-index: 10;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  width: 100%;
+  background-color: #d3d3d3;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.sidebar-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #4a4a4a;
+  width: 100%;
+  padding-left: 5px;
+}
+
+.sidebar.collapsed {
+  width: 0;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  overflow: visible;
+}
+
+.sidebar.collapsed .sidebar-header {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  background-color: transparent;
+  width: auto;
+  padding: 0;
+}
+
+.sidebar.collapsed .toggle-button {
+  margin-left: 0;
+}
+
+.toggle-button:focus {
+  outline: none;
+}
+
+.sidebar-title,
+.completeness,
+.profile-sections,
+.sidebar-footer {
+  display: block;
+}
+
+.sidebar.collapsed .sidebar-title,
+.sidebar.collapsed .completeness,
+.sidebar.collapsed .profile-sections,
+.sidebar.collapsed .sidebar-footer {
+  display: none;
+}
+
+.toggle-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #000;
+  margin-left: 24px; /* Moved toggle icon further right */
+}
+
+.completeness {
+  font-size: 15px;
+  font-weight: 500;
+  margin-top: 15px; /* Added more top spacing before Overall Completeness */
+  margin-bottom: 12px;
+  padding-left: 16px;
+}
+
+.profile-sections {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
+
+.profile-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  font-size: 15px;
+  border-bottom: 1px solid #e0e0e0;
+  gap: 6px;
+}
+
+.profile-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #000;
+}
+
+.profile-label:hover {
+  color: #B3238B;
+  cursor: pointer;
+}
+
+.settings-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #000;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  align-items: flex;
+  padding-left: 0px;
+  padding-bottom: 20px;
+}
+
+.edit-icon {
+  cursor: pointer;
+  color: #000;
+}
+
+.edit-icon:hover {
+  color: #B3238B; /* Accent color for edit icon */
+}
+
+.edit-input {
+  font-size: 14px;
+  padding: 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 120px;
+  background: white;
+  color: black;
+}
+
+.password-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle-password-icon {
+  cursor: pointer;
+  color: #666;
+  display: inline-flex;
+  align-items: center;
+}
+
+.password-edit-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.password-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.password-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.2rem;
+}
+
+.back-icon, .submit-icon {
+  cursor: pointer;
+}
+
+.back-icon:hover,.submit-icon:hover {
+  color: #B3238B;
+}
+
+
+.dark .sidebar {
+  background-color: #2c2c2c;
+  border-right: 1px solid #444;
+  color: #ddd;
+}
+
+.dark .sidebar-header {
+  background-color: #444;
+  color: #eee;
+}
+
+.dark .sidebar-title {
+  border-bottom: 1px solid #666;
+  color: #ddd;
+  padding-left: 5px;
+}
+
+.dark .toggle-button {
+  color: #ddd;
+}
+
+.dark .completeness {
+  color: #ccc;
+  padding-left: 16px;
+}
+
+.dark .profile-item {
+  border-bottom: 1px solid #555;
+  color: #ddd;
+}
+
+.dark .profile-label {
+  color: #ddd;
+}
+
+.dark .profile-label:hover {
+  color: #B3238B; 
+  cursor: pointer;
+}
+
+.dark .settings-label {
+  color: #ddd;
+}
+.dark .sidebar-footer {
+  padding-left: 0px;
+  padding-bottom: 20px;
+  color: #ccc;
+}
+
+.dark .edit-icon {
+  color: #ddd;
+}
+
+.dark .edit-icon:hover {
+  color: #B3238B; 
+}
+
+.dark .edit-input {
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+  color: #eee;
+}
+
+.dark {
+  --alert-circle-color: rgb(255, 0, 0);
+}
+
+.dark .password-display {
+  color: #ddd;
+}
+
+.dark .toggle-password-icon {
+  color: #aaa;
+}
+
+.dark .toggle-password-icon:hover {
+  color: #B3238B;
+}
+
+.dark .password-actions .back-icon,
+.dark .password-actions .submit-icon {
+  color: #ccc;
+}
+
+.dark .password-actions .back-icon:hover,
+.dark .password-actions .submit-icon:hover {
+  color: #B3238B;
+}

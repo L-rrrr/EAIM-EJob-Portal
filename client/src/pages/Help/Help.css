@@ -1,0 +1,90 @@
+.help-page {
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 64px);
+  font-family: Arial, sans-serif;
+}
+
+.help-header {
+  background: linear-gradient(to bottom, #b3238b, #D483BE);
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.help-header h1 {
+  color: white;
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+.faq-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.faq-item {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 15px 20px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+}
+
+.faq-item:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.faq-question {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.faq-answer {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Dark mode overrides for Help page */
+.dark .help-page {
+  background-color: #121212;
+  color: #ddd;
+  font-family: Arial, sans-serif;
+}
+
+.dark .help-header {
+  background: linear-gradient(to bottom, #8a206c, #a95a8f);
+}
+
+.dark .help-header h1 {
+  color: #f0e6f3;
+}
+
+.dark .faq-container {
+  color: #ddd;
+}
+
+.dark .faq-item {
+  background-color: #1e1e1e;
+  box-shadow: 0 2px 6px rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  transition: box-shadow 0.3s ease;
+  color: #ddd;
+  border: #444 1px solid;
+}
+
+.dark .faq-item:hover {
+  box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+}
+
+.dark .faq-question {
+  color: #eee;
+}
+
+.dark .faq-answer {
+  color: #bbb;
+}

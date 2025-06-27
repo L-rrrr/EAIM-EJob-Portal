@@ -1,0 +1,90 @@
+/* Background and container */
+.register-background {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Logo */
+.register-logo {
+  display: block;
+  margin: 0 auto 1rem;
+  width: 300px;
+}
+
+/* Register container */
+.register-container {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.register-label {
+  display: block;
+  margin-bottom: 0.1rem;
+  color: rgb(67, 67, 67);
+}
+
+/* Form layout */
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Input fields */
+.register-input {
+  width: 96%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.375rem;
+  background-color: #ffffff;
+  color: #000;
+}
+
+/* Error messages */
+.register-error {
+  color: #e53e3e;
+  font-size: 0.875rem;
+  height: 0rem; /* Reserve space to prevent layout shift */
+  margin-top: 0rem;
+}
+
+/* Submit button */
+.register-button {
+  background-color: #B3238B; /* Blue */
+  color: white;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.register-button:hover {
+  background-color: #7a0058; /* Darker blue on hover */
+}
+
+.register-login-link {
+  text-align: center;
+  margin-top: 0rem;
+  font-size: 0.875rem;
+  color: #333;  
+}
+
+.login-hyperlink {
+  color: #4299e1;
+  text-decoration: none;
+  margin-left: 0.25rem;
+}
+
+.login-hyperlink:hover {
+  text-decoration: underline;
+}

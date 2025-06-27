@@ -1,0 +1,183 @@
+.applicants-container {
+  display: flex;
+  flex-direction: row;
+  padding: 1.5rem;
+  gap: 1.5rem;
+  box-sizing: border-box;
+  height: 100%;
+  background-color: #f8f9fa;
+}
+
+.table-panel {
+  width: 80%;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+.applicants-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.applicants-table th,
+.applicants-table td {
+  padding: 12px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.applicants-table thead tr {
+  background-color: #f5f5f5;
+}
+
+.filter-panel {
+  width: 20%;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.MuiButton-outlined {
+  background-color: #f3f3f3;
+  color: black;
+  border: 1px solid #ccc;
+}
+
+.MuiButton-outlined:hover {
+  background-color: #e0e0e0;
+}
+
+.MuiButton-contained {
+  background-color: #B3238B !important;
+  color: white !important;
+  border: none;
+}
+
+.MuiButton-contained:hover {
+  background-color: #97006c !important;
+}
+
+/* Unify all DatePicker paddings */
+[class*="MuiPickersSectionList-root"][class*="sectionsContainer"] {
+  padding: 3px 0 !important;
+}
+
+.applicant-name-link {
+  color: #000000;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.applicant-name-link:hover {
+  color: #B3238B;
+}
+
+.custom-search-input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: white;
+}
+
+.custom-search-input:focus {
+  border-color: #b3238b;
+  outline: none;
+}
+
+
+
+
+/* ---------------- DARK MODE ---------------- */
+
+:root {
+  --bg-dark: #1e1e1e;
+  --card-dark: #2a2a2a;
+  --text-dark: #fff;
+  --border-dark: #444;
+  --hover-btn-dark: #8a2c6a;
+}
+
+.dark .applicants-container {
+  background-color: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+.dark .table-panel,
+.dark .filter-panel {
+  background-color: var(--card-dark);
+  color: var(--text-dark);
+  box-shadow: none;
+  border: 1px solid var(--border-dark);
+}
+
+.dark .custom-search-input {
+  background-color: #2a2a2a;
+  color: white;
+  border-color: #555;
+}
+
+.dark .applicants-table thead tr {
+  background-color: #333;
+}
+
+.dark .applicants-table th,
+.dark .applicants-table td {
+  color: var(--text-dark);
+  border-color: var(--border-dark);
+}
+
+.dark .MuiOutlinedInput-root {
+  background-color: #333;
+  color: var(--text-dark);
+  border: 1px solid var(--border-dark);
+}
+
+.dark .MuiButton-outlined {
+  background-color: #444;
+  border: 1px solid #666;
+  color: #eee;
+}
+
+.dark .MuiButton-contained {
+  background-color: #6a1b57 !important;
+}
+
+.dark .MuiButton-contained:hover {
+  background-color: var(--hover-btn-dark) !important;
+}
+
+.dark .applicant-name-link {
+  color: #ffffff;
+}
+
+.dark .applicant-name-link:hover {
+  color: #B3238B;
+}

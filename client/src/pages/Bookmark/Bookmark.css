@@ -1,0 +1,177 @@
+.bookmark-page {
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 40px);
+  font-family: Arial, sans-serif;
+}
+
+.bookmark-container {
+  max-width: 45%;
+  margin: -24px auto;
+  padding: 50px;
+}
+
+h2 {
+  margin-bottom: 50px;
+  color: #333;
+  text-align: center;
+  font-size: 1.8rem;
+}
+
+.no-jobs-msg {
+  text-align: center;
+  color: #888;
+  font-size: 1.1em;
+}
+
+.job-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px 20px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+}
+
+.job-card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.job-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #222;
+}
+
+.job-type {
+  font-size: 0.95rem;
+  color: #555;
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+.job-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 5px;
+  margin-right: 5px;
+  color: #8d8d8d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.remove-btn:hover {
+  color: #000000;
+}
+
+.apply-btn {
+  background-color: #B3238B;
+  color: white;
+  padding: 6px 12px;
+}
+
+.apply-btn:hover {
+  background-color: #97006c;
+}
+
+
+
+.job-details {
+  margin-top: 15px;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.job-details ul {
+  padding-left: 20px;
+  margin-top: 5px;
+}
+
+.job-details li {
+  margin-bottom: 5px;
+}
+
+/* Dark mode overrides for Bookmark page */
+.dark .bookmark-page {
+  background-color: #121212;
+  color: #ddd;
+  font-family: Arial, sans-serif;
+}
+
+.dark .bookmark-container {
+  /* keep width and padding same, text color inherited */
+  color: #ddd;
+}
+
+.dark h2 {
+  color: #eee;
+}
+
+.dark .no-jobs-msg {
+  color: #999;
+}
+
+.dark .job-card {
+  background-color: #1e1e1e;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+  color: #ddd;
+  transition: box-shadow 0.3s ease;
+}
+
+.dark .job-card:hover {
+  box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+}
+
+.dark .job-title {
+  color: #eee;
+}
+
+.dark .job-type {
+  color: #bbb;
+}
+
+.dark .remove-btn {
+  color: #aaa;
+}
+
+.dark .remove-btn:hover {
+  color: #fff;
+}
+
+.dark .apply-btn {
+  background-color: #6a1b57;
+  color: white;
+}
+
+.dark .apply-btn:hover {
+  background-color: #8a2c6a;
+  border: none;
+}
+
+.dark .job-details {
+  color: #bbb;
+}
+
+.dark .job-details ul {
+  padding-left: 20px;
+}
+
+.dark .job-details li {
+  margin-bottom: 5px;
+  color: #ccc;
+}
