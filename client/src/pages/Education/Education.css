@@ -81,7 +81,7 @@
 }
 
 .delete-btn svg {
-  color: #000000; /* Darker grey color - more visible */
+  color: #ffffff; /* Darker grey color - more visible */
   width: 16px;
   height: 16px;
   transition: color 0.2s ease;
