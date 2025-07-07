@@ -1,0 +1,533 @@
+.dashboardContent {
+  padding: 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: calc(100vh - 72px);
+  overflow-y: auto;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.dashboardContainer {
+  margin: 0 auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Stats Cards Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.statsCard {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.statsCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #B3238B, #7c3aed);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.statsCard:hover::before {
+  transform: scaleX(1);
+}
+
+.statsCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.totalJobsCard .cardIcon {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.applicantsCard .cardIcon {
+  background: linear-gradient(135deg, #10b981, #047857);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Card Components */
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.cardIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background: linear-gradient(135deg, #B3238B, #7c3aed);
+  box-shadow: 0 4px 12px rgba(179, 35, 139, 0.3);
+}
+
+.cardTitleSection {
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.cardSubtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.cardBody {
+  padding-top: 0.5rem;
+}
+
+.metricDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metricValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.metricLabel {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+/* Main Grid Layout - Updated */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+.leftSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.rightSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Charts Section - Made larger */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.chartCard {
+  background: white;
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.chartCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #B3238B, #7c3aed);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.chartCard:hover::before {
+  transform: scaleX(1);
+}
+
+.chartCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.chartHeader {
+  margin-bottom: 1.5rem;
+}
+
+.chartTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chartTitle::before {
+  content: '📊';
+  font-size: 1.1rem;
+}
+
+.chartContainer {
+  width: 100%;
+  height: 400px; /* Increased from 300px */
+}
+
+/* Table Cards */
+.tableCard {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.tableCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #10b981, #059669);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.tableCard:hover::before {
+  transform: scaleX(1);
+}
+
+.tableCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.1);
+}
+
+.tableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.tableTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tableTitle::before {
+  content: '💼';
+  font-size: 1.1rem;
+}
+
+.viewDetailsBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.viewDetailsBtn:hover {
+  background: linear-gradient(135deg, #1e40af, #1e3a8a);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.dataTable thead {
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+}
+
+.dataTable th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.dataTable td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.4);
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.dataTable tbody tr {
+  transition: all 0.2s ease;
+}
+
+.dataTable tbody tr:hover {
+  background: rgba(248, 250, 252, 0.8);
+  transform: scale(1.001);
+}
+
+.dataTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Add this new CSS class for the tables grid */
+.tablesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+/* Status Badges */
+.statusBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.pendingreview {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.shortlisted {
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+}
+
+.rejected {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.interviewscheduled {
+  background: rgba(59, 130, 246, 0.1);
+  color: #1e40af;
+}
+
+/* Dark Mode */
+:global(.dark) .dashboardContent {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+:global(.dark) .statsCard,
+:global(.dark) .chartCard,
+:global(.dark) .tableCard {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .statsCard:hover,
+:global(.dark) .chartCard:hover,
+:global(.dark) .tableCard:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+:global(.dark) .cardTitle,
+:global(.dark) .chartTitle,
+:global(.dark) .tableTitle {
+  color: #f8fafc;
+}
+
+:global(.dark) .cardSubtitle,
+:global(.dark) .metricLabel {
+  color: #94a3b8;
+}
+
+:global(.dark) .metricValue {
+  color: #f8fafc;
+}
+
+:global(.dark) .dataTable {
+  background: #1e293b;
+}
+
+:global(.dark) .dataTable thead {
+  background: linear-gradient(135deg, #1e293b, #334155);
+}
+
+:global(.dark) .dataTable th {
+  color: #cbd5e1;
+  border-bottom-color: rgba(51, 65, 85, 0.8);
+}
+
+:global(.dark) .dataTable td {
+  color: #94a3b8;
+  border-bottom-color: rgba(51, 65, 85, 0.4);
+}
+
+:global(.dark) .dataTable tbody tr:hover {
+  background: rgba(51, 65, 85, 0.3);
+}
+
+:global(.dark) .viewDetailsBtn {
+  background: linear-gradient(135deg, #1e40af, #1e3a8a);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+}
+
+:global(.dark) .viewDetailsBtn:hover {
+  background: linear-gradient(135deg, #1e3a8a, #1e3a8a);
+  box-shadow: 0 8px 20px rgba(30, 64, 175, 0.5);
+}
+
+:global(.dark) .pendingreview {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+:global(.dark) .shortlisted {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+:global(.dark) .rejected {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+:global(.dark) .interviewscheduled {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+/* Responsive Design - Updated */
+@media (max-width: 1200px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .chartsGrid {
+    grid-template-columns: 1fr 1fr; /* Keep side by side on medium screens */
+  }
+
+  .tablesGrid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboardContainer {
+    padding: 1rem;
+  }
+  
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .statsCard,
+  .chartCard,
+  .tableCard {
+    padding: 1.5rem;
+  }
+  
+  .tableHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .viewDetailsBtn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .dataTable {
+    font-size: 0.75rem;
+  }
+  
+  .dataTable th,
+  .dataTable td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .statsCard,
+  .chartCard,
+  .tableCard {
+    padding: 1rem;
+  }
+  
+  .dataTable {
+    font-size: 0.7rem;
+  }
+  
+  .dataTable th,
+  .dataTable td {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .chartContainer {
+    height: 300px; /* Even smaller on very small screens */
+  }
+}

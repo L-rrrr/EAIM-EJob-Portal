@@ -1,3 +1,13 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:9110578c7668d188c61512618e01d8d465598267071c47e107d00755e59fa268
-size 345
+import { Outlet } from "react-router-dom";
+import Navbar from "../components/Navbar/Navbar";
+
+const MainLayout = () => (
+  <div style={{ display: "flex", flexDirection: "column", height: "auto", overflowY: "hidden" }}>
+    <Navbar />
+    <div style={{ flex: 1 }}>
+      <Outlet />
+    </div>
+  </div>
+);
+
+export default MainLayout;

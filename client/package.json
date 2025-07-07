@@ -29,7 +29,8 @@
     "react-flags-select": "^2.5.0",
     "react-hook-form": "^7.56.4",
     "react-router-dom": "^6.28.0",
-    "react-select": "^5.10.1"
+    "react-select": "^5.10.1",
+    "recharts": "^3.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

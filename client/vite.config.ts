@@ -6,5 +6,9 @@ export default defineConfig({
   plugins: [react()],
   // server: {
   //   port: 3000,
-  // }
+  // } 
+// server: {
+//     port: 3019, // Change this to your desired port
+//     allowedHosts: ['ejob.eaim.edu.sg']
+//   },
 })

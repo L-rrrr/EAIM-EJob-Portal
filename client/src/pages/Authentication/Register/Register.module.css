@@ -1,0 +1,67 @@
+/* Register-specific styles */
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.formGridFull {
+  grid-column: 1 / -1;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 0.875rem;
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Success message styling */
+.successMessage {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 1rem;
+}
+
+/* Dark mode for success message */
+:global(.dark) .successMessage {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+/* Dark mode for register-specific elements */
+:global(.dark) .passwordToggle {
+  color: #94a3b8;
+}
+
+:global(.dark) .passwordToggle:hover {
+  color: #7c3aed;
+  background-color: rgba(124, 58, 237, 0.1);
+}
+
+:global(.dark) .successMessage {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+/* Responsive design for register grid */
+@media (max-width: 768px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
