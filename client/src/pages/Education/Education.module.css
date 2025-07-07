@@ -1,0 +1,635 @@
+/* Copy all styles from PersonalParticulars.module.css */
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+
+.mainPanel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  height: calc(100vh - 85px);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #1e293b;
+  padding: 2rem;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.formWrapper {
+  position: relative;
+  padding-bottom: 6rem;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.formContainer {
+  width: 100%;
+  margin: 1.5rem 0;
+  background: white;
+  padding: 0;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  overflow: hidden;
+  position: relative;
+}
+
+.formContainer:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  border-color: rgba(179, 35, 139, 0.2);
+}
+
+.formContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #B3238B, #7c3aed);
+  transform: scaleX(0);
+}
+
+.formContainer:hover::before {
+  transform: scaleX(1);
+}
+
+.sectionTitle {
+  margin: 0;
+  padding: 2rem 2rem 2rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #1e293b;
+  background: linear-gradient(135deg, rgba(179, 35, 139, 0.08), rgba(124, 58, 237, 0.08));
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  user-select: none;
+  text-align: left;
+}
+
+.sectionTitle::before {
+  content: '🎓';
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.sectionTitle:hover {
+  background: linear-gradient(135deg, rgba(179, 35, 139, 0.12), rgba(124, 58, 237, 0.12));
+  color: #B3238B;
+  transform: translateY(-1px);
+}
+
+.sectionTitleText {
+  flex: 1;
+  text-align: center;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.sectionArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(179, 35, 139, 0.1);
+  border: 1px solid rgba(179, 35, 139, 0.2);
+  color: #B3238B;
+  flex-shrink: 0;
+}
+
+.sectionTitle:hover .sectionArrow {
+  background: rgba(179, 35, 139, 0.15);
+  border-color: rgba(179, 35, 139, 0.3);
+  transform: scale(1.05);
+}
+
+.labelHint {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 1.5rem 2rem 0;
+  padding: 1rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-left: 4px solid #3b82f6;
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+}
+
+.noRecordsMessage {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  background: rgba(249, 250, 251, 0.5);
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  margin: 2rem;
+}
+
+.formSection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+  background: white;
+  position: relative;
+  margin: 1.5rem 0;
+}
+
+.record {
+  position: relative;
+  padding: 2.5rem 2rem 3rem;
+  border: 2px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.record:hover {
+  border-color: rgba(179, 35, 139, 0.2);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.deleteBtn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: none;
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  z-index: 10;
+}
+
+.deleteBtn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.deleteBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0rem;
+}
+
+.labelText {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.requiredAsterisk {
+  color: #ef4444;
+  margin-left: 0.25rem;
+  font-weight: 700;
+}
+
+.input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 0.95rem;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 12px;
+  background: white;
+  color: #1e293b;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgba(179, 35, 139, 0.3);
+  box-shadow: 0 0 0 3px rgba(179, 35, 139, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.input:hover {
+  border-color: rgba(179, 35, 139, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.input::placeholder {
+  color: #9ca3af;
+}
+
+.inputPair {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.inputPair .input {
+  flex: 1;
+}
+
+.errorMessage {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.errorMessage::before {
+  content: '⚠️';
+  font-size: 0.75rem;
+}
+
+.addRecordContainer {
+  text-align: center;
+  margin: 2rem;
+  padding: 0rem;
+}
+
+.addRecordBtn {
+  background: linear-gradient(135deg, rgba(179, 35, 139, 0.1), rgba(124, 58, 237, 0.1));
+  color: #B3238B;
+  border: 2px dashed rgba(179, 35, 139, 0.3);
+  padding: 1rem 2rem;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 200px;
+  justify-content: center;
+}
+
+.addRecordBtn:hover {
+  background: linear-gradient(135deg, rgba(179, 35, 139, 0.15), rgba(124, 58, 237, 0.15));
+  border-color: rgba(179, 35, 139, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(179, 35, 139, 0.2);
+}
+
+.addRecordBtn::before {
+  content: '+';
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.addRecordBtn:focus {
+  outline: none;
+}
+
+.formButtons {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  gap: 1rem;
+  z-index: 100;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1.25rem;
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.formButtons:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.9);
+}
+
+.btn {
+  padding: 0.875rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.save {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.1));
+  color: #059669;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.save:hover {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+}
+
+.submit {
+  background: linear-gradient(135deg, #B3238B, #7c3aed);
+  color: white;
+  box-shadow: 0 4px 12px rgba(179, 35, 139, 0.3);
+}
+
+.submit:hover {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(179, 35, 139, 0.4);
+}
+
+/* Dark Mode */
+:global(.dark) .mainPanel {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #f8fafc;
+}
+
+:global(.dark) .formContainer {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .formContainer:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(244, 114, 182, 0.3);
+}
+
+:global(.dark) .sectionTitle {
+  color: #f8fafc;
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.08), rgba(168, 85, 247, 0.08));
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .sectionTitle:hover {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.12), rgba(168, 85, 247, 0.12));
+  color: #f472b6;
+}
+
+:global(.dark) .sectionArrow {
+  background: rgba(244, 114, 182, 0.1);
+  border-color: rgba(244, 114, 182, 0.2);
+  color: #f472b6;
+}
+
+:global(.dark) .sectionTitle:hover .sectionArrow {
+  background: rgba(244, 114, 182, 0.15);
+  border-color: rgba(244, 114, 182, 0.3);
+}
+
+:global(.dark) .labelHint {
+  background: rgba(59, 130, 246, 0.1);
+  border-left-color: #3b82f6;
+  color: #94a3b8;
+}
+
+:global(.dark) .noRecordsMessage {
+  background: rgba(15, 23, 42, 0.5);
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+:global(.dark) .formSection {
+  background: #1e293b;
+}
+
+:global(.dark) .record {
+  background: rgba(15, 23, 42, 0.5);
+  border-color: #334155;
+}
+
+:global(.dark) .record:hover {
+  border-color: rgba(244, 114, 182, 0.2);
+}
+
+:global(.dark) .labelText {
+  color: #cbd5e1;
+}
+
+:global(.dark) .requiredAsterisk {
+  color: #f87171;
+}
+
+:global(.dark) .input {
+  background: #334155;
+  border-color: #475569;
+  color: #f8fafc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+:global(.dark) .input:focus {
+  border-color: rgba(244, 114, 182, 0.3);
+  box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .input:hover {
+  border-color: rgba(244, 114, 182, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .input::placeholder {
+  color: #64748b;
+}
+
+:global(.dark) .errorMessage {
+  color: #f87171;
+}
+
+:global(.dark) .addRecordBtn {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.1), rgba(168, 85, 247, 0.1));
+  color: #f472b6;
+  border-color: rgba(244, 114, 182, 0.3);
+}
+
+:global(.dark) .addRecordBtn:hover {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.15), rgba(168, 85, 247, 0.15));
+  border-color: rgba(244, 114, 182, 0.5);
+}
+
+:global(.dark) .formButtons {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+  border-color: rgba(51, 65, 85, 0.6);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(51, 65, 85, 0.8);
+}
+
+:global(.dark) .formButtons:hover {
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(51, 65, 85, 0.9);
+}
+
+:global(.dark) .save {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(34, 197, 94, 0.1));
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+:global(.dark) .save:hover {
+  background: linear-gradient(135deg, #34d399, #22c55e);
+  color: #1e293b;
+  box-shadow: 0 8px 20px rgba(52, 211, 153, 0.4);
+}
+
+:global(.dark) .submit {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+:global(.dark) .submit:hover {
+  background: linear-gradient(135deg, #5b21b6, #4c1d95);
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.5);
+}
+
+/* Enhanced date input styling to match other inputs */
+.input[type="date"] {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 0.95rem;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 12px;
+  background: white;
+  color: #1e293b;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  font-family: 'Segoe UI', sans-serif;
+  cursor: pointer;
+}
+
+.input[type="date"]:focus {
+  outline: none;
+  border-color: rgba(179, 35, 139, 0.3);
+  box-shadow: 0 0 0 3px rgba(179, 35, 139, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.input[type="date"]:hover {
+  border-color: rgba(179, 35, 139, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.input[type="date"]::-webkit-calendar-picker-indicator {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23B3238B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") no-repeat;
+  cursor: pointer;
+  opacity: 1;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+}
+
+.input[type="date"]:hover::-webkit-calendar-picker-indicator {
+  opacity: 0.8;
+}
+
+/* Dark mode for date inputs */
+:global(.dark) .input[type="date"] {
+  background: #334155;
+  border-color: #475569;
+  color: #f8fafc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+:global(.dark) .input[type="date"]:focus {
+  border-color: rgba(244, 114, 182, 0.3);
+  box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .input[type="date"]:hover {
+  border-color: rgba(244, 114, 182, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .input[type="date"]::-webkit-calendar-picker-indicator {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23f472b6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") no-repeat;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .mainPanel {
+    padding: 1rem;
+  }
+  
+  .formWrapper {
+    padding-bottom: 8rem;
+  }
+  
+  .formSection {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+    gap: 1.25rem;
+  }
+  
+  .sectionTitle {
+    padding: 1.5rem 1.5rem 1rem;
+    font-size: 1.25rem;
+  }
+  
+  .sectionArrow {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+  
+  .inputPair {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mainPanel {
+    padding: 0.75rem;
+  }
+  
+  .formSection {
+    padding: 1rem;
+  }
+  
+  .sectionTitle {
+    padding: 1rem;
+    font-size: 1.125rem;
+  }
+  
+  .sectionArrow {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .input {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.85rem;
+  }
+}

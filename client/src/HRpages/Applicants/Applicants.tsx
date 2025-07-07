@@ -1,3 +1,331 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:52d32c0707bc8c0f0ca6d5073349e88ae77b9fb6ecb0b42083f2b7fa6405ff09
-size 7102
+import { useState } from "react";
+import styles from "./Applicants.module.css";
+import { Link } from "react-router-dom";
+import axios from "axios";
+
+const mockData = [
+  { name: "Aaron Tan", job: "Lecturer (Discrete Maths)", applied: "2025-06-01", interview: "2025-06-10", status: "Pending review" },
+  { name: "Lee Chong Wei", job: "Badminton Coach", applied: "2025-06-03", interview: "2025-06-12", status: "Shortlisted for Interview" },
+  { name: "JJ Lin", job: "Vocal coach", applied: "2025-06-02", interview: "2025-06-11", status: "Accepted" },
+  { name: "Daniel Ng", job: "Freelance Lecturer (Psychology)", applied: "2025-06-04", interview: "2025-06-13", status: "Rejected" },
+  { name: "Elaine Goh", job: "Full-Time Lecturer (Business & Management)", applied: "2025-06-05", interview: "2025-06-14", status: "Pending review" },
+  { name: "Frankie Tan", job: "Education Sales Manager", applied: "2025-06-06", interview: "2025-06-15", status: "Accepted" },
+  { name: "Gina Lim", job: "Program Executive", applied: "2025-06-07", interview: "2025-06-16", status: "Rejected" },
+  { name: "Henry Chia", job: "Head of School", applied: "2025-06-08", interview: "2025-06-17", status: "Pending review" },
+  { name: "Ivy Ho", job: "Country Manager (Vietnam)", applied: "2025-06-09", interview: "2025-06-18", status: "Shortlisted for Interview" },
+  { name: "Jake Wong", job: "Full-Time Lecturer (O Level)", applied: "2025-06-10", interview: "2025-06-19", status: "Accepted" },
+];
+
+const Applicants = () => {
+  const [search, setSearch] = useState("");
+  const [appliedFrom, setAppliedFrom] = useState("");
+  const [appliedTo, setAppliedTo] = useState("");
+  const [interviewFrom, setInterviewFrom] = useState("");
+  const [interviewTo, setInterviewTo] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+
+  // Filter panel collapse state
+  const [isFilterExpanded, setIsFilterExpanded] = useState(true);
+
+  // AI Analysis state
+  const [selectedCandidate, setSelectedCandidate] = useState<{name: string, job: string} | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const toggleSelection = (item: string, list: string[], setList: (val: string[]) => void) => {
+    setList(list.includes(item) ? list.filter(i => i !== item) : [...list, item]);
+  };
+
+  // Function to analyze candidate with OpenAI
+  const analyzeCandidateWithAI = async (candidateName: string, jobTitle: string) => {
+    setIsAnalyzing(true);
+    setSelectedCandidate({ name: candidateName, job: jobTitle });
+    setAiAnalysis("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/ai/candidate-analysis`,
+        {
+          candidateName,
+          jobTitle,
+          applicationData: `Applied for ${jobTitle} position. Current status: ${mockData.find(m => m.name === candidateName)?.status || 'Unknown'}.`
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (response.data.success) {
+        setAiAnalysis(response.data.data.analysis);
+      } else {
+        setAiAnalysis("Failed to analyze candidate profile. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Failed to analyze candidate:", error);
+      
+      if (error.response?.status === 401) {
+        setAiAnalysis("Authentication failed. Please log in again.");
+      } else if (error.response?.status === 402) {
+        setAiAnalysis("OpenAI API quota exceeded. Please contact administrator.");
+      } else if (error.response?.data?.message) {
+        setAiAnalysis(`Error: ${error.response.data.message}`);
+      } else {
+        setAiAnalysis("Failed to analyze candidate profile. Please check your connection and try again.");
+      }
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  return (
+    <div className={styles.applicantsContainer}>
+      {/* TOP SECTION: TABLE AND FILTER SIDE BY SIDE */}
+      <div className={styles.topSection}>
+        {/* APPLICANTS TABLE PANEL */}
+        <div className={styles.tablePanel}>
+          <div className={styles.tableHeader}>
+            <h2>📋 Applicants Information</h2>
+            <div className={styles.tableStats}>
+              <span className={styles.totalCount}>{mockData.length} Total Applicants</span>
+            </div>
+          </div>
+          <div className={styles.tableWrapper}>
+            <table className={styles.applicantsTable}>
+              <thead>
+                <tr>
+                  <th>Applicant's Name</th>
+                  <th>Job Applied</th>
+                  <th>Applied Date</th>
+                  <th>Interview Date</th>
+                  <th>Status</th>
+                  <th>AI Analysis</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mockData.map((applicant, idx) => (
+                  <tr key={idx}>
+                    <td>
+                      <Link to={`/hr/applicant-details/personal-particulars`} className={styles.applicantNameLink}>
+                        {applicant.name}
+                      </Link>
+                    </td>
+                    <td>{applicant.job}</td>
+                    <td>{applicant.applied}</td>
+                    <td>{applicant.interview}</td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${styles[applicant.status.toLowerCase().replace(/\s+/g, '')]}`}>
+                        {applicant.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className={styles.aiAnalyzeBtn}
+                        onClick={() => analyzeCandidateWithAI(applicant.name, applicant.job)}
+                        disabled={isAnalyzing}
+                      >
+                        {isAnalyzing && selectedCandidate?.name === applicant.name ? 
+                          "Analyzing..." : "🤖 Analyze"
+                        }
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* COLLAPSIBLE FILTER PANEL */}
+        <div className={`${styles.filterPanel} ${isFilterExpanded ? styles.expanded : styles.collapsed}`}>
+          <div className={styles.filterHeader} onClick={() => setIsFilterExpanded(!isFilterExpanded)}>
+            <h3>🔍 Filters</h3>
+            <button className={styles.collapseToggle}>
+              {isFilterExpanded ? '◀' : '▶'}
+            </button>
+          </div>
+          
+          {isFilterExpanded && (
+            <div className={styles.filterContent}>
+              {/* Search Field */}
+              <div className={styles.filterGroup}>
+                <label htmlFor="search-applicants">Search Applicants</label>
+                <input
+                  type="text"
+                  id="search-applicants"
+                  className={styles.customSearchInput}
+                  placeholder="Enter applicant name"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+
+              {/* Job Category */}
+              <div className={styles.filterGroup}>
+                <label>Job Category</label>
+                <div className={`${styles.buttonGroup} ${styles.compact}`}>
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedCategories.includes("Manager / Executive") ? styles.selected : ""}`}
+                    onClick={() =>
+                      toggleSelection("Manager / Executive", selectedCategories, setSelectedCategories)
+                    }
+                  >
+                    Manager / Executive
+                  </button>
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedCategories.includes("Lecturer") ? styles.selected : ""}`}
+                    onClick={() =>
+                      toggleSelection("Lecturer", selectedCategories, setSelectedCategories)
+                    }
+                  >
+                    Lecturer
+                  </button>
+                </div>
+              </div>
+
+              {/* Date Filters - Default HTML Date Inputs */}
+              <div className={styles.filterGroup}>
+                <label>Applied Date From</label>
+                <input
+                  type="date"
+                  className={styles.dateInput}
+                  value={appliedFrom}
+                  onChange={(e) => setAppliedFrom(e.target.value)}
+                />
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label>Applied Date To</label>
+                <input
+                  type="date"
+                  className={styles.dateInput}
+                  value={appliedTo}
+                  onChange={(e) => setAppliedTo(e.target.value)}
+                />
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label>Interview Date From</label>
+                <input
+                  type="date"
+                  className={styles.dateInput}
+                  value={interviewFrom}
+                  onChange={(e) => setInterviewFrom(e.target.value)}
+                />
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label>Interview Date To</label>
+                <input
+                  type="date"
+                  className={styles.dateInput}
+                  value={interviewTo}
+                  onChange={(e) => setInterviewTo(e.target.value)}
+                />
+              </div>
+
+              {/* Application Status - Compact Grid */}
+              <div className={styles.filterGroup}>
+                <label>Application Status</label>
+                <div className={styles.buttonGrid}>
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Pending Review") ? styles.selected : ""}`}
+                    onClick={() =>
+                      toggleSelection("Pending Review", selectedStatus, setSelectedStatus)
+                    }
+                  >
+                    Pending
+                  </button>
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Shortlisted") ? styles.selected : ""}`}
+                    onClick={() =>
+                      toggleSelection("Shortlisted", selectedStatus, setSelectedStatus)
+                    }
+                  >
+                    Shortlisted
+                  </button>
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Rejected") ? styles.selected : ""}`}
+                    onClick={() =>
+                      toggleSelection("Rejected", selectedStatus, setSelectedStatus)
+                    }
+                  >
+                    Rejected
+                  </button>
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Accepted") ? styles.selected : ""}`}
+                    onClick={() =>
+                      toggleSelection("Accepted", selectedStatus, setSelectedStatus)
+                    }
+                  >
+                    Accepted
+                  </button>
+                </div>
+              </div>
+
+              <button className={`${styles.applyFilterBtn} ${styles.compact}`}>Apply Filter</button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* BOTTOM SECTION: AI ANALYSIS PANEL */}
+      {(selectedCandidate || isAnalyzing) && (
+        <div className={styles.aiAnalysisPanel}>
+          <div className={styles.aiPanelHeader}>
+            <div className={styles.aiPanelTitle}>
+              <h3>🤖 AI Background Analysis</h3>
+            </div>
+            <div className={styles.aiPanelInfo}>
+              {selectedCandidate && (
+                <div className={styles.candidateInfo}>
+                  <span className={styles.candidateName}>{selectedCandidate.name}</span>
+                  <span className={styles.candidatePosition}> Applied Position: {selectedCandidate.job}</span>
+                </div>
+              )}
+            </div>
+            <button className={styles.closeAiPanel} onClick={() => {
+              setSelectedCandidate(null);
+              setAiAnalysis("");
+            }}>×</button>
+          </div>
+          
+          <div className={styles.aiPanelContent}>
+            {isAnalyzing ? (
+              <div className={styles.aiLoading}>
+                <div className={styles.loadingSpinner}></div>
+                <p>Analyzing candidate background with AI...</p>
+              </div>
+            ) : (
+              <div className={styles.aiAnalysisText}>
+                {aiAnalysis ? (
+                  <div className={styles.aiResponse}>{aiAnalysis}</div>
+                ) : (
+                  <div className={styles.aiPlaceholder}>
+                    <p>💡 Click "🤖 Analyze" button next to any candidate to get their background analysis</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className={styles.aiPanelFooter}>
+            <div className={styles.aiPanelActions}>
+              <button className={styles.refreshAnalysis} onClick={() => {
+                if (selectedCandidate) {
+                  analyzeCandidateWithAI(selectedCandidate.name, selectedCandidate.job);
+                }
+              }}>
+                🔄 Refresh Analysis
+              </button>
+            </div>
+            <small>Powered by OpenAI API</small>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Applicants;

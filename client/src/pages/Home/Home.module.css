@@ -1,0 +1,468 @@
+.homeContent {
+  padding: 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: calc(100vh - 72px);
+  overflow-y: auto;
+}
+
+.homeContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Dashboard Grid */
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.dashboardCard {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboardCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #B3238B, #7c3aed);
+  transform: scaleX(0);
+}
+
+.dashboardCard:hover::before {
+  transform: scaleX(1);
+}
+
+.dashboardCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.cardIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background: linear-gradient(135deg, #B3238B, #7c3aed);
+  box-shadow: 0 4px 12px rgba(179, 35, 139, 0.3);
+}
+
+.profileCard .cardIcon {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.jobsCard .cardIcon {
+  background: linear-gradient(135deg, #10b981, #047857);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.cardTitleSection {
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.cardSubtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.cardAction {
+  color: #B3238B;
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.dashboardCard:hover .cardAction {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.cardBody {
+  padding-top: 0.5rem;
+}
+
+.metricDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.metricValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.metricLabel {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #1e40af);
+  border-radius: 4px;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #10b981, #047857);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  width: fit-content;
+  margin-top: 0.5rem;
+}
+
+/* Information Section */
+.infoSection {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.infoCard {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+.infoCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  opacity: 0.1;
+  z-index: 0;
+}
+
+.infoHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.infoIcon {
+  color: #f59e0b;
+  padding: 0.5rem;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 12px;
+}
+
+.infoTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0;
+}
+
+.infoContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.infoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  border-left: 4px solid #f59e0b;
+}
+
+.infoNumber {
+  width: 24px;
+  height: 24px;
+  background: #f59e0b;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.infoItem p {
+  margin: 0;
+  color: #78350f;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.infoItem strong {
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* Call to Action Section */
+.ctaSection {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.applyNowButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.25rem 2rem;
+  background: linear-gradient(135deg, #B3238B, #7c3aed);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(179, 35, 139, 0.3);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: none;
+}
+
+.applyNowButton::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  opacity: 0;
+}
+
+.applyNowButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(179, 35, 139, 0.4);
+}
+
+.applyNowButton:hover::before {
+  opacity: 1;
+}
+
+.applyNowButton > * {
+  position: relative;
+  z-index: 1;
+}
+
+.applyNowButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(179, 35, 139, 0.3);
+}
+
+/* Dark Mode */
+:global(.dark) .homeContent {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+:global(.dark) .dashboardCard {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .dashboardCard:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+:global(.dark) .cardTitle {
+  color: #f8fafc;
+}
+
+:global(.dark) .cardSubtitle {
+  color: #94a3b8;
+}
+
+:global(.dark) .metricValue {
+  color: #f8fafc;
+}
+
+:global(.dark) .metricLabel {
+  color: #94a3b8;
+}
+
+:global(.dark) .progressBar {
+  background-color: #334155;
+}
+
+:global(.dark) .cardAction {
+  color: #f472b6;
+}
+
+:global(.dark) .applyNowButton {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+}
+
+:global(.dark) .applyNowButton::before {
+  background: linear-gradient(135deg, #5b21b6, #4c1d95);
+}
+
+:global(.dark) .applyNowButton:hover {
+  box-shadow: 0 12px 35px rgba(124, 58, 237, 0.4);
+}
+
+:global(.dark) .infoCard {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .infoCard::before {
+  background: linear-gradient(135deg, #451a03, #78350f);
+  opacity: 0.2;
+}
+
+:global(.dark) .infoIcon {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+}
+
+:global(.dark) .infoTitle {
+  color: #fde68a;
+}
+
+:global(.dark) .infoItem {
+  background: rgba(30, 41, 59, 0.7);
+  border-left-color: #fbbf24;
+}
+
+:global(.dark) .infoNumber {
+  background: #fbbf24;
+  color: #451a03;
+}
+
+:global(.dark) .infoItem p {
+  color: #d4d4aa;
+}
+
+:global(.dark) .infoItem strong {
+  color: #fde68a;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .homeContainer {
+    padding: 1rem;
+  }
+
+  .pageTitle {
+    font-size: 2rem;
+  }
+
+  .dashboardGrid {
+    gap: 1.5rem;
+  }
+
+  .dashboardCard {
+    padding: 1.5rem;
+  }
+
+  .cardIcon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .applyNowButton {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+
+  .infoCard {
+    padding: 1.5rem;
+  }
+
+  .infoItem {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .infoNumber {
+    align-self: flex-start;
+  }
+
+  .ctaSection {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardHeader {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .cardAction {
+    display: none;
+  }
+
+  .applyNowButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

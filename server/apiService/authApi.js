@@ -1,6 +1,30 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const db = require("../dbConn");
+
+
+const secretKey = crypto.randomBytes(32).toString("hex");
+
+// Generate token function - returns only the token
+const generateToken = (payload) => {
+  const token = jwt.sign(payload, secretKey, { algorithm: 'HS256' });
+  return token;
+};
+
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1]; // Bearer <token>
+
+  if (!token) return res.status(401).json({ success: false, message: "Access token required" });
+
+  jwt.verify(token, secretKey, (err, user) => {
+    if (err) return res.status(403).json({ success: false, message: "Invalid or expired token" });
+
+    req.user = user; // user = { id, username }
+    next();
+  });
+};
 
 const register = async (req, res) => {
   const { username, password, firstName, lastName, nationality } = req.body;
@@ -27,7 +51,6 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { username, password, role } = req.body;
   try {
-
     const rows = await db.executeQuery(`SELECT * FROM tbl_users WHERE username = ?`, [username]);
 
     if (!rows.length) {
@@ -52,14 +75,25 @@ const login = async (req, res) => {
       }
     }
 
-    const token = jwt.sign(
-      { user_id: rows[0].user_id, username: rows[0].username },
-      process.env.JWT_SECRET,
-      { expiresIn: "10h" } //this is just for testing, need to reduce the duration
-    );
+  
+    const payload = {
+      user_id: rows[0].user_id,
+      username: rows[0].username,
+      role: rows[0].role,
+      iat: Math.floor(Date.now() / 1000),
+      jti: crypto.randomUUID()
+    };
 
-    return res.status(200).json({ success: true, message: "Login successful", token });
+    // Generate token using the function
+    const token = generateToken(payload);
+
+    return res.status(200).json({ 
+      success: true, 
+      message: "Login successful", 
+      token
+    });
   } catch (e) {
+    console.error("Login error:", e);
     return res.status(500).json({ success: false, message: "Login failed", error: e.message });
   }
 };
@@ -67,4 +101,5 @@ const login = async (req, res) => {
 module.exports = {
   register,
   login,
+  authenticateToken
 };

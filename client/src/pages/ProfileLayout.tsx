@@ -1,3 +1,13 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:208b246cda243b6f3f2189a8f4df28b0816ac6d97e10f5a1a3cb00e70584ef04
-size 383
+import { Outlet } from "react-router-dom";
+import Sidebar from "../components/Sidebar/Sidebar";
+
+const ProfileLayout = () => (
+  <div style={{ display: "flex", flexDirection: "row", height: "91vh", overflowY: "hidden" }}>
+  <Sidebar />
+    <div style={{ flex: 1, padding: "0px", overflowY: "auto" }}>
+      <Outlet />
+    </div>
+  </div>
+);
+
+export default ProfileLayout;

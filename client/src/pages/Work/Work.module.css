@@ -1,0 +1,42 @@
+.sectionTitle {
+  margin: 0;
+  padding: 2rem 2rem 2rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #1e293b;
+  background: linear-gradient(135deg, rgba(179, 35, 139, 0.08), rgba(124, 58, 237, 0.08));
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  user-select: none;
+  text-align: left;
+}
+
+.sectionTitle::before {
+  content: '💼';
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.sectionTitle:hover {
+  background: linear-gradient(135deg, rgba(179, 35, 139, 0.12), rgba(124, 58, 237, 0.12));
+  color: #B3238B;
+  transform: translateY(-1px);
+}
+
+
+:global(.dark) .sectionTitle {
+  color: #f8fafc;
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.08), rgba(168, 85, 247, 0.08));
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .sectionTitle:hover {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.12), rgba(168, 85, 247, 0.12));
+  color: #f472b6;
+}

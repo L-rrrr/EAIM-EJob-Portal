@@ -1,3 +1,191 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:8662a385eab431df40a74f647d8e5f589bc271eb41879277440a2ebf88cc3d99
-size 3998
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { ChevronDown, ChevronUp, Clock, MapPin, Briefcase, Users, BookmarkMinus, Bookmark as BookmarkIcon, Loader2 } from "lucide-react";
+import styles from "./Bookmark.module.css";
+
+type Job = {
+  id: number;
+  title: string;
+  job_category: string;
+  job_type: string;
+  job_requirements: string;
+  job_responsibilities: string;
+};
+
+const Bookmark: React.FC = () => {
+  const [bookmarkedJobs, setBookmarkedJobs] = useState<Job[]>([]);
+  const [expandedJobIds, setExpandedJobIds] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchBookmarks = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/bookmarks`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (res.data.success) {
+          setBookmarkedJobs(res.data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch bookmarks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookmarks();
+  }, []);
+
+  const toggleJobDetails = (id: string) => {
+    setExpandedJobIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      return newSet;
+    });
+  };
+
+  const removeBookmark = async (title: string) => {
+    try {
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/bookmarks`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        data: { title },
+      });
+
+      setBookmarkedJobs(prev => prev.filter(job => job.title !== title));
+      setExpandedJobIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(title);
+        return newSet;
+      });
+    } catch (error) {
+      console.error("Failed to remove bookmark:", error);
+      alert("Failed to remove bookmark.");
+    }
+  };
+
+  return (
+    <div className={styles.bookmarkPage}>
+      {loading ? (
+        // Loading state - only background, no content
+        <div className={styles.loadingContainer}>
+          {/* Completely empty - only background visible */}
+        </div>
+      ) : (
+        // Content shows only after loading is complete
+        <div className={styles.bookmarkContainer}>
+          <div className={styles.pageHeader}>
+            <h2>Saved Jobs</h2>
+            <p className={styles.pageSubtitle}>Manage your bookmarked job opportunities</p>
+          </div>
+
+          {bookmarkedJobs.length === 0 ? (
+            <div className={styles.noJobsCard}>
+              <div className={styles.noJobsIcon}>
+                <BookmarkIcon size={48} />
+              </div>
+              <h3>No Saved Jobs</h3>
+              <p>You haven't bookmarked any jobs yet. Start exploring opportunities!</p>
+            </div>
+          ) : (
+            <div className={styles.jobsGrid}>
+              {bookmarkedJobs.map((job) => (
+                <div key={job.id} className={styles.jobCard}>
+                  <div
+                    className={styles.jobHeader}
+                    onClick={() => toggleJobDetails(job.title)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") toggleJobDetails(job.title);
+                    }}
+                    aria-expanded={expandedJobIds.has(job.title)}
+                  >
+                    <div className={styles.jobMainInfo}>
+                      <div className={styles.jobTitleSection}>
+                        <h3 className={styles.jobTitle}>{job.title}</h3>
+                        <div className={styles.jobMeta}>
+                          <span className={styles.jobTypeBadge}>
+                            <Clock size={12} />
+                            {job.job_type}
+                          </span>
+                          <span className={styles.jobCategoryBadge}>
+                            <MapPin size={12} />
+                            {job.job_category === "lecturer" ? "Academic" : "Operations"}
+                          </span>
+                          <span className={`${styles.jobStatusBadge} ${styles.statusSaved}`}>
+                            <BookmarkIcon size={12} />
+                            Bookmarked
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className={styles.jobActions} onClick={(e) => e.stopPropagation()}>
+                        <button
+                          className={styles.removeBookmarkBtn}
+                          onClick={() => removeBookmark(job.title)}
+                          aria-label="Remove bookmark"
+                        >
+                          <BookmarkMinus size={16} />
+                          Remove
+                        </button>
+                        <button
+                          className={styles.applyBtn}
+                          onClick={() => navigate("/apply")}
+                        >
+                          Apply Now
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className={styles.expandIndicator}>
+                      {expandedJobIds.has(job.title) ? 
+                        <ChevronUp size={20} /> : 
+                        <ChevronDown size={20} />
+                      }
+                    </div>
+                  </div>
+
+                  {expandedJobIds.has(job.title) && (
+                    <div className={styles.jobDetails}>
+                      <div className={styles.detailsSection}>
+                        <h4 className={styles.sectionTitle}>
+                          <Briefcase size={16} />
+                          Job Responsibilities
+                        </h4>
+                        <div 
+                          className={styles.sectionContent}
+                          dangerouslySetInnerHTML={{ __html: job.job_responsibilities }} 
+                        />
+                      </div>
+
+                      <div className={styles.detailsSection}>
+                        <h4 className={styles.sectionTitle}>
+                          <Users size={16} />
+                          Job Requirements
+                        </h4>
+                        <div 
+                          className={styles.sectionContent}
+                          dangerouslySetInnerHTML={{ __html: job.job_requirements }} 
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Bookmark;

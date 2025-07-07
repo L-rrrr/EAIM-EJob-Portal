@@ -1,0 +1,421 @@
+.hrNavbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 0.75rem 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.navbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navbarLogo {
+  height: 40px;
+  margin-right: 1rem;
+}
+
+.navbarLink {
+  text-decoration: none;
+  color: #64748b;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.navbarLink:hover {
+  color: #B3238B;
+  background-color: rgba(179, 35, 139, 0.1);
+  transform: translateY(-1px);
+}
+
+.navbarRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.iconButton {
+  background-color: transparent;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 40px;
+  color: #64748b;
+  border: none;
+  outline: none;
+  border-radius: 12px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.iconButton:hover {
+  color: #1e293b;
+  background-color: rgba(226, 232, 240, 0.5);
+  transform: translateY(-2px);
+}
+
+.iconButton:active {
+  transform: translateY(0);
+}
+
+.iconButton:focus {
+  outline: none;
+}
+
+.iconButton.dark {
+  background-color: transparent;
+  color: #ffffff !important;
+  border: none;
+  outline: none;
+}
+
+.iconButton.dark:hover {
+  background-color: rgba(51, 65, 85, 0.5) !important;
+  transform: translateY(-2px);
+}
+
+.navbarIcon {
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 12px;
+  height: 25px;
+  width: 25px;
+  transition: all 0.3s ease;
+}
+
+.navbarIcon:hover {
+  color: #1e293b;
+  background-color: rgba(226, 232, 240, 0.5);
+  transform: translateY(-2px);
+}
+
+.notificationWrapper {
+  position: relative;
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.notificationPopup {
+  position: absolute;
+  top: 35px;
+  right: 0;
+  width: 280px;
+  background: white;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  padding: 1.5rem;
+  z-index: 1000;
+  color: black;
+  transform: translateY(-10px);
+  opacity: 0;
+  animation: slideIn 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.notificationPopup p {
+  margin: 0 0 0.75rem 0;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+.notificationPopup p:last-child {
+  margin-bottom: 0;
+}
+
+.notificationPopup strong {
+  color: #B3238B;
+  font-weight: 600;
+}
+
+.profileWrapper {
+  position: relative;
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.profilePopup {
+  position: absolute;
+  top: 35px;
+  right: 0;
+  width: 320px;
+  background: white;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  padding: 1.5rem;
+  z-index: 1000;
+  color: black;
+  transform: translateY(-10px);
+  opacity: 0;
+  animation: slideIn 0.3s ease forwards;
+}
+
+.username {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.username p {
+  margin: 0;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+.username strong {
+  color: #B3238B;
+  font-weight: 600;
+}
+
+.passwordRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.passwordRow label {
+  color: #B3238B;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.passwordField {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordField input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  padding-right: 3rem;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.5);
+  color: #1e293b;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.passwordField input:focus {
+  border-color: rgba(179, 35, 139, 0.3);
+  box-shadow: 0 0 0 3px rgba(179, 35, 139, 0.1);
+}
+
+.eyeButton {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eyeButton:hover {
+  color: #B3238B;
+  background-color: rgba(179, 35, 139, 0.1);
+}
+
+/* Dark mode overrides for HRNavbar */
+:global(.dark) .hrNavbar {
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border-bottom-color: rgba(51, 65, 85, 0.8);
+}
+
+:global(.dark) .navbarLink {
+  color: #94a3b8;
+}
+
+:global(.dark) .navbarLink:hover {
+  color: #f472b6;
+  background-color: rgba(244, 114, 182, 0.1);
+  transform: translateY(-1px);
+}
+
+:global(.dark) .navbarIcon {
+  color: #94a3b8;
+}
+
+:global(.dark) .navbarIcon:hover {
+  color: #f8fafc;
+  background-color: rgba(51, 65, 85, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+:global(.dark) .notificationPopup {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+:global(.dark) .notificationPopup p {
+  color: #f8fafc;
+}
+
+:global(.dark) .notificationPopup strong {
+  color: #f472b6;
+}
+
+:global(.dark) .profilePopup {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+:global(.dark) .username {
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .username p {
+  color: #f8fafc;
+}
+
+:global(.dark) .username strong {
+  color: #f472b6;
+}
+
+:global(.dark) .passwordRow label {
+  color: #f472b6;
+}
+
+:global(.dark) .passwordField input {
+  background: #334155;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+:global(.dark) .passwordField input:focus {
+  border-color: rgba(244, 114, 182, 0.3);
+  box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.1);
+}
+
+:global(.dark) .eyeButton {
+  color: #94a3b8;
+}
+
+:global(.dark) .eyeButton:hover {
+  color: #f472b6;
+  background-color: rgba(244, 114, 182, 0.1);
+}
+
+:global(.dark) .iconButton:focus {
+  outline: none;
+  border: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hrNavbar {
+    padding: 0.5rem 1rem;
+  }
+  
+  .navbarLeft {
+    gap: 1rem;
+    overflow-x: auto;
+  }
+  
+  .navbarLink {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+  
+  .navbarRight {
+    gap: 0.75rem;
+  }
+  
+  .iconButton,
+  .navbarIcon {
+    height: 36px !important;
+    width: 36px !important;
+    padding: 0.375rem;
+  }
+  
+  .notificationPopup,
+  .profilePopup {
+    width: 240px;
+    right: -20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hrNavbar {
+    padding: 0.5rem;
+  }
+  
+  .navbarLeft {
+    gap: 0.5rem;
+  }
+  
+  .navbarLogo {
+    height: 32px;
+    margin-right: 0.5rem;
+  }
+  
+  .navbarLink {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .navbarRight {
+    gap: 0.5rem;
+  }
+  
+  .iconButton,
+  .navbarIcon {
+    height: 32px !important;
+    width: 32px !important;
+    padding: 0.25rem;
+  }
+  
+  .notificationPopup,
+  .profilePopup {
+    width: 200px;
+    right: -40px;
+    padding: 1rem;
+  }
+  
+  .passwordField input {
+    font-size: 0.8rem;
+    padding: 0.625rem 0.875rem;
+    padding-right: 2.5rem;
+  }
+  
+  .eyeButton {
+    right: 0.625rem;
+  }
+}
