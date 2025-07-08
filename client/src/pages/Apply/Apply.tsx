@@ -42,12 +42,16 @@ const Apply: React.FC = () => {
   const validateFile = (file: File): string | null => {
     const maxSize = 10 * 1024 * 1024;
     const allowedTypes = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/gif',
       'application/pdf',
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'image/jpeg',
-      'image/png',
-      'image/jpg'
+      'text/plain',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ];
 
     if (file.size > maxSize) {
@@ -55,7 +59,7 @@ const Apply: React.FC = () => {
     }
 
     if (!allowedTypes.includes(file.type)) {
-      return "Only PDF, DOC, DOCX, JPG, JPEG, and PNG files are allowed";
+      return "Only JPEG, JPG, PNG, GIF, PDF, DOC, DOCX, TXT, XLS, and XLSX files are allowed";
     }
 
     return null;
@@ -257,10 +261,8 @@ const Apply: React.FC = () => {
                   Document Type
                   <span className={styles.requiredAsterisk}>*</span>
                 </span>
-                <input
-                  type="text"
+                <select
                   className={styles.input}
-                  placeholder="e.g., Resume, Cover Letter, Portfolio"
                   value={attachment.documentType}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -276,7 +278,15 @@ const Apply: React.FC = () => {
                   style={{
                     borderColor: validationErrors.documentType ? "red" : undefined,
                   }}
-                />
+                >
+                  <option value="" disabled>-- Select Document Type --</option>
+                  <option value="Resume">Resume</option>
+                  <option value="Cover Letter">Cover Letter</option>
+                  <option value="Certificate">Certificate</option>
+                  <option value="Photo">Photo</option>
+                  <option value="Passport">Passport</option>
+                  <option value="Others">Others</option>
+                </select>
                 {validationErrors.documentType && (
                   <div className={styles.errorMessage}>
                     {validationErrors.documentType}
@@ -338,7 +348,7 @@ const Apply: React.FC = () => {
                   </label>
                 </div>
                 <div className={styles.fileHint}>
-                  Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG (Max: 10MB)
+                  Accepted formats: JPEG, JPG, PNG, GIF, PDF, DOC, DOCX, TXT, XLS, XLSX (Max: 10MB)
                 </div>
                 {validationErrors.uploadedFile && (
                   <div className={styles.errorMessage}>
@@ -485,7 +495,7 @@ const Apply: React.FC = () => {
                     borderColor: validationErrors.sourceObtainedFrom ? "red" : undefined,
                   }}
                 >
-                  <option value="" disabled>Select source</option>
+                  <option value="" disabled>-- Select source --</option>
                   {sourceOptions.map(source => (
                     <option key={source} value={source}>{source}</option>
                   ))}

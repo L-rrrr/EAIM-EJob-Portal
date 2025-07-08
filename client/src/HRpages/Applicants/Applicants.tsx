@@ -4,16 +4,16 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 const mockData = [
-  { name: "Aaron Tan", job: "Lecturer (Discrete Maths)", applied: "2025-06-01", interview: "2025-06-10", status: "Pending review" },
-  { name: "Lee Chong Wei", job: "Badminton Coach", applied: "2025-06-03", interview: "2025-06-12", status: "Shortlisted for Interview" },
-  { name: "JJ Lin", job: "Vocal coach", applied: "2025-06-02", interview: "2025-06-11", status: "Accepted" },
-  { name: "Daniel Ng", job: "Freelance Lecturer (Psychology)", applied: "2025-06-04", interview: "2025-06-13", status: "Rejected" },
-  { name: "Elaine Goh", job: "Full-Time Lecturer (Business & Management)", applied: "2025-06-05", interview: "2025-06-14", status: "Pending review" },
-  { name: "Frankie Tan", job: "Education Sales Manager", applied: "2025-06-06", interview: "2025-06-15", status: "Accepted" },
-  { name: "Gina Lim", job: "Program Executive", applied: "2025-06-07", interview: "2025-06-16", status: "Rejected" },
-  { name: "Henry Chia", job: "Head of School", applied: "2025-06-08", interview: "2025-06-17", status: "Pending review" },
-  { name: "Ivy Ho", job: "Country Manager (Vietnam)", applied: "2025-06-09", interview: "2025-06-18", status: "Shortlisted for Interview" },
-  { name: "Jake Wong", job: "Full-Time Lecturer (O Level)", applied: "2025-06-10", interview: "2025-06-19", status: "Accepted" },
+  { name: "Aaron Tan", job: "Lecturer (Discrete Maths)", applied: "01-06-2025", interview: "10-06-2025", status: "Pending review" },
+  { name: "Lee Chong Wei", job: "Badminton Coach", applied: "03-06-2025", interview: "12-06-2025", status: "Shortlisted for Interview" },
+  { name: "JJ Lin", job: "Vocal coach", applied: "02-06-2025", interview: "11-06-2025", status: "Accepted" },
+  { name: "Daniel Ng", job: "Freelance Lecturer (Psychology)", applied: "04-06-2025", interview: "13-06-2025", status: "Rejected" },
+  { name: "Elaine Goh", job: "Full-Time Lecturer (Business & Management)", applied: "05-06-2025", interview: "14-06-2025", status: "Pending review" },
+  { name: "Frankie Tan", job: "Education Sales Manager", applied: "06-06-2025", interview: "15-06-2025", status: "Accepted" },
+  { name: "Gina Lim", job: "Program Executive", applied: "07-06-2025", interview: "16-06-2025", status: "Rejected" },
+  { name: "Henry Chia", job: "Head of School", applied: "08-06-2025", interview: "17-06-2025", status: "Pending review" },
+  { name: "Ivy Ho", job: "Country Manager (Vietnam)", applied: "09-06-2025", interview: "18-06-2025", status: "Shortlisted for Interview" },
+  { name: "Jake Wong", job: "Full-Time Lecturer (O Level)", applied: "10-06-2025", interview: "19-06-2025", status: "Accepted" },
 ];
 
 const Applicants = () => {
@@ -36,6 +36,7 @@ const Applicants = () => {
   const toggleSelection = (item: string, list: string[], setList: (val: string[]) => void) => {
     setList(list.includes(item) ? list.filter(i => i !== item) : [...list, item]);
   };
+  
 
   // Function to analyze candidate with OpenAI
   const analyzeCandidateWithAI = async (candidateName: string, jobTitle: string) => {

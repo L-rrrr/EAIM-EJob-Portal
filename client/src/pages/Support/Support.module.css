@@ -29,6 +29,12 @@
   transform: translateY(-1px);
 }
 
+.fileHint {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  font-style: italic;
+}
 
 :global(.dark) .sectionTitle {
   color: #f8fafc;
@@ -39,4 +45,8 @@
 :global(.dark) .sectionTitle:hover {
   background: linear-gradient(135deg, rgba(244, 114, 182, 0.12), rgba(168, 85, 247, 0.12));
   color: #f472b6;
+}
+
+:global(.dark) .fileHint {
+  color: #9ca3af;
 }

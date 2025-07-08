@@ -236,10 +236,9 @@ const PostJob: React.FC = () => {
                     onChange={(e) => setJobCategory(e.target.value)} 
                     required
                   >
-                    <option value="">Select category</option>
-                    <option value="manager">Manager / Executive</option>
-                    <option value="lecturer">Lecturer</option>
-                    <option value="others">Others</option>
+                    <option value="" disabled>Select category</option>
+                    <option value="operative">Operative</option>
+                    <option value="academic">Academic</option>
                   </select>
                 </div>
 

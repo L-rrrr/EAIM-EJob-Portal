@@ -112,6 +112,9 @@ app.post("/api/submit-application", authenticateToken, accountApi.uploadMiddlewa
 // OpenAI endpoints
 app.post("/api/ai/candidate-analysis", authenticateToken, openaiApi.analyzeCandidateProfile);
 
+// Applied jobs endpoint
+app.get("/api/applied-jobs", authenticateToken, accountApi.getAppliedJobs);
+
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
 });

@@ -55,6 +55,7 @@ const PersonalParticulars: React.FC = () => {
 
         if (overseasAddressResponse.data && overseasAddressResponse.data.data) {
           setOverseasAddress(overseasAddressResponse.data.data);
+          
         }
 
 
@@ -105,6 +106,27 @@ const PersonalParticulars: React.FC = () => {
     if (!isValid) {
       return;
     }
+    
+    let overseasAddressToSave = { ...overseasAddress };
+    if (overseasAddress.has_overseas_address === "N") {
+      overseasAddressToSave = {
+        ...overseasAddress,
+        has_overseas_address: "N",
+        blk_or_house_no: "",
+        street_name: "",
+        building_name: "",
+        city: "",
+        state_or_province: "",
+        country: "",
+        postal_code: "",
+        mobile_country_code: "",
+        mobile_number: "",
+        home_country_code: "",
+        home_number: "",
+      };
+      // Update the local state after clearing
+      setOverseasAddress(overseasAddressToSave);
+    }
 
     try {
       const token = localStorage.getItem("token");
@@ -148,7 +170,7 @@ const PersonalParticulars: React.FC = () => {
         axios.post(
           `${import.meta.env.VITE_BACKEND_URL}/save-overseas-address`,
           {
-            ...overseasAddress,
+            ...overseasAddressToSave,
             is_draft: "N", // Set as final submission
           },
           {
@@ -201,12 +223,17 @@ const PersonalParticulars: React.FC = () => {
     });
 
     // Validate Overseas Address fields
+  if (!overseasAddress.has_overseas_address) {
+    errors.has_overseas_address = "Please specify if you have an overseas address";
+  }
+
+  if (overseasAddress.has_overseas_address === "Y") {
     overseasAddressFields.forEach(({ label, required, name }) => {
       if (required && !overseasAddress[name]?.trim()) {
         errors[name] = `${label} is required`;
       }
     });
-
+  }
     // Validate Personal Particulars fields (including date fields)
     personalParticularsFields.forEach(({ label, required, name, type }) => {
       const value = personalParticulars[name];
@@ -257,7 +284,26 @@ const PersonalParticulars: React.FC = () => {
   const handleSaveDraft = async () => {
     try {
       const token = localStorage.getItem("token"); // Retrieve JWT token
-
+        let overseasAddressToSave = { ...overseasAddress };
+        if (overseasAddress.has_overseas_address === "N") {
+          overseasAddressToSave = {
+            ...overseasAddress,
+            has_overseas_address: "N",
+            blk_or_house_no: "",
+            street_name: "",
+            building_name: "",
+            city: "",
+            state_or_province: "",
+            country: "",
+            postal_code: "",
+            mobile_country_code: "",
+            mobile_number: "",
+            home_country_code: "",
+            home_number: "",
+          };
+          // Update the local state after clearing
+          setOverseasAddress(overseasAddressToSave);
+        }
       
       // 1. Save Personal Particulars
       await axios.post(
@@ -288,11 +334,12 @@ const PersonalParticulars: React.FC = () => {
         }
       );
 
+
       // 3. Save Overseas Address
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/save-overseas-address`,
         {
-          ...overseasAddress,
+          ...overseasAddressToSave,
           is_draft: "Y",
         },
         {
@@ -368,33 +415,6 @@ type SelectField = {
   options?: string[];
 };
 
-const personalParticularsFieldA: SelectField[] = [
-  { label: "Salutation", required: true, name: "salutation", type: "select", options: ["Mr.", "Ms.", "Mrs.", "Miss", "Dr."] },
-  { label: "Full Name (as in NRIC/ Passport)", required: true, name: "full_name", type: "text" },
-  { label: "NRIC", required: true, name: "nric", type: "text" },
-  { label: "Alias", required: false, name: "alias", type: "text" },
-  { label: "Email Address", required: true, name: "email", type: "email" }
-]
-
- const personalParticularFieldB: SelectField[] = [
-  { label: "Marital Status", required: true, name: "marital_status", type: "select", options: ["Single", "Married", "Divorced", "Widowed", "Separated"] },
-  { label: "Gender", required: true, name: "gender", type: "select", options: ["Male", "Female"] },
-  { label: "Nationality", required: true, name: "nationality", type: "select", options: [
-    "Singapore", "Malaysia", "Indonesia", "China", "India", "United States", "United Kingdom", "Australia", "Canada",
-    // ... add all countries here or import separately
-  ]},
-  { label: "Status in Singapore", required: true, name: "status_in_sg", type: "select", options: ["Citizen", "PR", "Foreigner"] },
-  { label: "Race", required: true, name: "race", type: "select", options: ["Chinese", "Malay", "Indian", "Others"] },
-  { label: "Dialect", required: false, name: "dialect", type: "text" },
-  { label: "Religion", required: true, name: "religion", type: "select", options: ["Buddhism", "Christianity", "Hinduism", "Islam", "Others"] },
-  { label: "Country of Birth", required: true, name: "country_of_birth", type: "select", options: [
-    "Singapore", "Malaysia", "Indonesia", "China", "India", "United States", "United Kingdom", "Australia", "Canada",
-    // ... add all countries here or import separately
-  ]},
-  { label: "Passport No.", required: true, name: "passport_no", type: "text" },
-];
-
-// Replace the personalParticularsFieldA and personalParticularFieldB arrays with this combined array:
 
   const personalParticularsFields: SelectField[] = [
     { label: "Salutation", required: true, name: "salutation", type: "select", options: ["Mr.", "Ms.", "Mrs.", "Miss", "Dr."] },
@@ -443,6 +463,7 @@ const personalParticularsFieldA: SelectField[] = [
 
 
 type OverseasAddressKeys =
+  | "has_overseas_address"
   | "blk_or_house_no"
   | "street_name"
   | "building_name"
@@ -457,6 +478,7 @@ type OverseasAddressKeys =
 
 
 const [overseasAddress, setOverseasAddress] = useState<Record<OverseasAddressKeys, string>>({
+  has_overseas_address: "N", // Default to "N" if not set
   blk_or_house_no: "",
   street_name: "",
   building_name: "",
@@ -464,9 +486,9 @@ const [overseasAddress, setOverseasAddress] = useState<Record<OverseasAddressKey
   state_or_province: "",
   country: "",
   postal_code: "",
-  mobile_country_code: "+65",
+  mobile_country_code: "",
   mobile_number: "",
-  home_country_code: "+65",
+  home_country_code: "",
   home_number: "",
 });
 
@@ -1053,94 +1075,134 @@ type MilitaryServiceKeys =
           </h2>
           {showOverseasAddress && (
             <div className={styles.formSection}>
-              {overseasAddressFields.map(({ label, required, name, type }, i) => (
-                <div key={i} className={styles.inputGroup}>
+                <div className={styles.inputGroup}>
                   <span className={styles.labelText}>
-                    {label}
-                    {required && <span className={styles.requiredAsterisk}>*</span>}
+                    Do you have an address overseas?
+                    <span className={styles.requiredAsterisk}>*</span>
                   </span>
-
-                  {/* Phone fields with country code */}
-                  {(name === "mobile_number" || name === "home_number") ? (
-                    <div className={styles.phoneInputGroup}>
-                      <select
-                        className={styles.countryInput}
-                        value={overseasAddress[name === "mobile_number" ? "mobile_country_code" : "home_country_code"]}
-                        onChange={(e) => {
-                          const codeKey = name === "mobile_number" ? "mobile_country_code" : "home_country_code";
-                          setOverseasAddress((prev) => ({ ...prev, [codeKey]: e.target.value }));
-                          // Clear error for country code if needed
-                          if (validationErrors[codeKey]) {
-                            setValidationErrors((prev) => {
-                              const updated = { ...prev };
-                              delete updated[codeKey];
-                              return updated;
-                            });
-                          }
-                        }}
-                      >
-                        <option value="+65">+65 (SG)</option>
-                        <option value="+60">+60 (MY)</option>
-                        <option value="+91">+91 (IN)</option>
-                        <option value="+1">+1 (US)</option>
-                        <option value="+44">+44 (UK)</option>
-                        <option value="+61">+61 (AU)</option>
-                        <option value="+81">+81 (JP)</option>
-                        <option value="+86">+86 (CN)</option>
-                      </select>
-
-                      <input
-                        type={type}
-                        placeholder="Contact Number"
-                        className={styles.input}
-                        name={name}
-                        value={overseasAddress[name]}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setOverseasAddress((prev) => ({ ...prev, [name]: value }));
-                          if (validationErrors[name]) {
-                            setValidationErrors((prev) => {
-                              const updated = { ...prev };
-                              delete updated[name];
-                              return updated;
-                            });
-                          }
-                        }}
-                        style={{
-                          borderColor: validationErrors[name] ? "red" : undefined,
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <input
-                      type={type}
-                      className={styles.input}
-                      name={name}
-                      value={overseasAddress[name]}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setOverseasAddress((prev) => ({ ...prev, [name]: value }));
-                        if (validationErrors[name]) {
-                          setValidationErrors((prev) => {
-                            const updated = { ...prev };
-                            delete updated[name];
-                            return updated;
-                          });
-                        }
-                      }}
-                      style={{
-                        borderColor: validationErrors[name] ? "red" : undefined,
-                      }}
-                    />
-                  )}
-
-                  {validationErrors[name] && (
+                  <select
+                    className={styles.input}
+                    value={overseasAddress.has_overseas_address}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setOverseasAddress((prev) => ({ ...prev, has_overseas_address: value }));
+                      
+                      // Clear validation errors for overseas address
+                      if (validationErrors.has_overseas_address) {
+                        setValidationErrors((prev) => {
+                          const updated = { ...prev };
+                          delete updated.has_overseas_address;
+                          return updated;
+                        });
+                      }
+                    }}
+                    style={{
+                      borderColor: validationErrors.has_overseas_address ? "red" : undefined,
+                    }}
+                  >
+                    <option value="" disabled>-- Select --</option>
+                    <option value="Y">Yes</option>
+                    <option value="N">No</option>
+                  </select>
+                  {validationErrors.has_overseas_address && (
                     <div className={styles.errorMessage}>
-                      {validationErrors[name]}
+                      {validationErrors.has_overseas_address}
                     </div>
                   )}
                 </div>
-              ))}
+              
+              {overseasAddress.has_overseas_address === "Y" && (
+                <>
+                  {overseasAddressFields.map(({ label, required, name, type }, i) => (
+                    <div key={i} className={styles.inputGroup}>
+                      <span className={styles.labelText}>
+                        {label}
+                        {required && <span className={styles.requiredAsterisk}>*</span>}
+                      </span>
+
+                      {/* Phone fields with country code */}
+                      {(name === "mobile_number" || name === "home_number") ? (
+                        <div className={styles.phoneInputGroup}>
+                          <select
+                            className={styles.countryInput}
+                            value={overseasAddress[name === "mobile_number" ? "mobile_country_code" : "home_country_code"]}
+                            onChange={(e) => {
+                              const codeKey = name === "mobile_number" ? "mobile_country_code" : "home_country_code";
+                              setOverseasAddress((prev) => ({ ...prev, [codeKey]: e.target.value }));
+                              // Clear error for country code if needed
+                              if (validationErrors[codeKey]) {
+                                setValidationErrors((prev) => {
+                                  const updated = { ...prev };
+                                  delete updated[codeKey];
+                                  return updated;
+                                });
+                              }
+                            }}
+                          >
+                            <option value="+65">+65 (SG)</option>
+                            <option value="+60">+60 (MY)</option>
+                            <option value="+91">+91 (IN)</option>
+                            <option value="+1">+1 (US)</option>
+                            <option value="+44">+44 (UK)</option>
+                            <option value="+61">+61 (AU)</option>
+                            <option value="+81">+81 (JP)</option>
+                            <option value="+86">+86 (CN)</option>
+                          </select>
+
+                          <input
+                            type={type}
+                            placeholder="Contact Number"
+                            className={styles.input}
+                            name={name}
+                            value={overseasAddress[name]}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setOverseasAddress((prev) => ({ ...prev, [name]: value }));
+                              if (validationErrors[name]) {
+                                setValidationErrors((prev) => {
+                                  const updated = { ...prev };
+                                  delete updated[name];
+                                  return updated;
+                                });
+                              }
+                            }}
+                            style={{
+                              borderColor: validationErrors[name] ? "red" : undefined,
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <input
+                          type={type}
+                          className={styles.input}
+                          name={name}
+                          value={overseasAddress[name]}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setOverseasAddress((prev) => ({ ...prev, [name]: value }));
+                            if (validationErrors[name]) {
+                              setValidationErrors((prev) => {
+                                const updated = { ...prev };
+                                delete updated[name];
+                                return updated;
+                              });
+                            }
+                          }}
+                          style={{
+                            borderColor: validationErrors[name] ? "red" : undefined,
+                          }}
+                        />
+                      )}
+
+                      {validationErrors[name] && (
+                        <div className={styles.errorMessage}>
+                          {validationErrors[name]}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>
@@ -1201,7 +1263,7 @@ type MilitaryServiceKeys =
               
               {militaryService.ns_status === "Completed" && (
                 <>
-                  <div className={styles.militaryPeriodGroup}>
+                  <div className={styles.inputGroup}>
                     <span className={styles.labelText}>
                       Service Period From<span className={styles.requiredAsterisk}>*</span>
                     </span>
@@ -1269,7 +1331,7 @@ type MilitaryServiceKeys =
                     )}
                   </div>
 
-                  <div className={styles.militaryPeriodGroup}>
+                  <div className={styles.inputGroup}>
                     <span className={styles.labelText}>
                       To<span className={styles.requiredAsterisk}>*</span>
                     </span>

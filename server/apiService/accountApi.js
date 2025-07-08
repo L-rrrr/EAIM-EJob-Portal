@@ -323,9 +323,10 @@ const getPersonalParticulars = async (req, res) => {
 
 const saveOverseasAddress = async (req, res) => {
   try {
-    const user_id = req.user.user_id; // assuming user is authenticated
+    const user_id = req.user.user_id;
 
     const {
+      has_overseas_address,
       blk_or_house_no,
       street_name,
       building_name,
@@ -346,6 +347,7 @@ const saveOverseasAddress = async (req, res) => {
     const sql = `
       INSERT INTO tbl_overseas_address (
         user_id,
+        has_overseas_address,
         blk_or_house_no,
         street_name,
         building_name,
@@ -358,9 +360,10 @@ const saveOverseasAddress = async (req, res) => {
         home_country_code,
         home_number,
         is_draft
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
       ON DUPLICATE KEY UPDATE
+        has_overseas_address = VALUES(has_overseas_address),
         blk_or_house_no = VALUES(blk_or_house_no),
         street_name = VALUES(street_name),
         building_name = VALUES(building_name),
@@ -377,6 +380,7 @@ const saveOverseasAddress = async (req, res) => {
 
     const params = [
       user_id,
+      has_overseas_address || null,
       blk_or_house_no || null,
       street_name || null,
       building_name || null,
@@ -390,6 +394,10 @@ const saveOverseasAddress = async (req, res) => {
       home_number || null,
       isDraft
     ];
+
+    console.log("SQL placeholders count:", (sql.match(/\?/g) || []).length);
+    console.log("Params count:", params.length);
+    console.log("Params:", params);
 
     await db.executeQuery(sql, params);
 
@@ -2573,6 +2581,60 @@ const submitApplication = async (req, res) => {
   }
 };
 
+// Get Application information
+const getAppliedJobs = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+
+    const sql = `
+      SELECT 
+        a.application_id,
+        a.user_id,
+        a.job_id,
+        a.applied_date,
+        a.application_status,
+        a.interview_date,
+        a.document_type,
+        a.document_name,
+        a.file_name,
+        a.file_path,
+        a.file_size,
+        a.current_salary,
+        a.expected_salary,
+        a.earliest_start_date,
+        a.source_obtained_from,
+        a.total_work_experience,
+        a.relevant_work_experience,
+        j.title,
+        j.job_category,
+        j.job_type,
+        j.hiring_status,
+        j.job_requirements,
+        j.job_responsibilities,
+        j.seekers_required,
+        j.posting_date
+      FROM tbl_application a
+      LEFT JOIN tbl_jobs j ON a.job_id = j.job_id
+      WHERE a.user_id = ?
+      ORDER BY a.applied_date DESC
+    `;
+
+    const applications = await db.executeQuery(sql, [user_id]);
+
+    return res.status(200).json({
+      success: true,
+      data: applications,
+    });
+  } catch (e) {
+    console.error("Failed to fetch applied jobs:", e);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: e.message,
+    });
+  }
+};
+
 
 module.exports = {
   postJobs,
@@ -2624,7 +2686,8 @@ module.exports = {
   uploadFile,
   uploadMiddleware: upload.single('file'),
   replaceAttachmentFile,
-  submitApplication
+  submitApplication,
+  getAppliedJobs
 };
 
 

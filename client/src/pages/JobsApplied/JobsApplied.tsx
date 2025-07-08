@@ -1,94 +1,61 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, Calendar, Clock, MapPin, Briefcase, Users, CheckCircle, AlertCircle } from "lucide-react";
 import styles from "./JobsApplied.module.css";
+import axios from "axios";
 
 type Job = {
-  id: number;
+  application_id: number;
+  job_id: number;
   title: string;
-  dateApplied: string;
-  interviewDate?: string;
-  jobType: "Full Time" | "Part Time" | "Freelance";
-  applicationStatus: string;
-  jobCategory: string;
-  jobResponsibilities: string;
-  jobRequirements: string;
+  applied_date: string;
+  interview_date?: string;
+  job_type: "Full Time" | "Part Time" | "Freelance";
+  application_status: string;
+  job_category: string;
+  job_responsibilities: string;
+  job_requirements: string;
 };
 
-const initialJobs: Job[] = [
-  {
-    id: 1,
-    title: "Freelance Lecturer (Business & Management)",
-    dateApplied: "2025-06-01",
-    interviewDate: "2025-06-05",
-    jobType: "Freelance",
-    applicationStatus: "Interview Scheduled",
-    jobCategory: "lecturer",
-    jobResponsibilities: `
-      <ul>
-        <li>Deliver high-quality lectures and seminars in Business and Management subjects</li>
-        <li>Develop and update course materials, including presentations, assignments, and assessments</li>
-        <li>Provide academic guidance and mentorship to students</li>
-        <li>Assess student performance through examinations, assignments, and continuous evaluation</li>
-        <li>Participate in departmental meetings and academic committees</li>
-        <li>Conduct research in relevant areas and publish findings in academic journals</li>
-        <li>Collaborate with other faculty members on curriculum development</li>
-        <li>Maintain accurate records of student attendance and academic progress</li>
-      </ul>
-    `,
-    jobRequirements: `
-      <ul>
-        <li>Master's degree in Business Administration, Management, or related field</li>
-        <li>Minimum 3 years of teaching experience in higher education</li>
-        <li>Strong knowledge of business principles, management theories, and current industry trends</li>
-        <li>Excellent verbal and written communication skills</li>
-        <li>Proficiency in educational technology and online learning platforms</li>
-        <li>Ability to engage and motivate students from diverse backgrounds</li>
-        <li>Research experience and published work in business/management field preferred</li>
-        <li>Professional certification in relevant business areas (CPA, MBA, etc.) is an advantage</li>
-      </ul>
-    `
-  },
-  {
-    id: 2,
-    title: "Operations Manager",
-    dateApplied: "2025-05-28",
-    jobType: "Full Time",
-    applicationStatus: "Application Under Review",
-    jobCategory: "manager",
-    jobResponsibilities: `
-      <ul>
-        <li>Oversee daily operations and ensure smooth functioning of all departments</li>
-        <li>Develop and implement operational policies and procedures</li>
-        <li>Monitor performance metrics and KPIs to optimize efficiency</li>
-        <li>Manage budgets and resource allocation for operational activities</li>
-        <li>Lead and coordinate cross-functional teams to achieve organizational goals</li>
-        <li>Identify process improvements and implement best practices</li>
-        <li>Ensure compliance with regulatory requirements and company policies</li>
-        <li>Prepare regular reports on operational performance for senior management</li>
-        <li>Handle vendor relationships and negotiate contracts</li>
-        <li>Manage risk assessment and mitigation strategies</li>
-      </ul>
-    `,
-    jobRequirements: `
-      <ul>
-        <li>Bachelor's degree in Business Administration, Operations Management, or related field</li>
-        <li>Minimum 5 years of experience in operations management or similar role</li>
-        <li>Strong analytical and problem-solving skills</li>
-        <li>Proven leadership experience with ability to manage diverse teams</li>
-        <li>Excellent project management and organizational skills</li>
-        <li>Proficiency in data analysis tools and business intelligence software</li>
-        <li>Knowledge of lean manufacturing principles and process optimization</li>
-        <li>Strong financial acumen and budget management experience</li>
-        <li>Excellent communication and interpersonal skills</li>
-        <li>PMP certification or similar project management qualification preferred</li>
-      </ul>
-    `
-  }
-];
-
 const JobsApplied: React.FC = () => {
-  const [savedJobs] = useState<Job[]>(initialJobs);
+  const [appliedJobs, setAppliedJobs] = useState<Job[]>([]);
   const [expandedJobIds, setExpandedJobIds] = useState<Set<number>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchAppliedJobs();
+  }, []);
+
+  const fetchAppliedJobs = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Authentication token not found");
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/applied-jobs`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setAppliedJobs(response.data.data);
+      } else {
+        setError("Failed to fetch applied jobs");
+      }
+    } catch (err: any) {
+      console.error("Error fetching applied jobs:", err);
+      setError("Failed to load applied jobs");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleJobDetails = (id: number) => {
     setExpandedJobIds((prev) => {
@@ -104,9 +71,13 @@ const JobsApplied: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "Interview Scheduled":
+      case "Shortlisted":
         return <CheckCircle size={14} />;
-      case "Application Under Review":
+      case "Reviewed":
+        return <AlertCircle size={14} />;
+      case "Accepted":
+        return <CheckCircle size={14} />;
+      case "Rejected":
         return <AlertCircle size={14} />;
       default:
         return <Clock size={14} />;
@@ -115,14 +86,53 @@ const JobsApplied: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Interview Scheduled":
+      case "Shortlisted":
         return styles.statusScheduled;
-      case "Application Under Review":
+      case "Reviewed":
         return styles.statusReview;
+      case "Accepted":
+        return styles.statusAccepted;
+      case "Rejected":
+        return styles.statusRejected;
       default:
         return styles.statusDefault;
     }
   };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const formatInterviewDate = (dateString?: string) => {
+    if (!dateString) return "Not scheduled";
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.jobsAppliedPage}>
+        <div className={styles.jobsAppliedContainer}>
+          <div className={styles.pageHeader}>
+            <h2>Your Job Applications</h2>
+            <p className={styles.pageSubtitle}>Loading your applications...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.jobsAppliedPage}>
+        <div className={styles.jobsAppliedContainer}>
+          <div className={styles.pageHeader}>
+            <h2>Your Job Applications</h2>
+            <p className={styles.pageSubtitle} style={{ color: "red" }}>{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.jobsAppliedPage}>
@@ -132,7 +142,7 @@ const JobsApplied: React.FC = () => {
           <p className={styles.pageSubtitle}>Track your application progress and interview schedules</p>
         </div>
 
-        {savedJobs.length === 0 ? (
+        {appliedJobs.length === 0 ? (
           <div className={styles.noJobsCard}>
             <div className={styles.noJobsIcon}>
               <Briefcase size={48} />
@@ -142,17 +152,17 @@ const JobsApplied: React.FC = () => {
           </div>
         ) : (
           <div className={styles.jobsGrid}>
-            {savedJobs.map((job) => (
-              <div key={job.id} className={styles.jobCard}>
+            {appliedJobs.map((job) => (
+              <div key={job.application_id} className={styles.jobCard}>
                 <div
                   className={styles.jobHeader}
-                  onClick={() => toggleJobDetails(job.id)}
+                  onClick={() => toggleJobDetails(job.application_id)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") toggleJobDetails(job.id);
+                    if (e.key === "Enter" || e.key === " ") toggleJobDetails(job.application_id);
                   }}
-                  aria-expanded={expandedJobIds.has(job.id)}
+                  aria-expanded={expandedJobIds.has(job.application_id)}
                 >
                   <div className={styles.jobMainInfo}>
                     <div className={styles.jobTitleSection}>
@@ -160,15 +170,15 @@ const JobsApplied: React.FC = () => {
                       <div className={styles.jobMeta}>
                         <span className={styles.jobTypeBadge}>
                           <Clock size={12} />
-                          {job.jobType}
+                          {job.job_type}
                         </span>
                         <span className={styles.jobCategoryBadge}>
                           <MapPin size={12} />
-                          {job.jobCategory === "lecturer" ? "Academic" : "Operations"}
+                          {job.job_category}
                         </span>
-                        <span className={`${styles.jobStatusBadge} ${getStatusColor(job.applicationStatus)}`}>
-                          {getStatusIcon(job.applicationStatus)}
-                          {job.applicationStatus}
+                        <span className={`${styles.jobStatusBadge} ${getStatusColor(job.application_status)}`}>
+                          {getStatusIcon(job.application_status)}
+                          {job.application_status}
                         </span>
                       </div>
                     </div>
@@ -176,26 +186,24 @@ const JobsApplied: React.FC = () => {
                     <div className={styles.jobDates}>
                       <div className={styles.dateInfo}>
                         <Calendar size={14} />
-                        <span>Applied: {new Date(job.dateApplied).toLocaleDateString()}</span>
+                        <span>Applied: {formatDate(job.applied_date)}</span>
                       </div>
-                      {job.interviewDate && (
-                        <div className={`${styles.dateInfo} ${styles.interviewDate}`}>
-                          <Users size={14} />
-                          <span>Interview: {new Date(job.interviewDate).toLocaleDateString()}</span>
-                        </div>
-                      )}
+                      <div className={`${styles.dateInfo} ${styles.interviewDate}`}>
+                        <Users size={14} />
+                        <span>Interview: {formatInterviewDate(job.interview_date)}</span>
+                      </div>
                     </div>
                   </div>
                   
                   <div className={styles.expandIndicator}>
-                    {expandedJobIds.has(job.id) ? 
+                    {expandedJobIds.has(job.application_id) ? 
                       <ChevronUp size={20} /> : 
                       <ChevronDown size={20} />
                     }
                   </div>
                 </div>
 
-                {expandedJobIds.has(job.id) && (
+                {expandedJobIds.has(job.application_id) && (
                   <div className={styles.jobDetails}>
                     <div className={styles.detailsSection}>
                       <h4 className={styles.sectionTitle}>
@@ -204,7 +212,7 @@ const JobsApplied: React.FC = () => {
                       </h4>
                       <div 
                         className={styles.sectionContent}
-                        dangerouslySetInnerHTML={{ __html: job.jobResponsibilities }} 
+                        dangerouslySetInnerHTML={{ __html: job.job_responsibilities || "No responsibilities listed" }} 
                       />
                     </div>
 
@@ -215,7 +223,7 @@ const JobsApplied: React.FC = () => {
                       </h4>
                       <div 
                         className={styles.sectionContent}
-                        dangerouslySetInnerHTML={{ __html: job.jobRequirements }} 
+                        dangerouslySetInnerHTML={{ __html: job.job_requirements || "No requirements listed" }} 
                       />
                     </div>
                   </div>

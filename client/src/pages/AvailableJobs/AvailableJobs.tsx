@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "./AvailableJobs.module.css";
 
 type Job = {
-  id: number;
+  job_id: number;
   title: string;
   job_category: string;
   job_type: string;
@@ -32,7 +32,7 @@ const JobSection: React.FC<{
     <div className={styles.jobColumn}>
       <h2>{title}</h2>
       {filteredJobs.map(job => (
-        <div key={job.title} className={styles.jobItem}>
+        <div key={job.job_id} className={styles.jobItem}>
           <div
             className={styles.jobHeader}
             onClick={() => onToggleJob(job.title)}
@@ -57,7 +57,7 @@ const JobSection: React.FC<{
                   navigate("/apply", { 
                     state: { 
                       jobData: {
-                        job_id: job.id,
+                        job_id: job.job_id,
                         title: job.title,
                         job_type: job.job_type,
                         job_category: job.job_category
@@ -145,8 +145,8 @@ const AvailableJobs: React.FC = () => {
     }
   };
 
-  const academicJobs = jobs.filter(job => job.job_category === "lecturer");
-  const operationJobs = jobs.filter(job => job.job_category === "manager");
+  const academicJobs = jobs.filter(job => job.job_category === "academic");
+  const operationJobs = jobs.filter(job => job.job_category === "operative");
 
   return (
     <div className={styles.availableJobsPage}>

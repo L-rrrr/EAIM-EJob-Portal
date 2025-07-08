@@ -1012,7 +1012,7 @@ const handleUpdate = async (e?: React.MouseEvent) => {
           {showWork && (
             <div>
               <div className={styles.labelHint}>
-                Please provide your most recent work experience for the first record if applicable.
+                Please provide all relevant work experience and provide your most recent work experience for the first record if applicable. 
               </div>
               
               {workExperiences.length === 0 && (
@@ -1215,7 +1215,7 @@ const handleUpdate = async (e?: React.MouseEvent) => {
           {showTeaching && (
             <div>
               <div className={styles.labelHint}>
-                Please provide your most recent teaching experience for the first record if applicable.
+                Please provide all relevant teaching experience if you are applying for any teaching roles and provide your most recent teaching experience for the first record if applicable.
               </div>
               
               {teachingExperiences.length === 0 && (

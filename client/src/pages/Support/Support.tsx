@@ -142,7 +142,7 @@ const Support: React.FC = () => {
 
   // Add file size validation function
   const validateFileSize = (file: File): boolean => {
-    const maxSize = 0.1 * 1024 * 1024; // 10MB in bytes
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
     return file.size <= maxSize;
   };
 
@@ -883,6 +883,10 @@ const Support: React.FC = () => {
           </h2>
           {showAttachments && (
             <div>
+              <div className={styles.labelHint}>
+                Resume is compulsory. You can add more attachments if needed.
+              </div>
+
               {attachments.map((att, index) => (
                 <div key={att.id} className={`${styles.formSection} ${index > 0 ? styles.record : ""}`}>
                   {index > 0 && (
@@ -912,6 +916,7 @@ const Support: React.FC = () => {
                         }}
                       >
                         <option value="">-- Select Document Type --</option>
+                        <option value="Resume">Resume</option>
                         <option value="Cover Letter">Cover Letter</option>
                         <option value="Certificate">Certificate</option>
                         <option value="Photo">Photo</option>
@@ -958,6 +963,11 @@ const Support: React.FC = () => {
                         borderColor: attachmentValidationErrors[att.id]?.file ? "red" : undefined,
                       }}
                     />
+
+                    <div className={supportStyles.fileHint}>
+                      Accepted formats: JPEG, JPG, PNG, GIF, PDF, DOC, DOCX, TXT, XLS, XLSX (Max: 10MB)
+                    </div>
+
                     {attachmentValidationErrors[att.id]?.file && (
                       <div className={styles.errorMessage}>
                         {attachmentValidationErrors[att.id].file}
@@ -984,7 +994,6 @@ const Support: React.FC = () => {
         <div className={styles.formButtons}>
           <button className={`${styles.btn} ${styles.save}`} onClick={handleSaveDraft}>Save as draft</button>
           <button className={`${styles.btn} ${styles.save}`} onClick={handleUpdate}>Update</button>
-          <button className={`${styles.btn} ${styles.submit}`} onClick={() => navigate("/")}>Submit</button>
         </div>
       </div>
     </div>
