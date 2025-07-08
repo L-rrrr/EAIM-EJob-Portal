@@ -54,7 +54,16 @@ const JobSection: React.FC<{
                 className={styles.applyButton}
                 onClick={e => {
                   e.stopPropagation();
-                  navigate("/apply");
+                  navigate("/apply", { 
+                    state: { 
+                      jobData: {
+                        job_id: job.id,
+                        title: job.title,
+                        job_type: job.job_type,
+                        job_category: job.job_category
+                      }
+                    }
+                  });
                 }}
               >
                 Apply

@@ -2465,6 +2465,115 @@ const replaceAttachmentFile = async (req, res) => {
   }
 };
 
+
+// Application functions
+// Add this function to accountApi.js
+const submitApplication = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    
+    const {
+      job_id,
+      documentType,
+      documentName,
+      currentSalary,
+      expectedSalary,
+      earliestStartingDate,
+      sourceObtainedFrom,
+      totalWorkExperience,
+      relevantWorkExperience
+    } = req.body;
+
+    // Get current date for applied_date
+    const appliedDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+    // Handle file upload data
+    let fileData = {
+      file_name: null,
+      file_path: null,
+      file_size: null
+    };
+
+    if (req.file) {
+      fileData = {
+        file_name: req.file.originalname,
+        file_path: req.file.path,
+        file_size: req.file.size
+      };
+    }
+
+    // Insert application into database
+    const insertSql = `
+      INSERT INTO tbl_application (
+        user_id,
+        job_id,
+        applied_date,
+        application_status,
+        document_type,
+        document_name,
+        file_name,
+        file_path,
+        file_size,
+        current_salary,
+        expected_salary,
+        earliest_start_date,
+        source_obtained_from,
+        total_work_experience,
+        relevant_work_experience
+      ) VALUES (?, ?, ?, 'Pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const params = [
+      user_id,
+      job_id || null,
+      appliedDate,
+      documentType || null,
+      documentName || null,
+      fileData.file_name,
+      fileData.file_path,
+      fileData.file_size,
+      parseFloat(currentSalary) || null,
+      parseFloat(expectedSalary) || null,
+      earliestStartingDate || null,
+      sourceObtainedFrom || null,
+      parseFloat(totalWorkExperience) || null,
+      parseFloat(relevantWorkExperience) || null
+    ];
+
+    const result = await db.executeQuery(insertSql, params);
+
+    return res.status(200).json({
+      success: true,
+      message: "Application submitted successfully",
+      data: {
+        application_id: result.insertId
+      }
+    });
+
+  } catch (e) {
+    console.error("Failed to submit application:", e);
+    
+    // Clean up uploaded file if database insertion fails
+    if (req.file && req.file.path) {
+      try {
+        const fs = require('fs');
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+      } catch (fileErr) {
+        console.error("Failed to clean up file after error:", fileErr);
+      }
+    }
+    
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: e.message
+    });
+  }
+};
+
+
 module.exports = {
   postJobs,
   getJobs,
@@ -2514,7 +2623,8 @@ module.exports = {
   deleteAttachments,
   uploadFile,
   uploadMiddleware: upload.single('file'),
-  replaceAttachmentFile
+  replaceAttachmentFile,
+  submitApplication
 };
 
 

@@ -79,6 +79,13 @@ const Applicants = () => {
     }
   };
 
+  const formatAiResponse = (text: string) => {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Convert **text** to <strong>text</strong>
+    .replace(/\*(.*?)\*/g, '<em>$1</em>') // Convert *text* to <em>text</em>
+    .replace(/\n/g, '<br>'); // Convert line breaks
+};
+
   return (
     <div className={styles.applicantsContainer}>
       {/* TOP SECTION: TABLE AND FILTER SIDE BY SIDE */}
@@ -300,7 +307,12 @@ const Applicants = () => {
             ) : (
               <div className={styles.aiAnalysisText}>
                 {aiAnalysis ? (
-                  <div className={styles.aiResponse}>{aiAnalysis}</div>
+                  <div 
+                    className={styles.aiResponse}
+                    dangerouslySetInnerHTML={{ __html: formatAiResponse(aiAnalysis) }}
+                  />
+                  
+                  
                 ) : (
                   <div className={styles.aiPlaceholder}>
                     <p>💡 Click "🤖 Analyze" button next to any candidate to get their background analysis</p>

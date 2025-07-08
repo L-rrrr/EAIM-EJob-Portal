@@ -106,6 +106,8 @@ app.get("/api/get-attachments", authenticateToken, accountApi.getAttachments);
 app.delete("/api/delete-attachments", authenticateToken, accountApi.deleteAttachments);
 app.delete("/api/replace-attachment-file", authenticateToken, accountApi.replaceAttachmentFile);
 
+//Application submission endpoint
+app.post("/api/submit-application", authenticateToken, accountApi.uploadMiddleware, accountApi.submitApplication);
 
 // OpenAI endpoints
 app.post("/api/ai/candidate-analysis", authenticateToken, openaiApi.analyzeCandidateProfile);
