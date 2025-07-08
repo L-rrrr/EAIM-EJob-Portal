@@ -1,3 +1,13 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:7b9e35e22aec175d4a4684ae736114d3eb0b2ef5ea80958772f0f88d760bd96e
-size 365
+import { Outlet } from "react-router-dom";
+import Navbar from "../components/ManagerNavbar/ManagerNavbar";
+
+const ManagerLayout = () => (
+  <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflowY: "auto" }}>
+    <Navbar />
+    <div style={{ flex: 1, }}>
+      <Outlet />
+    </div>
+  </div>
+);
+
+export default ManagerLayout;
