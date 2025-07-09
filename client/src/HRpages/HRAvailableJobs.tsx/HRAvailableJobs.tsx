@@ -4,6 +4,17 @@ import { Search, Plus, Edit, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const formatDate = (dateString: string) => {
+  if (!dateString) return "";
+  
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  
+  return `${day}-${month}-${year}`;
+};
+
 const HRAvailableJobs: React.FC = () => {
   const navigate = useNavigate();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -122,6 +133,7 @@ You can view their full profiles in the Applicants section for detailed evaluati
                   <th>Actions</th>
                 </tr>
               </thead>
+
               <tbody>
                 {jobs.map((job, index) => (
                   <tr key={index}>
@@ -132,7 +144,7 @@ You can view their full profiles in the Applicants section for detailed evaluati
                       </span>
                     </td>
                     <td>{job.job_type}</td>
-                    <td>{job.posting_date?.split(" ")[0]}</td>
+                    <td>{formatDate(job.posting_date)}</td>
                     <td>{job.seekers_required}</td>
                     <td>{job.applicants_now || 0}</td>
                     <td>
