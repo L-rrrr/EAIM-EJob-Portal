@@ -144,17 +144,17 @@ const deleteJob = async (req, res) => {
 
 const bookmarkJob = async (req, res) => {
   try {
-    const { title, jobCategory, jobType, hiringStatus, jobRequirements, jobResponsibilities } = req.body;
-    const username = req.user.username; // From JWT middleware
+    const { job_id, title, jobCategory, jobType, hiringStatus, jobRequirements, jobResponsibilities } = req.body;
     const user_id = req.user.user_id;
+    const email = req.user.email;
 
 
     // Check if this job is already bookmarked by the user
     const checkSql = `
       SELECT * FROM tbl_bookmark
-      WHERE title = ? AND username = ?
+      WHERE user_id = ? AND job_id = ?
     `;
-    const existing = await db.executeQuery(checkSql, [title, username]);
+    const existing = await db.executeQuery(checkSql, [user_id, job_id]);
 
     if (existing.length > 0) {
       return res.status(400).json({ success: false, message: "This job is already bookmarked." });
@@ -163,19 +163,20 @@ const bookmarkJob = async (req, res) => {
     // If not bookmarked yet, insert it
     const insertSql = `
       INSERT INTO tbl_bookmark
-      (title, job_category, job_type, hiring_status, job_requirements, job_responsibilities, username, user_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (user_id, email, job_id, title, job_category, job_type, hiring_status, job_requirements, job_responsibilities)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     await db.executeQuery(insertSql, [
+      user_id,
+      email,
+      job_id,
       title,
       jobCategory,
       jobType,
       hiringStatus,
       jobRequirements,
-      jobResponsibilities,
-      username,
-      user_id,
+      jobResponsibilities
     ]);
 
     return res.status(200).json({ success: true, message: "Job bookmarked successfully." });
@@ -188,9 +189,9 @@ const bookmarkJob = async (req, res) => {
 
 const getBookmarks = async (req, res) => {
   try {
-    const username = req.user.username;
-    const sql = `SELECT * FROM tbl_bookmark WHERE username = ?`;
-    const bookmarks = await db.executeQuery(sql, [username]);
+    const user_id = req.user.user_id;
+    const sql = `SELECT * FROM tbl_bookmark WHERE user_id = ?`;
+    const bookmarks = await db.executeQuery(sql, [user_id]);
     return res.status(200).json({ success: true, data: bookmarks });
   } catch (e) {
     console.error("Failed to fetch bookmarks:", e);
@@ -200,11 +201,11 @@ const getBookmarks = async (req, res) => {
 
 const deleteBookmark = async (req, res) => {
   try {
-    const username = req.user.username;
-    const { title } = req.body;
+    const user_id = req.user.user_id;
+    const { job_id } = req.body;
 
-    const sql = `DELETE FROM tbl_bookmark WHERE username = ? AND title = ?`;
-    await db.executeQuery(sql, [username, title]);
+    const sql = `DELETE FROM tbl_bookmark WHERE user_id = ? AND job_id = ?`;
+    await db.executeQuery(sql, [user_id, job_id]);
 
     return res.status(200).json({ success: true, message: "Bookmark deleted" });
   } catch (e) {

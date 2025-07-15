@@ -13,6 +13,7 @@ import {
   Globe
 } from 'lucide-react';
 import styles from './Settings.module.css';
+import Countries from '../../utils/Countries';
 
 type PasswordChangeInputs = {
   currentPassword: string;
@@ -253,12 +254,20 @@ const Settings: React.FC = () => {
                     <Globe size={18} />
                     Nationality
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Enter your nationality"
+                  <select
                     {...registerProfile("nationality", { required: "Nationality is required" })}
                     className={`${styles.input} ${profileErrors.nationality ? styles.inputError : ''}`}
-                  />
+                    defaultValue=""
+                  >
+                    <option value="" disabled>
+                      Select your nationality
+                    </option>
+                    {Countries.map((country) => (
+                      <option key={country} value={country}>
+                        {country}
+                      </option>
+                    ))}
+                  </select>
                   {profileErrors.nationality && <p className={styles.errorMessage}>{profileErrors.nationality.message}</p>}
                 </div>
 

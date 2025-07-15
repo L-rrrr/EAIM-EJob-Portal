@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { ChevronDown, ChevronUp, Clock, MapPin, Briefcase, Users, BookmarkMinus, Bookmark as BookmarkIcon, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Clock, MapPin, Briefcase, Users, BookmarkMinus, Bookmark as BookmarkIcon } from "lucide-react";
 import styles from "./Bookmark.module.css";
 
 type Job = {
-  id: number;
+  job_id: number;
   title: string;
   job_category: string;
   job_type: string;
@@ -50,19 +50,19 @@ const Bookmark: React.FC = () => {
     });
   };
 
-  const removeBookmark = async (title: string) => {
+  const removeBookmark = async (job_id: number) => {
     try {
       await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/bookmarks`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        data: { title },
+        data: { job_id },
       });
 
-      setBookmarkedJobs(prev => prev.filter(job => job.title !== title));
+      setBookmarkedJobs(prev => prev.filter(job => job.job_id !== job_id));
       setExpandedJobIds(prev => {
         const newSet = new Set(prev);
-        newSet.delete(title);
+        newSet.delete(job_id.toString());
         return newSet;
       });
     } catch (error) {
@@ -97,16 +97,16 @@ const Bookmark: React.FC = () => {
           ) : (
             <div className={styles.jobsGrid}>
               {bookmarkedJobs.map((job) => (
-                <div key={job.id} className={styles.jobCard}>
+                <div key={job.job_id} className={styles.jobCard}>
                   <div
                     className={styles.jobHeader}
-                    onClick={() => toggleJobDetails(job.title)}
+                    onClick={() => toggleJobDetails(job.job_id.toString())}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") toggleJobDetails(job.title);
+                      if (e.key === "Enter" || e.key === " ") toggleJobDetails(job.job_id.toString());
                     }}
-                    aria-expanded={expandedJobIds.has(job.title)}
+                    aria-expanded={expandedJobIds.has(job.job_id.toString())}
                   >
                     <div className={styles.jobMainInfo}>
                       <div className={styles.jobTitleSection}>
@@ -130,7 +130,7 @@ const Bookmark: React.FC = () => {
                       <div className={styles.jobActions} onClick={(e) => e.stopPropagation()}>
                         <button
                           className={styles.removeBookmarkBtn}
-                          onClick={() => removeBookmark(job.title)}
+                          onClick={() => removeBookmark(job.job_id)}
                           aria-label="Remove bookmark"
                         >
                           <BookmarkMinus size={16} />
@@ -146,14 +146,14 @@ const Bookmark: React.FC = () => {
                     </div>
                     
                     <div className={styles.expandIndicator}>
-                      {expandedJobIds.has(job.title) ? 
+                      {expandedJobIds.has(job.job_id.toString()) ? 
                         <ChevronUp size={20} /> : 
                         <ChevronDown size={20} />
                       }
                     </div>
                   </div>
 
-                  {expandedJobIds.has(job.title) && (
+                  {expandedJobIds.has(job.job_id.toString()) && (
                     <div className={styles.jobDetails}>
                       <div className={styles.detailsSection}>
                         <h4 className={styles.sectionTitle}>

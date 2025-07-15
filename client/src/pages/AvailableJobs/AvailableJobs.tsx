@@ -120,6 +120,7 @@ const AvailableJobs: React.FC = () => {
     const res = await axios.post(
       `${import.meta.env.VITE_BACKEND_URL}/post-bookmarks`,
       {
+        job_id: job.job_id,
         title: job.title,
         jobCategory: job.job_category,
         jobType: job.job_type,

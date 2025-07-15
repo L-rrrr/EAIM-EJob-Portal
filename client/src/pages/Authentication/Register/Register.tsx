@@ -8,6 +8,7 @@ import axios from "axios";
 import { User, Mail, Lock, Globe, Eye, EyeOff, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "../../../hooks/useTheme";
+import countries from "../../../utils/Countries"; 
 
 type RegisterFormInputs = {
   username: string;
@@ -204,19 +205,23 @@ const Register: React.FC = () => {
               Nationality
             </label>
             <div className={authStyles.inputWrapper}>
-              <input
+              <select
                 id="nationality"
-                type="text"
-                placeholder="Enter your nationality"
                 {...register("nationality", { 
-                  required: "Nationality is required",
-                  minLength: {
-                    value: 2,
-                    message: "Please enter a valid nationality"
-                  }
+                  required: "Nationality is required"
                 })}
                 className={`${authStyles.input} ${errors.nationality ? authStyles.inputError : ''}`}
-              />
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Select your nationality
+                </option>
+                {countries.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
             </div>
             {errors.nationality && <p className={authStyles.errorMessage}>{errors.nationality.message}</p>}
           </div>
