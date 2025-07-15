@@ -6,7 +6,6 @@ import background from "../../../assets/background4.jpg";
 import axios from "axios";
 import { Mail, Sun, Moon} from "lucide-react";
 import { useState } from "react";
-import { useTheme } from "../../../hooks/useTheme";
 
 type ForgotPasswordInputs = {
   email: string;
@@ -18,7 +17,16 @@ const ForgotPassword: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverMessage, setServerMessage] = useState("");
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
-  const { isDark, toggleTheme } = useTheme();
+  const [darkMode, setDarkMode] = useState(() => {
+    return document.documentElement.classList.contains('dark');
+  });
+
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
+    document.documentElement.classList.toggle('dark', newDarkMode);
+  };
 
   const onSubmit = async (data: ForgotPasswordInputs) => {
     setIsLoading(true);
@@ -55,10 +63,10 @@ const ForgotPassword: React.FC = () => {
         {/* Theme Toggle Button */}
         <button 
           className={authStyles.themeToggle}
-          onClick={toggleTheme}
-          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          onClick={toggleDarkMode}
+          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
-          {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          {darkMode ? <Sun size={18} /> : <Moon size={18} />}
         </button>
 
 

@@ -6,8 +6,7 @@ import EAIM from "../../../assets/EAIM.png";
 import background from "../../../assets/background4.jpg";
 import axios from "axios";
 import { Eye, EyeOff, Mail, Lock, User, Sun, Moon } from "lucide-react";
-import { useState } from "react";
-import { useTheme } from "../../../hooks/useTheme";
+import { useState, useEffect } from "react";
 
 type LoginFormInputs = {
   role: string;
@@ -22,7 +21,21 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverMessage, setServerMessage] = useState("");
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
-  const { isDark, toggleTheme } = useTheme();
+
+  const [darkMode, setDarkMode] = useState(() => {
+    return document.documentElement.classList.contains('dark');
+  });
+
+  useEffect(() => {
+    setDarkMode(document.documentElement.classList.contains('dark'));
+  }, []);
+
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
+    document.documentElement.classList.toggle('dark', newDarkMode);
+  };
 
   const onSubmit = async (data: LoginFormInputs) => {
     setIsLoading(true);
@@ -81,10 +94,10 @@ const Login = () => {
 
         <button 
           className={authStyles.themeToggle}
-          onClick={toggleTheme}
-          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          onClick={toggleDarkMode}
+          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
-          {isDark ? <Moon size={20} /> : <Sun size={20} />}
+          {darkMode ? <Moon size={20} /> : <Sun size={20} />}
         </button>
 
         <form onSubmit={handleSubmit(onSubmit)} className={authStyles.authForm}>

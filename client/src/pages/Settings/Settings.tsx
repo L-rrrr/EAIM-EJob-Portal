@@ -279,6 +279,11 @@ const Settings: React.FC = () => {
                   <Save size={18} />
                   Update Profile
                 </button>
+                {message && (
+                  <div className={`${styles.message} ${styles[messageType]}`}>
+                    {message}
+                  </div>
+                )}
               </form>
             </div>
           )}
