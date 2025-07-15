@@ -1,0 +1,475 @@
+/* --- Main container and panel styles (copied and adapted from JobRequisition.module.css) --- */
+.postJobContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 1.5rem;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  box-sizing: border-box;
+}
+
+.topSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.statsCard {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.statsCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.cardIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.totalJobsCard .cardIcon {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.pendingCard .cardIcon {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.cardContent {
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0 0 0.25rem 0;
+}
+
+.cardValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+  display: block;
+}
+
+.cardSubtitle {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+.mainPanelsSection {
+  display: flex;
+  gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.formPanel {
+  flex: 3;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.formHeader {
+  background: linear-gradient(135deg, #B3238B 0%, #97006c 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.formTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.postJobForm {
+  padding: 2rem;
+}
+
+/* --- 4-column grid for the first 10 questions --- */
+.formSection {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  padding: 2rem 0;
+  background: transparent;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.labelText {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.requiredAsterisk {
+  color: #ef4444;
+  margin-left: 0.25rem;
+  font-weight: 700;
+}
+
+.input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 0.95rem;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 12px;
+  background: white;
+  color: #1e293b;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgba(179, 35, 139, 0.3);
+  box-shadow: 0 0 0 3px rgba(179, 35, 139, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.input:hover {
+  border-color: rgba(179, 35, 139, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.input::placeholder {
+  color: #9ca3af;
+}
+
+.errorMessage {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.errorMessage::before {
+  content: '⚠️';
+  font-size: 0.75rem;
+}
+
+/* Responsive: stack columns on smaller screens */
+@media (max-width: 1200px) {
+  .formSection {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .formSection {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem 0;
+  }
+  .formPanel {
+    padding: 18px 8px;
+  }
+}
+
+/* --- Divider and actions --- */
+.sectionDivider {
+  border-top: 2px solid #f3e8ff;
+  margin-bottom: 32px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.submitBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #B3238B, #97006c);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitBtn:hover {
+  background: linear-gradient(135deg, #97006c, #7d1a5a);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(179, 35, 139, 0.3);
+}
+
+/* --- Questions/radio/remark design --- */
+.questionsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+.questionBlock {
+  background: #f3f4f6;
+  border-radius: 18px;
+  padding: 22px 20px 16px 20px;
+  margin-bottom: 32px;
+  border: none;
+  box-shadow: 0 2px 16px 0 rgba(124, 58, 237, 0.07), 0 1.5px 6px 0 rgba(179, 35, 139, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+
+
+
+.questionNumber {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.questionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+.questionDesc {
+  font-size: 0.92rem;
+  font-weight: 400;
+  color: #000000;
+  opacity: 0.7;
+}
+
+.ratingRow {
+  display: flex;
+  gap: 18px;
+  margin: 8px 0 0 0;
+  flex-wrap: wrap;
+}
+
+.ratingLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.98rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: #6d28d9;
+  border-radius: 8px;
+  padding: 2px 10px 2px 6px;
+  border: 1.5px solid transparent;
+}
+
+.ratingLabel input[type="radio"] {
+  accent-color: #b3238b;
+  margin-right: 2px;
+}
+
+
+.ratingValue {
+  padding: 2px 10px;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #B3238B;
+  font-size: 0.97em;
+  font-weight: 600;
+}
+
+.remarkInput {
+  margin-top: 8px;
+  min-height: 38px;
+  border-radius: 8px;
+  border: 1.5px solid #e0e7ff;
+  padding: 8px 10px;
+  font-size: 0.97rem;
+  background: #f8fafc;
+  color: #312e81;
+  resize: vertical;
+}
+
+.remarkInput:focus {
+  border: 1.5px solid #b3238b;
+  outline: none;
+  background: #fff;
+}
+
+
+:global(.dark) .postJobContainer {
+  background-color: #0f172a;
+}
+
+:global(.dark) .statsCard,
+:global(.dark) .formPanel {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .formHeader {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+}
+
+:global(.dark) .cardTitle,
+:global(.dark) .formTitle {
+  color: #f8fafc;
+}
+
+:global(.dark) .cardValue {
+  color: #f8fafc;
+}
+
+:global(.dark) .cardSubtitle {
+  color: #94a3b8;
+}
+
+:global(.dark) .formSection {
+  background: #1e293b;
+}
+
+:global(.dark) .labelText {
+  color: #cbd5e1;
+}
+
+:global(.dark) .requiredAsterisk {
+  color: #f87171;
+}
+
+:global(.dark) .input {
+  background: #334155;
+  border-color: #475569;
+  color: #f8fafc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+:global(.dark) .input:focus {
+  border-color: rgba(244, 114, 182, 0.3);
+  box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .input:hover {
+  border-color: rgba(244, 114, 182, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .input::placeholder {
+  color: #64748b;
+}
+
+:global(.dark) .errorMessage {
+  color: #f87171;
+}
+
+:global(.dark) .questionBlock {
+  background: #2b384a;
+  border-radius: 18px;
+  border: none;
+  box-shadow: 0 2px 16px 0 rgba(124, 58, 237, 0.13), 0 1.5px 6px 0 rgba(179, 35, 139, 0.09);
+}
+
+:global(.dark) .questionHeader,
+:global(.dark) .questionTitle {
+  color: #ffffff;
+}
+
+:global(.dark) .questionNumber {
+  color: #ffffff;
+}
+
+:global(.dark) .questionDesc {
+  color: #ffffff;
+  opacity: 0.7;
+}
+
+:global(.dark) .ratingLabel {
+  background: transparent;
+  color: #c7d2fe;
+  border: 1.5px solid transparent;
+}
+
+:global(.dark) .ratingLabel:hover {
+  color: #f3e8ff;
+}
+
+:global(.dark) .ratingValue {
+  background: #6a1b57;
+  color: #f3e8ff;
+}
+
+
+:global(.dark) .remarkInput {
+  background: #23233b;
+  color: #f3f4f6;
+  border: 1.5px solid #6a1b57;
+}
+
+:global(.dark) .remarkInput:focus {
+  border: 1.5px solid #b3238b;
+}
+
+.formGroup {
+  margin-top: 32px;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: transparent;
+}
+
+.formGroup label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+  font-size: 1rem;
+}
+
+@media (max-width: 700px) {
+  .formGroup {
+    margin-top: 20px;
+  }
+}
+
+/* Dark mode */
+:global(.dark) .formGroup label {
+  color: #cbd5e1;
+} 

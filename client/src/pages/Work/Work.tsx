@@ -583,7 +583,7 @@ const handleSaveDraft = async (e?: React.MouseEvent) => {
       }));
       setLanguages(updatedLanguages);
     }
-
+    window.dispatchEvent(new Event("profile-completeness-updated"));
     alert("Draft saved!");
   } catch (error) {
     console.error("Save draft error:", error);
@@ -647,12 +647,6 @@ const handleUpdate = async (e?: React.MouseEvent) => {
       )
     );
 
-    // **Remove this check - let validation handle it**
-    // if (promises.length === 0) {
-    //   alert("No data to update!");
-    //   return;
-    // }
-
     const responses = await Promise.all(promises);
     
     // Update records with backend IDs
@@ -697,6 +691,7 @@ const handleUpdate = async (e?: React.MouseEvent) => {
       setLanguages(updatedLanguages);
     }
     
+    window.dispatchEvent(new Event("profile-completeness-updated"));
     alert("Work experience updated!");
   } catch (error) {
     console.error("Update error:", error);

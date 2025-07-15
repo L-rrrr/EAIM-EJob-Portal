@@ -23,10 +23,13 @@ app.use(compression());
 // Auth endpoints
 app.post("/api/register", authApi.register);
 app.post("/api/login", authApi.login);
+app.post("/api/change-password", authenticateToken, authApi.changePassword);
 
 //Jobs endpoints
 app.post("/api/post-jobs", accountApi.postJobs);
+app.put("/api/jobs/:id", accountApi.updateJob);
 app.get("/api/jobs", accountApi.getJobs);
+app.delete("/api/jobs/:id", accountApi.deleteJob);
 
 //Bookmarks endpoints
 app.post("/api/post-bookmarks", authenticateToken, accountApi.bookmarkJob);
@@ -114,6 +117,40 @@ app.post("/api/ai/candidate-analysis", authenticateToken, openaiApi.analyzeCandi
 
 // Applied jobs endpoint
 app.get("/api/applied-jobs", authenticateToken, accountApi.getAppliedJobs);
+app.get("/api/applicants", authenticateToken, accountApi.getApplicants);
+
+// Applicant information endpoint
+app.get("/api/get-applicant-data/:userId", authenticateToken, accountApi.getApplicantPersonalParticulars);
+app.get("/api/get-applicant-education/:userId", authenticateToken, accountApi.getApplicantEducation);
+app.get("/api/get-applicant-work/:userId", authenticateToken, accountApi.getApplicantWork);
+app.get("/api/get-applicant-family/:userId", authenticateToken, accountApi.getApplicantFamily);
+app.get("/api/get-applicant-support/:userId", authenticateToken, accountApi.getApplicantSupport);
+
+// Schedule interview endpoint
+app.post("/api/schedule-interview", authenticateToken, accountApi.scheduleInterview);
+app.get("/api/pending-applicants", authenticateToken, accountApi.getPendingApplicants);
+app.get("/api/all-applicants", authenticateToken, accountApi.getAllApplicants);
+app.get("/api/all-jobs", authenticateToken, accountApi.getAllJobs);
+app.put("/api/interview/:id", authenticateToken, accountApi.updateInterview);
+app.get("/api/interviews", authenticateToken, accountApi.getAllInterviews);
+app.delete("/api/interview/:id", authenticateToken, accountApi.deleteInterview);
+
+// Update application status endpoint
+app.put("/api/application-status/:id", authenticateToken, accountApi.updateApplicationStatus);
+
+// Check completeness endpoint
+app.get("/api/personal-particulars-completeness", authenticateToken, accountApi.checkPersonalParticularsCompleteness);
+app.get("/api/education-completeness", authenticateToken, accountApi.checkEducationCompleteness);
+app.get("/api/work-completeness", authenticateToken, accountApi.checkWorkCompleteness);
+app.get("/api/family-completeness", authenticateToken, accountApi.checkFamilyCompleteness);
+app.get("/api/support-completeness", authenticateToken, accountApi.checkSupportCompleteness);
+
+// Get full applicant profile endpoint
+app.get("/api/get-full-applicant-profile/:userId", authenticateToken, accountApi.getFullApplicantProfile);
+
+// User profile endpoints
+app.get("/api/user-profile", authenticateToken, accountApi.getUserInfo);
+app.put("/api/update-profile", authenticateToken, accountApi.updateUserInfo);
 
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);

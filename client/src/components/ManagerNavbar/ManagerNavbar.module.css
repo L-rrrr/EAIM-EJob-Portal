@@ -106,22 +106,15 @@
   transform: translateY(-2px);
 }
 
-.notificationWrapper {
+.profileWrapper {
   position: relative;
   display: inline-block;
-  margin-top: 6px;
 }
 
-.notificationNumber {
-  color: #222;
-  margin-right: 4px;
-}
-
-.notificationPopup {
+.profilePopup {
   position: absolute;
-  top: 35px;
   right: 0;
-  width: 280px;
+  top: 40px;
   background: white;
   border: 1px solid rgba(226, 232, 240, 0.8);
   border-radius: 16px;
@@ -129,6 +122,10 @@
   padding: 1.5rem;
   z-index: 1000;
   color: black;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   transform: translateY(-10px);
   opacity: 0;
   animation: slideIn 0.3s ease forwards;
@@ -141,77 +138,77 @@
   }
 }
 
-.notificationPopup p {
-  margin: 0 0 0.75rem 0;
-  color: #1e293b;
-  line-height: 1.5;
+.passwordRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.notificationPopup p:last-child {
-  margin-bottom: 0;
+.passwordField {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  border: none !important;
+  gap: 10px;
 }
 
-.notificationPopup strong {
-  color: #B3238B;
-  font-weight: 600;
-}
-
-/* Dark mode overrides for Navbar */
-:global(.dark) .navbar {
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-  border-bottom-color: rgba(51, 65, 85, 0.8);
-}
-
-:global(.dark) .navbarLink {
-  color: #94a3b8;
-}
-
-:global(.dark) .navbarLink:hover {
-  color: #f472b6;
-  background-color: rgba(244, 114, 182, 0.1);
-  transform: translateY(-1px);
-}
-
-:global(.dark) .navbarIcon {
-  color: #94a3b8;
-}
-
-:global(.dark) .navbarIcon:hover {
-  color: #f8fafc;
-  background-color: rgba(51, 65, 85, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-:global(.dark) .notificationPopup {
-  background: #1e293b;
-  border-color: #334155;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-}
-
-:global(.dark) .notificationPopup p {
-  color: #f8fafc;
-}
-
-:global(.dark) .notificationPopup strong {
-  color: #f472b6;
-}
-
-:global(.dark) .notificationNumber {
-  color: #fff;
-}
-
-:global(.dark) .notificationPopup p,
-:global(.dark) .notificationPopup ul,
-:global(.dark) .notificationPopup li {
-  color: #f8fafc;
-}
-
-:global(.dark) .iconButton:focus {
-  outline: none;
+.passwordField input {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 4px;
   border: none;
+  font-size: 14px;
+}
+
+.eyeButton {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  color: #000000;
+  transition: color 0.2s ease;
+  height: 30px;
+  background-color: transparent !important;
+}
+
+.eyeButton:focus {
+  outline: none;
+}
+
+.editPasswordField {
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.dark .editPasswordField {
+  background: #232323;
+  color: #f0f0f0;
+  border: 1px solid #555;
+}
+
+.changeBtn {
+  background-color: #b3238b;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.changeBtn:hover {
+  background-color: #97006c;
+}
+
+.dark .changeBtn {
+  background-color: #6a1b57;
+}
+
+.dark .changeBtn:hover {
+  background-color: #8a2c6a;
 }
 
 /* Responsive Design */
@@ -242,9 +239,10 @@
     padding: 0.375rem;
   }
   
-  .notificationPopup {
+  .profilePopup {
     width: 240px;
     right: -20px;
+    padding: 1rem;
   }
 }
 
@@ -278,9 +276,67 @@
     padding: 0.25rem;
   }
   
-  .notificationPopup {
+  .profilePopup {
     width: 200px;
     right: -40px;
-    padding: 1rem;
+    padding: 0.75rem;
   }
+}
+
+
+/* Add these rules at the end of your ManagerNavbar.module.css for dark mode support, matching Navbar.module.css */
+
+/* Dark mode overrides for ManagerNavbar */
+:global(.dark) .navbar {
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border-bottom-color: rgba(51, 65, 85, 0.8);
+}
+
+:global(.dark) .navbarLink {
+  color: #94a3b8;
+}
+
+:global(.dark) .navbarLink:hover {
+  color: #f472b6;
+  background-color: rgba(244, 114, 182, 0.1);
+  transform: translateY(-1px);
+}
+
+:global(.dark) .navbarIcon {
+  color: #94a3b8;
+}
+
+:global(.dark) .navbarIcon:hover {
+  color: #f8fafc;
+  background-color: rgba(51, 65, 85, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+:global(.dark) .profilePopup {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  color: #f8fafc;
+}
+
+:global(.dark) .editPasswordField {
+  background: #232323;
+  color: #f0f0f0;
+  border: 1px solid #555;
+}
+
+:global(.dark) .changeBtn {
+  background-color: #6a1b57;
+}
+
+:global(.dark) .changeBtn:hover {
+  background-color: #8a2c6a;
+}
+
+:global(.dark) .iconButton:focus {
+  outline: none;
+  border: none;
 }

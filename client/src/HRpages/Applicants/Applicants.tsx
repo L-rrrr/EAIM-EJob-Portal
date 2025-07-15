@@ -1,20 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./Applicants.module.css";
 import { Link } from "react-router-dom";
 import axios from "axios";
-
-const mockData = [
-  { name: "Aaron Tan", job: "Lecturer (Discrete Maths)", applied: "01-06-2025", interview: "10-06-2025", status: "Pending review" },
-  { name: "Lee Chong Wei", job: "Badminton Coach", applied: "03-06-2025", interview: "12-06-2025", status: "Shortlisted for Interview" },
-  { name: "JJ Lin", job: "Vocal coach", applied: "02-06-2025", interview: "11-06-2025", status: "Accepted" },
-  { name: "Daniel Ng", job: "Freelance Lecturer (Psychology)", applied: "04-06-2025", interview: "13-06-2025", status: "Rejected" },
-  { name: "Elaine Goh", job: "Full-Time Lecturer (Business & Management)", applied: "05-06-2025", interview: "14-06-2025", status: "Pending review" },
-  { name: "Frankie Tan", job: "Education Sales Manager", applied: "06-06-2025", interview: "15-06-2025", status: "Accepted" },
-  { name: "Gina Lim", job: "Program Executive", applied: "07-06-2025", interview: "16-06-2025", status: "Rejected" },
-  { name: "Henry Chia", job: "Head of School", applied: "08-06-2025", interview: "17-06-2025", status: "Pending review" },
-  { name: "Ivy Ho", job: "Country Manager (Vietnam)", applied: "09-06-2025", interview: "18-06-2025", status: "Shortlisted for Interview" },
-  { name: "Jake Wong", job: "Full-Time Lecturer (O Level)", applied: "10-06-2025", interview: "19-06-2025", status: "Accepted" },
-];
+import { Eye, Mail } from "lucide-react"; 
 
 const Applicants = () => {
   const [search, setSearch] = useState("");
@@ -24,24 +12,67 @@ const Applicants = () => {
   const [interviewTo, setInterviewTo] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+  const [analysisLevel, setAnalysisLevel] = useState("Basic");
 
   // Filter panel collapse state
   const [isFilterExpanded, setIsFilterExpanded] = useState(true);
+
+  // Replace mockData with dynamic data from database
+  const [applicantsData, setApplicantsData] = useState<any[]>([]);
+  const [filteredApplicants, setFilteredApplicants] = useState<any[]>([]);
+  const [filtersApplied, setFiltersApplied] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // AI Analysis state
   const [selectedCandidate, setSelectedCandidate] = useState<{name: string, job: string} | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const toggleSelection = (item: string, list: string[], setList: (val: string[]) => void) => {
-    setList(list.includes(item) ? list.filter(i => i !== item) : [...list, item]);
-  };
-  
+  // Fetch applicants data from database
+  useEffect(() => {
+    const fetchApplicants = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/applicants`,
+          {
+            headers: { 
+              Authorization: `Bearer ${token}` // Add authorization header
+            }
+          }
+        );
+        
+        if (response.data.success) {
+          setApplicantsData(response.data.data);
+          setFilteredApplicants(response.data.data);
+        } else {
+          console.error("Failed to fetch applicants:", response.data.message);
+          setApplicantsData([]);
+          setFilteredApplicants([]);
+        }
+      } catch (error) {
+        console.error("Error fetching applicants:", error);
+        setApplicantsData([]);
+        setFilteredApplicants([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Function to analyze candidate with OpenAI
-  const analyzeCandidateWithAI = async (candidateName: string, jobTitle: string) => {
-    setIsAnalyzing(true);
+    fetchApplicants();
+  }, []);
+
+  const openAnalysisPanel = (candidateName: string, jobTitle: string) => {
     setSelectedCandidate({ name: candidateName, job: jobTitle });
+    setAiAnalysis(""); // Clear previous analysis
+  };
+
+  // Separate function for actual analysis
+  const startAnalysis = async () => {
+    if (!selectedCandidate) return;
+    
+    setIsAnalyzing(true);
     setAiAnalysis("");
 
     try {
@@ -49,9 +80,10 @@ const Applicants = () => {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/ai/candidate-analysis`,
         {
-          candidateName,
-          jobTitle,
-          applicationData: `Applied for ${jobTitle} position. Current status: ${mockData.find(m => m.name === candidateName)?.status || 'Unknown'}.`
+          candidateName: selectedCandidate.name,
+          jobTitle: selectedCandidate.job,
+          applicationData: `Applied for ${selectedCandidate.job} position. Current status: ${applicantsData.find(m => m.name === selectedCandidate.name)?.status || 'Unknown'}.`,
+          analysisLevel: analysisLevel
         },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -65,83 +97,301 @@ const Applicants = () => {
       }
     } catch (error: any) {
       console.error("Failed to analyze candidate:", error);
-      
-      if (error.response?.status === 401) {
-        setAiAnalysis("Authentication failed. Please log in again.");
-      } else if (error.response?.status === 402) {
-        setAiAnalysis("OpenAI API quota exceeded. Please contact administrator.");
-      } else if (error.response?.data?.message) {
-        setAiAnalysis(`Error: ${error.response.data.message}`);
-      } else {
-        setAiAnalysis("Failed to analyze candidate profile. Please check your connection and try again.");
-      }
+      setAiAnalysis("Failed to analyze candidate profile. Please check your connection and try again.");
     } finally {
       setIsAnalyzing(false);
     }
   };
 
+  const toggleSelection = (item: string, list: string[], setList: (val: string[]) => void) => {
+    setList(list.includes(item) ? list.filter(i => i !== item) : [...list, item]);
+  };
+
+  // Helper function to parse date strings (DD-MM-YYYY format)
+  const parseDate = (dateString: string) => {
+    if (!dateString) return null;
+    const [day, month, year] = dateString.split('-');
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  };
+
+  // Apply filters function
+  const applyFilters = () => {
+    let filtered = [...applicantsData];
+
+    // Search filter
+    if (search.trim()) {
+      filtered = filtered.filter(applicant =>
+        applicant.name.toLowerCase().includes(search.toLowerCase()) ||
+        applicant.job.toLowerCase().includes(search.toLowerCase()) ||
+        applicant.email?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    // Category filter
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(applicant => {
+        const category = applicant.job_category?.toLowerCase();
+        
+        return selectedCategories.some(selectedCategory => {
+          if (selectedCategory === "Operative") {
+            return category === "operative"
+
+          } else if (selectedCategory === "Academic") {
+            return category === "academic"
+          }
+          return false;
+        });
+      });
+    }
+
+    // Status filter
+    if (selectedStatus.length > 0) {
+      filtered = filtered.filter(applicant => {
+        return selectedStatus.some(status => {
+          if (status === "Pending Review") {
+            return applicant.status === "Pending review" || applicant.status === "Pending";
+          } else if (status === "Shortlisted") {
+            return applicant.status.includes("Shortlisted");
+          } else {
+            return applicant.status === status;
+          }
+        });
+      });
+    }
+
+    // Applied date filters
+    if (appliedFrom) {
+      const fromDate = new Date(appliedFrom);
+      filtered = filtered.filter(applicant => {
+        const appliedDate = parseDate(applicant.applied);
+        return appliedDate && appliedDate >= fromDate;
+      });
+    }
+
+    if (appliedTo) {
+      const toDate = new Date(appliedTo);
+      filtered = filtered.filter(applicant => {
+        const appliedDate = parseDate(applicant.applied);
+        return appliedDate && appliedDate <= toDate;
+      });
+    }
+
+    // Interview date filters
+    if (interviewFrom) {
+      const fromDate = new Date(interviewFrom);
+      filtered = filtered.filter(applicant => {
+        const interviewDate = parseDate(applicant.interview);
+        return interviewDate && interviewDate >= fromDate;
+      });
+    }
+
+    if (interviewTo) {
+      const toDate = new Date(interviewTo);
+      filtered = filtered.filter(applicant => {
+        const interviewDate = parseDate(applicant.interview);
+        return interviewDate && interviewDate <= toDate;
+      });
+    }
+
+    setFilteredApplicants(filtered);
+  };
+
+  // Handle apply filters
+  const handleApplyFilters = () => {
+    applyFilters();
+    const hasActiveFilters = !!(search.trim() ||
+                           selectedCategories.length > 0 ||
+                           selectedStatus.length > 0 ||
+                           appliedFrom ||
+                           appliedTo ||
+                           interviewFrom ||
+                           interviewTo);
+    setFiltersApplied(hasActiveFilters);
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearch("");
+    setAppliedFrom("");
+    setAppliedTo("");
+    setInterviewFrom("");
+    setInterviewTo("");
+    setSelectedCategories([]);
+    setSelectedStatus([]);
+    setFilteredApplicants(applicantsData);
+    setFiltersApplied(false);
+  };
+
   const formatAiResponse = (text: string) => {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Convert **text** to <strong>text</strong>
-    .replace(/\*(.*?)\*/g, '<em>$1</em>') // Convert *text* to <em>text</em>
-    .replace(/\n/g, '<br>'); // Convert line breaks
-};
+    return text
+      // Convert ### headings to styled headings
+      .replace(/###\s*(.*?)(?=\n|$)/g, '<h3 class="ai-section-heading">$1</h3>')
+      
+      // Convert --- separators to styled dividers
+      .replace(/^---+$/gm, '<div class="ai-section-divider"></div>')
+      
+      // Convert **text** to bold
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      
+      // Convert *text* to italic
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      
+      // Convert bullet points (- item)
+      .replace(/^-\s+(.*?)$/gm, '<li class="ai-bullet-point">$1</li>')
+      
+      // Wrap consecutive bullet points in ul tags
+      .replace(/(<li class="ai-bullet-point">.*?<\/li>)(\s*<li class="ai-bullet-point">.*?<\/li>)*/gs, '<ul class="ai-bullet-list">$&</ul>')
+      
+      // Convert numbered lists (1. item)
+      .replace(/^\d+\.\s+(.*?)$/gm, '<li class="ai-numbered-point">$1</li>')
+      
+      // Wrap consecutive numbered points in ol tags
+      .replace(/(<li class="ai-numbered-point">.*?<\/li>)(\s*<li class="ai-numbered-point">.*?<\/li>)*/gs, '<ol class="ai-numbered-list">$&</ol>')
+      
+      // Convert line breaks to paragraphs for better spacing
+      .replace(/\n\n/g, '</p><p class="ai-paragraph">')
+      .replace(/^(.*)$/gm, '<p class="ai-paragraph">$1</p>')
+      
+      // Clean up empty paragraphs
+      .replace(/<p class="ai-paragraph"><\/p>/g, '')
+      .replace(/<p class="ai-paragraph">(<h3|<div|<ul|<ol)/g, '$1')
+      .replace(/(<\/h3>|<\/div>|<\/ul>|<\/ol>)<\/p>/g, '$1');
+  };
 
   return (
     <div className={styles.applicantsContainer}>
       {/* TOP SECTION: TABLE AND FILTER SIDE BY SIDE */}
-      <div className={styles.topSection}>
+      <div className={styles.topSection}> 
         {/* APPLICANTS TABLE PANEL */}
         <div className={styles.tablePanel}>
           <div className={styles.tableHeader}>
-            <h2>📋 Applicants Information</h2>
+            <h2>📋 Application Information</h2>
             <div className={styles.tableStats}>
-              <span className={styles.totalCount}>{mockData.length} Total Applicants</span>
+              <span className={styles.totalCount}>
+                {filteredApplicants.length} of {applicantsData.length} Total Applicants
+                {filtersApplied && <span className={styles.filteredIndicator}> (Filtered)</span>}
+              </span>
             </div>
           </div>
           <div className={styles.tableWrapper}>
-            <table className={styles.applicantsTable}>
-              <thead>
-                <tr>
-                  <th>Applicant's Name</th>
-                  <th>Job Applied</th>
-                  <th>Applied Date</th>
-                  <th>Interview Date</th>
-                  <th>Status</th>
-                  <th>AI Analysis</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockData.map((applicant, idx) => (
-                  <tr key={idx}>
-                    <td>
-                      <Link to={`/hr/applicant-details/personal-particulars`} className={styles.applicantNameLink}>
-                        {applicant.name}
-                      </Link>
-                    </td>
-                    <td>{applicant.job}</td>
-                    <td>{applicant.applied}</td>
-                    <td>{applicant.interview}</td>
-                    <td>
-                      <span className={`${styles.statusBadge} ${styles[applicant.status.toLowerCase().replace(/\s+/g, '')]}`}>
-                        {applicant.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className={styles.aiAnalyzeBtn}
-                        onClick={() => analyzeCandidateWithAI(applicant.name, applicant.job)}
-                        disabled={isAnalyzing}
-                      >
-                        {isAnalyzing && selectedCandidate?.name === applicant.name ? 
-                          "Analyzing..." : "🤖 Analyze"
-                        }
-                      </button>
-                    </td>
+            {isLoading ? (
+              <div className={styles.loadingContainer}>
+                <div className={styles.loadingSpinner}></div>
+                <p>Loading applicants...</p>
+              </div>
+            ) : (
+              <table className={styles.applicantsTable}>
+                <thead>
+                  <tr>
+                    <th>Applicant's Name</th>
+                    <th>Job Applied</th>
+                    <th>Applied Date</th>
+                    <th>Interview Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                    <th>AI Analysis</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredApplicants.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className={styles.noResults}>
+                        {applicantsData.length === 0 ? "No applicants available" : "No applicants match your filter criteria"}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredApplicants.map((applicant, idx) => (
+                      <tr key={`${applicant.application_id}-${idx}`}>
+                        <td>
+                          {applicant.name}
+                        </td>
+                        <td>{applicant.job}</td>
+                        <td>{applicant.applied}</td>
+                        <td>{applicant.interview || "Not scheduled"}</td>
+                        <td>
+                          <select
+                            className={styles.statusSelect}
+                            value={applicant.status}
+                            onChange={async (e) => {
+                              const newStatus = e.target.value;
+                              if (newStatus === applicant.status) return;
+                              if (
+                                window.confirm(
+                                  "Changing the application status will notify the applicant. Do you want to proceed?"
+                                )
+                              ) {
+                                try {
+                                  const token = localStorage.getItem("token");
+                                  await axios.put(
+                                    `${import.meta.env.VITE_BACKEND_URL}/application-status/${applicant.application_id}`,
+                                    { status: newStatus },
+                                    { headers: { Authorization: `Bearer ${token}` } }
+                                  );
+                                  // Update the status in the table immediately
+                                  setFilteredApplicants((prev) =>
+                                    prev.map((a) =>
+                                      a.application_id === applicant.application_id
+                                        ? { ...a, status: newStatus }
+                                        : a
+                                    )
+                                  );
+                                  setApplicantsData((prev) =>
+                                    prev.map((a) =>
+                                      a.application_id === applicant.application_id
+                                        ? { ...a, status: newStatus }
+                                        : a
+                                    )
+                                  );
+                                } catch (err) {
+                                  alert("Failed to update status. Please try again.");
+                                }
+                              }
+                            }}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Reviewing">Reviewing</option>
+                            <option value="Accepted">Accepted</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="Interview Scheduled" disabled>Interview Scheduled</option>
+                          </select>
+                        </td>
+
+                        <td> {/* Add this new Actions column */}
+                          <div className={styles.actionButtons}>
+                            <Link 
+                              to={`/hr/applicant-details/personal-particulars?userId=${applicant.user_id}`} 
+                              className={styles.actionBtn}
+                              title="View Details"
+                            >
+                              <Eye size={14} />
+                            </Link>
+                            
+                            <button
+                              className={styles.actionBtn}
+                              onClick={() => {
+                                // Email functionality will be added later
+                                console.log(`Email ${applicant.name} at ${applicant.email}`);
+                              }}
+                              title="Send Email"
+                            >
+                              <Mail size={14} />
+                            </button>
+                          </div>
+                        </td>
+                        <td>
+                          <button
+                            className={styles.aiAnalyzeBtn}
+                            onClick={() => openAnalysisPanel(applicant.name, applicant.job)}
+                          >
+                            🤖 Analyze
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 
@@ -163,7 +413,7 @@ const Applicants = () => {
                   type="text"
                   id="search-applicants"
                   className={styles.customSearchInput}
-                  placeholder="Enter applicant name"
+                  placeholder="Enter applicant name or job"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -172,27 +422,76 @@ const Applicants = () => {
               {/* Job Category */}
               <div className={styles.filterGroup}>
                 <label>Job Category</label>
-                <div className={`${styles.buttonGroup} ${styles.compact}`}>
+                <div className={styles.buttonGrid}>
                   <button
-                    className={`${styles.filterBtn} ${styles.compact} ${selectedCategories.includes("Manager / Executive") ? styles.selected : ""}`}
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedCategories.includes("Operative") ? styles.selected : ""}`}
                     onClick={() =>
-                      toggleSelection("Manager / Executive", selectedCategories, setSelectedCategories)
+                      toggleSelection("Operative", selectedCategories, setSelectedCategories)
                     }
                   >
-                    Manager / Executive
+                    Operative
                   </button>
                   <button
-                    className={`${styles.filterBtn} ${styles.compact} ${selectedCategories.includes("Lecturer") ? styles.selected : ""}`}
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedCategories.includes("Academic") ? styles.selected : ""}`}
                     onClick={() =>
-                      toggleSelection("Lecturer", selectedCategories, setSelectedCategories)
+                      toggleSelection("Academic", selectedCategories, setSelectedCategories)
                     }
                   >
-                    Lecturer
+                    Academic
                   </button>
                 </div>
               </div>
 
-              {/* Date Filters - Default HTML Date Inputs */}
+              {/* Application Status */}
+              <div className={styles.filterGroup}>
+                <label>Application Status</label>
+                <div className={styles.buttonGrid}>
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Pending") ? styles.selected : ""}`}
+                    onClick={() =>
+                      toggleSelection("Pending", selectedStatus, setSelectedStatus)
+                    }
+                  >
+                    Pending
+                  </button>
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Interview Scheduled") ? styles.selected : ""}`}
+                    onClick={() =>
+                      toggleSelection("Interview Scheduled", selectedStatus, setSelectedStatus)
+                    }
+                  >
+                    Interview Scheduled
+                  </button>
+
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Reviewing") ? styles.selected : ""}`}
+                    onClick={() =>
+                      toggleSelection("Reviewing", selectedStatus, setSelectedStatus)
+                    }
+                  >
+                    Reviewing
+                  </button>
+
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Rejected") ? styles.selected : ""}`}
+                    onClick={() =>
+                      toggleSelection("Rejected", selectedStatus, setSelectedStatus)
+                    }
+                  >
+                    Rejected
+                  </button>
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Accepted") ? styles.selected : ""}`}
+                    onClick={() =>
+                      toggleSelection("Accepted", selectedStatus, setSelectedStatus)
+                    }
+                  >
+                    Accepted
+                  </button>
+                </div>
+              </div>
+
+              {/* Date Filters */}
               <div className={styles.filterGroup}>
                 <label>Applied Date From</label>
                 <input
@@ -233,46 +532,21 @@ const Applicants = () => {
                 />
               </div>
 
-              {/* Application Status - Compact Grid */}
-              <div className={styles.filterGroup}>
-                <label>Application Status</label>
-                <div className={styles.buttonGrid}>
-                  <button
-                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Pending Review") ? styles.selected : ""}`}
-                    onClick={() =>
-                      toggleSelection("Pending Review", selectedStatus, setSelectedStatus)
-                    }
-                  >
-                    Pending
-                  </button>
-                  <button
-                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Shortlisted") ? styles.selected : ""}`}
-                    onClick={() =>
-                      toggleSelection("Shortlisted", selectedStatus, setSelectedStatus)
-                    }
-                  >
-                    Shortlisted
-                  </button>
-                  <button
-                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Rejected") ? styles.selected : ""}`}
-                    onClick={() =>
-                      toggleSelection("Rejected", selectedStatus, setSelectedStatus)
-                    }
-                  >
-                    Rejected
-                  </button>
-                  <button
-                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Accepted") ? styles.selected : ""}`}
-                    onClick={() =>
-                      toggleSelection("Accepted", selectedStatus, setSelectedStatus)
-                    }
-                  >
-                    Accepted
-                  </button>
-                </div>
+              {/* Filter Action Buttons */}
+              <div className={styles.filterActions}>
+                <button 
+                  className={`${styles.applyFilterBtn} ${styles.compact}`}
+                  onClick={handleApplyFilters}
+                >
+                  Apply Filter
+                </button>
+                <button 
+                  className={`${styles.resetFilterBtn} ${styles.compact}`}
+                  onClick={clearAllFilters}
+                >
+                  Reset
+                </button>
               </div>
-
-              <button className={`${styles.applyFilterBtn} ${styles.compact}`}>Apply Filter</button>
             </div>
           )}
         </div>
@@ -284,6 +558,41 @@ const Applicants = () => {
           <div className={styles.aiPanelHeader}>
             <div className={styles.aiPanelTitle}>
               <h3>🤖 AI Background Analysis</h3>
+                  <div className={styles.analysisLevelGroup}>
+                    <label className={styles.analysisLevelLabel}>Analysis Level:</label>
+                    <div className={styles.radioGroup}>
+                      <label className={styles.radioOption}>
+                        <input
+                          type="radio"
+                          name="analysisLevel"
+                          value="Basic"
+                          checked={analysisLevel === "Basic"}
+                          onChange={(e) => setAnalysisLevel(e.target.value)}
+                        />
+                        <span>Basic</span>
+                      </label>
+                      <label className={styles.radioOption}>
+                        <input
+                          type="radio"
+                          name="analysisLevel"
+                          value="Standard"
+                          checked={analysisLevel === "Standard"}
+                          onChange={(e) => setAnalysisLevel(e.target.value)}
+                        />
+                        <span>Standard</span>
+                      </label>
+                      <label className={styles.radioOption}>
+                        <input
+                          type="radio"
+                          name="analysisLevel"
+                          value="Comprehensive"
+                          checked={analysisLevel === "Comprehensive"}
+                          onChange={(e) => setAnalysisLevel(e.target.value)}
+                        />
+                        <span>Comprehensive</span>
+                      </label>
+                    </div>
+                  </div>
             </div>
             <div className={styles.aiPanelInfo}>
               {selectedCandidate && (
@@ -300,38 +609,44 @@ const Applicants = () => {
           </div>
           
           <div className={styles.aiPanelContent}>
-            {isAnalyzing ? (
+            {!aiAnalysis && !isAnalyzing ? (
+              <div className={styles.aiPlaceholder}>
+                <div className={styles.aiPlaceholderContent}>
+                  <h4>Ready to Analyze: {selectedCandidate?.name}</h4>
+                  <p>Position: {selectedCandidate?.job}</p>
+                  <p>Select your preferred analysis level above and click "Start Analysis" to begin the AI background review.</p>
+                  
+                  <button 
+                    className={styles.startAnalysisBtn}
+                    onClick={startAnalysis}
+                    disabled={isAnalyzing}
+                  >
+                    🚀 Start Analysis
+                  </button>
+                </div>
+              </div>
+            ) : isAnalyzing ? (
               <div className={styles.aiLoading}>
                 <div className={styles.loadingSpinner}></div>
                 <p>Analyzing candidate background with AI...</p>
               </div>
             ) : (
               <div className={styles.aiAnalysisText}>
-                {aiAnalysis ? (
-                  <div 
-                    className={styles.aiResponse}
-                    dangerouslySetInnerHTML={{ __html: formatAiResponse(aiAnalysis) }}
-                  />
-                  
-                  
-                ) : (
-                  <div className={styles.aiPlaceholder}>
-                    <p>💡 Click "🤖 Analyze" button next to any candidate to get their background analysis</p>
-                  </div>
-                )}
+                <div 
+                  className={styles.aiResponse}
+                  dangerouslySetInnerHTML={{ __html: formatAiResponse(aiAnalysis) }}
+                />
               </div>
             )}
           </div>
           
           <div className={styles.aiPanelFooter}>
             <div className={styles.aiPanelActions}>
-              <button className={styles.refreshAnalysis} onClick={() => {
-                if (selectedCandidate) {
-                  analyzeCandidateWithAI(selectedCandidate.name, selectedCandidate.job);
-                }
-              }}>
-                🔄 Refresh Analysis
-              </button>
+              {aiAnalysis && (
+                <button className={styles.refreshAnalysis} onClick={startAnalysis}>
+                  🔄 Analyze Again
+                </button>
+              )}
             </div>
             <small>Powered by OpenAI API</small>
           </div>

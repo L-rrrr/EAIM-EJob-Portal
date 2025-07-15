@@ -1,569 +1,749 @@
-import { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import "./ApplicantPersonalParticulars.css";
-
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { CssBaseline } from "@mui/material";
-import { ColorModeContext } from "../../ThemeContext"; // Adjust the path as necessary
-
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import "react-datepicker/dist/react-datepicker.css";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import styles from "../../pages/PersonalParticulars/PersonalParticulars.module.css";
+import axios from "axios";
 
 const ApplicantPersonalParticulars: React.FC = () => {
   const navigate = useNavigate();
-  const [dob, setDob] = useState<Date | null>();
-  const [passportExpiry, setPassportExpiry] = useState<Date | null>(null);
+  const [searchParams] = useSearchParams(); // Add this
+  const userId = searchParams.get('userId'); // Add this line
   const [showPersonalParticulars, setShowPersonalParticulars] = useState(true);
   const [showSingaporeAddress, setShowSingaporeAddress] = useState(true);
   const [showOverseasAddress, setShowOverseasAddress] = useState(true);
   const [showMilitaryService, setShowMilitaryService] = useState(true);
-  const [nsStatus, setNsStatus] = useState<string>("");
-  const [isOperationallyReady, setIsOperationallyReady] = useState("");
-  const [dateOfNextCamp, setDateOfNextCamp] = useState<Date | null>(null);
-  const { darkMode } = useContext(ColorModeContext);
+  
+  const currentYear = new Date().getFullYear();
 
+  // Generate year options from current year down to 1960
+  const generateYearOptions = () => {
+    const years = [];
+    for (let year = currentYear; year >= 1960; year--) {
+      years.push(year);
+    }
+    return years;
+  };
+
+  // Replace the existing useEffect with this:
+  useEffect(() => {
+    const fetchApplicantData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        
+        if (!userId) {
+          console.error("No user ID provided");
+          return;
+        }
+
+        // Fetch applicant data based on user ID
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/get-applicant-data/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data && response.data.success) {
+          const data = response.data.data;
+          
+          // Set personal particulars
+          if (data.personalParticulars) {
+            const personalData = data.personalParticulars;
+            setPersonalParticulars({
+              salutation: personalData.salutation || "",
+              full_name: personalData.full_name || "",
+              nric: personalData.nric || "",
+              alias: personalData.alias || "",
+              email: personalData.email || "",
+              date_of_birth: personalData.date_of_birth ? new Date(personalData.date_of_birth) : null,
+              marital_status: personalData.marital_status || "",
+              gender: personalData.gender || "",
+              nationality: personalData.nationality || "",
+              status_in_sg: personalData.status_in_sg || "",
+              race: personalData.race || "",
+              dialect: personalData.dialect || "",
+              religion: personalData.religion || "",
+              country_of_birth: personalData.country_of_birth || "",
+              passport_no: personalData.passport_no || "",
+              passport_expiry: personalData.passport_expiry ? new Date(personalData.passport_expiry) : null,
+            });
+          }
+
+          // Set Singapore address
+          if (data.sgAddress) {
+            setSgAddress({
+              blk_no: data.sgAddress.blk_no || "",
+              street_name: data.sgAddress.street_name || "",
+              unit_no: data.sgAddress.unit_no || "",
+              postal_code: data.sgAddress.postal_code || "",
+              mobile_no: data.sgAddress.mobile_no || "",
+              home_no: data.sgAddress.home_no || "",
+            });
+          }
+
+          // Set overseas address
+          if (data.overseasAddress) {
+            setOverseasAddress({
+              has_overseas_address: data.overseasAddress.has_overseas_address || "N",
+              blk_or_house_no: data.overseasAddress.blk_or_house_no || "",
+              street_name: data.overseasAddress.street_name || "",
+              building_name: data.overseasAddress.building_name || "",
+              city: data.overseasAddress.city || "",
+              state_or_province: data.overseasAddress.state_or_province || "",
+              country: data.overseasAddress.country || "",
+              postal_code: data.overseasAddress.postal_code || "",
+              mobile_country_code: data.overseasAddress.mobile_country_code || "+65",
+              mobile_number: data.overseasAddress.mobile_number || "",
+              home_country_code: data.overseasAddress.home_country_code || "+65",
+              home_number: data.overseasAddress.home_number || "",
+            });
+          }
+
+          // Set military service
+          if (data.militaryService) {
+            const militaryData = data.militaryService;
+            setMilitaryService({
+              ns_status: militaryData.ns_status || "",
+              service_from_year: militaryData.service_from_year || "",
+              service_from_month: militaryData.service_from_month || "",
+              service_to_year: militaryData.service_to_year || "",
+              service_to_month: militaryData.service_to_month || "",
+              rank: militaryData.rank || "",
+              unit: militaryData.unit || "",
+              vocation: militaryData.vocation || "",
+              next_camp_date: militaryData.next_camp_date || "",
+              is_operationally_ready: militaryData.is_operationally_ready || "",
+              nsman_unit: militaryData.nsman_unit || "",
+              nsman_vocation: militaryData.nsman_vocation || "",
+              ns_exemption_reason: militaryData.ns_exemption_reason || "",
+            });
+          }
+        }
+      } catch (error: any) {
+        console.error("Failed to fetch applicant data", error);
+      } 
+    };
+
+    fetchApplicantData();
+  }, [userId]);
+
+  type PersonalParticularsKeys =
+  | "salutation"
+  | "full_name"
+  | "nric"
+  | "alias"
+  | "email"
+  | "date_of_birth"
+  | "marital_status"
+  | "gender"
+  | "nationality"
+  | "status_in_sg"
+  | "race"
+  | "dialect"
+  | "religion"
+  | "country_of_birth"
+  | "passport_no"
+  | "passport_expiry";
+
+  const [personalParticulars, setPersonalParticulars] = useState<Record<PersonalParticularsKeys, string | Date | null>>({
+    salutation: "",
+    full_name: "",
+    nric: "",
+    alias: "",
+    email: "",
+    date_of_birth: null as Date | null,
+    marital_status: "",
+    gender: "",
+    nationality: "",
+    status_in_sg: "",
+    race: "",
+    dialect: "",
+    religion: "",
+    country_of_birth: "",
+    passport_no: "",
+    passport_expiry: null,
+  });
+
+  type SelectField = {
+    label: string;
+    required: boolean;
+    name: PersonalParticularsKeys;
+    type: "select" | "text" | "email" | "tel" | "date";
+    options?: string[];
+  };
+
+  const personalParticularsFields: SelectField[] = [
+    { label: "Salutation", required: true, name: "salutation", type: "select", options: ["Mr.", "Ms.", "Mrs.", "Miss", "Dr."] },
+    { label: "Full Name (as in NRIC/ Passport)", required: true, name: "full_name", type: "text" },
+    { label: "NRIC", required: true, name: "nric", type: "text" },
+    { label: "Alias", required: false, name: "alias", type: "text" },
+    { label: "Email Address", required: true, name: "email", type: "email" },
+    { label: "Date of Birth", required: true, name: "date_of_birth", type: "date" },
+    { label: "Marital Status", required: true, name: "marital_status", type: "select", options: ["Single", "Married", "Divorced", "Widowed", "Separated"] },
+    { label: "Gender", required: true, name: "gender", type: "select", options: ["Male", "Female"] },
+    { label: "Nationality", required: true, name: "nationality", type: "select", options: [
+      "Singapore", "Malaysia", "Indonesia", "China", "India", "United States", "United Kingdom", "Australia", "Canada",
+    ]},
+    { label: "Status in Singapore", required: true, name: "status_in_sg", type: "select", options: ["Citizen", "PR", "Foreigner"] },
+    { label: "Race", required: true, name: "race", type: "select", options: ["Chinese", "Malay", "Indian", "Others"] },
+    { label: "Dialect", required: false, name: "dialect", type: "text" },
+    { label: "Religion", required: true, name: "religion", type: "select", options: ["Buddhism", "Christianity", "Hinduism", "Islam", "Others"] },
+    { label: "Country of Birth", required: true, name: "country_of_birth", type: "select", options: [
+      "Singapore", "Malaysia", "Indonesia", "China", "India", "United States", "United Kingdom", "Australia", "Canada",
+    ]},
+    { label: "Passport No.", required: true, name: "passport_no", type: "text" },
+    { label: "Passport Expiry Date", required: true, name: "passport_expiry", type: "date" },
+  ];
+
+  type SgAddressKeys = "blk_no" | "street_name" | "unit_no" | "postal_code" | "mobile_no" | "home_no";
+
+  const [sgAddress, setSgAddress] = useState<Record<SgAddressKeys, string>>({
+    blk_no: "",
+    street_name: "",
+    unit_no: "",
+    postal_code: "",
+    mobile_no: "",
+    home_no: "",
+  });
+
+  const sgAddressfields: { label: string; required: boolean; name: SgAddressKeys; type: string }[] = [
+    { label: "Blk/House No.", required: true, name: "blk_no", type: "text" },
+    { label: "Street Name", required: true, name: "street_name", type: "text" },
+    { label: "Unit No. (e.g. 01-23)", required: true, name: "unit_no", type: "text" },
+    { label: "Postal Code", required: true, name: "postal_code", type: "text" },
+    { label: "Mobile No.", required: true, name: "mobile_no", type: "tel" },
+    { label: "Home Telephone No.", required: false, name: "home_no", type: "tel" },
+  ];
+
+  type OverseasAddressKeys =
+  | "has_overseas_address"
+  | "blk_or_house_no"
+  | "street_name"
+  | "building_name"
+  | "city"
+  | "state_or_province"
+  | "country"
+  | "postal_code"
+  | "mobile_country_code"
+  | "mobile_number"
+  | "home_country_code"
+  | "home_number";
+
+  const [overseasAddress, setOverseasAddress] = useState<Record<OverseasAddressKeys, string>>({
+    has_overseas_address: "N",
+    blk_or_house_no: "",
+    street_name: "",
+    building_name: "",
+    city: "",
+    state_or_province: "",
+    country: "",
+    postal_code: "",
+    mobile_country_code: "",
+    mobile_number: "",
+    home_country_code: "",
+    home_number: "",
+  });
+
+  const overseasAddressFields: {
+    label: string;
+    required: boolean;
+    name: OverseasAddressKeys;
+    type: string;
+  }[] = [
+    { label: "Blk/House No.", required: true, name: "blk_or_house_no", type: "text" },
+    { label: "Street Name", required: true, name: "street_name", type: "text" },
+    { label: "Building Name", required: false, name: "building_name", type: "text" },
+    { label: "City", required: true, name: "city", type: "text" },
+    { label: "State/Province", required: true, name: "state_or_province", type: "text" },
+    { label: "Country", required: true, name: "country", type: "text" },
+    { label: "Postal Code", required: true, name: "postal_code", type: "text" },
+    { label: "Mobile No.", required: true, name: "mobile_number", type: "tel" },
+    { label: "Home Telephone No.", required: false, name: "home_number", type: "tel" },
+  ];
+
+  type MilitaryServiceKeys =
+  | "ns_status"
+  | "service_from_year"
+  | "service_from_month"
+  | "service_to_year"
+  | "service_to_month"
+  | "rank"
+  | "unit"
+  | "vocation"
+  | "next_camp_date"
+  | "is_operationally_ready"
+  | "nsman_unit"
+  | "nsman_vocation"
+  | "ns_exemption_reason";
+
+  const [militaryService, setMilitaryService] = useState<Record<MilitaryServiceKeys, string>>({
+    ns_status: "",
+    service_from_year: "",
+    service_from_month: "",
+    service_to_year: "",
+    service_to_month: "",
+    rank: "",
+    unit: "",
+    vocation: "",
+    next_camp_date: "",
+    is_operationally_ready: "",
+    nsman_unit: "",
+    nsman_vocation: "",
+    ns_exemption_reason: "",
+  });
+
+  // const militaryServiceFields: {
+  //   label: string;
+  //   required: boolean;
+  //   name: MilitaryServiceKeys;
+  //   type: string;
+  //   options?: string[];
+  //   placeholder?: string;
+  // }[] = [
+  //   {
+  //     label: "NS Status",
+  //     required: true,
+  //     name: "ns_status",
+  //     type: "select",
+  //     options: ["Completed", "Not Completed", "Exempted", "Not Applicable"],
+  //   },
+  //   { label: "Service From Year", required: militaryService.ns_status === "Completed", name: "service_from_year", type: "number" },
+  //   { label: "Service From Month", required: militaryService.ns_status === "Completed", name: "service_from_month", type: "text" },
+  //   { label: "Service To Year", required: militaryService.ns_status === "Completed", name: "service_to_year", type: "number" },
+  //   { label: "Service To Month", required: militaryService.ns_status === "Completed", name: "service_to_month", type: "text" },
+  //   { label: "Rank", required: militaryService.ns_status === "Completed", name: "rank", type: "text", placeholder: "e.g., 3SG" },
+  //   { label: "Unit", required: militaryService.ns_status === "Completed", name: "unit", type: "text", placeholder: "e.g., 3rd Infantry Battalion" },
+  //   { label: "Vocation", required: militaryService.ns_status === "Completed", name: "vocation", type: "text", placeholder: "e.g., Combat Engineer" },
+  //   { label: "Next Camp Date", required: false, name: "next_camp_date", type: "date" },
+  //   {
+  //     label: "Operationally Ready",
+  //     required: militaryService.ns_status === "Completed",
+  //     name: "is_operationally_ready",
+  //     type: "select",
+  //     options: ["Yes", "No"],
+  //   },
+  //   { label: "NSman Unit", required: false, name: "nsman_unit", type: "text" },
+  //   { label: "NSman Vocation", required: false, name: "nsman_vocation", type: "text" },
+  //   { label: "Exemption Reason", required: militaryService.ns_status !== "Completed", name: "ns_exemption_reason", type: "textarea" },
+  // ];
 
   return (
-    <div className="main-panel">
-      <div className="form-wrapper">
-        <div className="form-container">
+    <div className={styles.mainPanel}>
+      <div className={styles.formWrapper}>
+        <div className={styles.applicantHeader}>
+        </div>
+
+
+        <div className={styles.formContainer}>
           <h2
-            className="section-title"
+            className={styles.sectionTitle}
             onClick={() => setShowPersonalParticulars((prev) => !prev)}
             style={{ cursor: "pointer" }}
           >
-            Personal Particulars
+            <span className={styles.sectionTitleText}>
+              Personal Particulars
+            </span>
+            <div className={styles.sectionArrow}>
+              {showPersonalParticulars ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
           </h2>
+
           {showPersonalParticulars && (
-            <div className="form-section">
-              {[
-                {
-                  label: "Salutation",
-                  required: true,
-                  type: "select",
-                  options: ["Mr.", "Ms.", "Mrs.", "Dr."],
-                },
-                {
-                  label: "Full Name (as in NRIC/ Passport)",
-                  required: true,
-                  type: "text",
-                },
-                 {
-                  label: "NRIC",
-                  required: true,
-                  type: "text",
-                },
-                { label: "Alias", type: "text" },
-                { label: "Email Address", required: true, type: "email" },
-              ].map((field, i) => (
-                <div key={i}>
-                  <span className="label-text">
-                    {field.label}
-                    {field.required && <span className="required-asterisk">*</span>}
+            <div className={styles.formSection}>
+              {personalParticularsFields.map(({ label, required, name, type, options }, i) => (
+                <div key={i} className={styles.inputGroup}>
+                  <span className={styles.labelText}>
+                    {label}
+                    {required && <span className={styles.requiredAsterisk}>*</span>}
                   </span>
-                  {field.type === "select" ? (
-                    <select className="input" defaultValue="">
+
+                  {type === "select" ? (
+                    <select
+                      className={styles.input}
+                      name={name}
+                      value={personalParticulars[name] as string}
+                      disabled
+                    >
                       <option value="" disabled>
                         Select
                       </option>
-                      {field.options?.map((opt) => (
-                        <option key={opt}>{opt}</option>
+                      {options?.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
                       ))}
                     </select>
+                  ) : type === "date" ? (
+                    <input
+                      type="date"
+                      className={styles.input}
+                      name={name}
+                      value={personalParticulars[name] 
+                        ? personalParticulars[name] instanceof Date 
+                          ? personalParticulars[name].toISOString().split('T')[0]
+                          : personalParticulars[name].toString().split('T')[0]
+                        : ""
+                      }
+                      disabled
+                    />
                   ) : (
-                    <input type={field.type} className="input" />
+                    <input
+                      type={type}
+                      className={styles.input}
+                      name={name}
+                      value={(personalParticulars[name] as string) ?? ""}
+                      disabled
+                    />
                   )}
                 </div>
               ))}
-
-              <div className="date-input-wrapper">
-                <span className="label-text">
-                  Date of Birth<span className="required-asterisk">*</span>
-                </span>
-                <CssBaseline />
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    value={dob}
-                    onChange={(newValue) => setDob(newValue)}
-                    format="dd/MM/yyyy"
-                    slotProps={{
-                      textField: {
-                        variant: "outlined",
-                        size: "small",
-                        fullWidth: true,
-                        InputProps: {
-                          sx: {
-                            backgroundColor: darkMode ? "#3a3a3a" : "#fff",
-                            color: darkMode ? "#fff" : "#000",
-                            borderColor: darkMode ? "#555" : "#ccc",
-                            '& .MuiInputBase-input': {
-                              color: darkMode ? "#fff" : "#000",
-                            },
-                            '& .MuiOutlinedInput-notchedOutline': {
-                              borderColor: darkMode ? "#777" : "#ccc",
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                              borderColor: darkMode ? "#aaa" : "#666",
-                            },
-                          },
-                        },
-                      },
-                    }}
-                    sx={{
-                      '& .MuiPickersPopper-root': {
-                        backgroundColor: darkMode ? '#2c2c2c' : '#fff',
-                        color: darkMode ? '#fff' : '#000',
-                      },
-                    }}
-                  />
-                </LocalizationProvider>
-              </div>
-
-
-              {[
-                {
-                  label: "Marital Status",
-                  required: true,
-                  options: ["Single", "Married", "Divorced", "Widowed"],
-                },
-                { label: "Gender", required: true, options: ["Male", "Female"] },
-                {
-                  label: "Nationality",
-                  required: true,
-                  options: ["Singaporean", "Malaysian", "Indonesian", "Others"],
-                },
-                {
-                  label: "Status in Singapore",
-                  required: true,
-                  options: ["Citizen", "PR", "Foreigner"],
-                },
-                {
-                  label: "Race",
-                  required: true,
-                  options: ["Chinese", "Malay", "Indian", "Others"],
-                },
-                { label: "Dialect", type: "text" },
-                {
-                  label: "Religion",
-                  required: true,
-                  options: ["Buddhism", "Christianity", "Hinduism", "Islam", "Others"],
-                },
-                {
-                  label: "Country of Birth",
-                  required: true,
-                  options: ["Singapore", "Malaysia", "India", "Others"],
-                },
-                { label: "Passport No.", required: true, type: "text" },
-              ].map((field, i) => (
-                <div key={i}>
-                  <span className="label-text">
-                    {field.label}
-                    {field.required && <span className="required-asterisk">*</span>}
-                  </span>
-                  {field.type === "text" || !field.options ? (
-                    <input type="text" className="input" />
-                  ) : (
-                    <select className="input" defaultValue="">
-                      <option value="" disabled>
-                        Select
-                      </option>
-                      {field.options.map((opt) => (
-                        <option key={opt}>{opt}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              ))}
-
-              <div className="date-input-wrapper">
-                  <span className="label-text">
-                    Passport Expiry Date<span className="required-asterisk">*</span>
-                  </span>
-
-                  <div className="date-picker-container">
-                    <CssBaseline />
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <DatePicker
-                        value={passportExpiry}
-                        onChange={(newValue) => setPassportExpiry(newValue)}
-                        format="dd/MM/yyyy"
-                        slotProps={{
-                          textField: {
-                            variant: "outlined",
-                            size: "small",
-                            fullWidth: true,
-                            InputProps: {
-                              sx: {
-                                backgroundColor: darkMode ? "#3a3a3a" : "#fff",
-                                color: darkMode ? "#fff" : "#000",
-                                borderColor: darkMode ? "#555" : "#ccc",
-                                '& .MuiInputBase-input': {
-                                  color: darkMode ? "#fff" : "#000",
-                                },
-                                '& .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: darkMode ? "#777" : "#ccc",
-                                },
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: darkMode ? "#aaa" : "#666",
-                                },
-                              },
-                            },
-                          },
-                        }}
-                        sx={{
-                          '& .MuiPickersPopper-root': {
-                            backgroundColor: darkMode ? '#2c2c2c' : '#fff',
-                            color: darkMode ? '#fff' : '#000',
-                          },
-                        }}
-                      />
-                    </LocalizationProvider>
-                  </div>
-                </div>
-              </div>
+            </div>
           )}
         </div>
 
-        <div className="form-container">
+        <div className={styles.formContainer}>
           <h2
-            className="section-title"
+            className={styles.sectionTitle}
             onClick={() => setShowSingaporeAddress((prev) => !prev)}
             style={{ cursor: "pointer" }}
           >
-            Singapore Address
+            <span className={styles.sectionTitleText}>
+              Singapore Address
+            </span>
+            <div className={styles.sectionArrow}>
+              {showSingaporeAddress ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
           </h2>
+
           {showSingaporeAddress && (
-            <div className="form-section">
-              {[
-                {
-                  label: "Blk/House No.",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  label: "Street Name",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  label: "Unit",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  label: "No.",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  label: "Postal Code",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  label: "Mobile No.",
-                  required: true,
-                  type: "tel",
-                },
-                {
-                  label: "Home Telephone No.",
-                  required: false,
-                  type: "tel",
-                },
-              ].map((field, i) => (
-                <div key={i}>
-                  <span className="label-text">
-                    {field.label}
-                    {field.required && <span className="required-asterisk">*</span>}
+            <div className={styles.formSection}>
+              {sgAddressfields.map(({ label, required, name, type }, i) => (
+                <div key={i} className={styles.inputGroup}>
+                  <span className={styles.labelText}>
+                    {label}
+                    {required && <span className={styles.requiredAsterisk}>*</span>}
                   </span>
-                  {<input type={field.type} className="input" />}
+                  <input
+                    type={type}
+                    className={styles.input}
+                    name={name}
+                    value={sgAddress[name]}
+                    disabled
+                  />
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        <div className="form-container">
+        <div className={styles.formContainer}>
           <h2
-            className="section-title"
+            className={styles.sectionTitle}
             onClick={() => setShowOverseasAddress((prev) => !prev)}
             style={{ cursor: "pointer" }}
           >
-            Overseas Address
+            <span className={styles.sectionTitleText}>
+              Overseas Address
+            </span>
+            <div className={styles.sectionArrow}>
+              {showOverseasAddress ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
           </h2>
+          
           {showOverseasAddress && (
-            <div className="form-section">
-              {[
-                {
-                  label: "Blk/House No.",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  label: "Street Name",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  label: "Building Name",
-                  required: false,
-                  type: "text",
-                },
-                {
-                  label: "City",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  label: "State/Province",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  label: "Country",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  label: "Postal Code",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  label: "Mobile No.",
-                  required: true,
-                  type: "tel",
-                },
-                {
-                  label: "Home Telephone No.",
-                  required: false,
-                  type: "tel",
-                }
-              ].map((field, i) => (
-                <div key={i}>
-                  <span className="label-text">
-                    {field.label}
-                    {field.required && <span className="required-asterisk">*</span>}
-                  </span>
-                  {(field.label === "Mobile No." || field.label === "Home Telephone No.") ? (
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <select className="country-input" style={{ flex: "1 1 35%" }}>
-                        <option value="+65">+65 (SG)</option>
-                        <option value="+60">+60 (MY)</option>
-                        <option value="+91">+91 (IN)</option>
-                        <option value="+1">+1 (US)</option>
-                        <option value="+44">+44 (UK)</option>
-                        <option value="+61">+61 (AU)</option>
-                        <option value="+81">+81 (JP)</option>
-                        <option value="+86">+86 (CN)</option>
-                      </select>
-                      <input
-                        type="tel"
-                        placeholder="Contact Number"
-                        className="input"
-                        style={{ flex: "1 1 65%" }}
-                      />
+            <div className={styles.formSection}>
+              <div className={styles.inputGroup}>
+                <span className={styles.labelText}>
+                  Do you have an address overseas?
+                  <span className={styles.requiredAsterisk}>*</span>
+                </span>
+                <select
+                  className={styles.input}
+                  value={overseasAddress.has_overseas_address}
+                  disabled
+                >
+                  <option value="" disabled>-- Select --</option>
+                  <option value="Y">Yes</option>
+                  <option value="N">No</option>
+                </select>
+              </div>
+            
+              {overseasAddress.has_overseas_address === "Y" && (
+                <>
+                  {overseasAddressFields.map(({ label, required, name, type }, i) => (
+                    <div key={i} className={styles.inputGroup}>
+                      <span className={styles.labelText}>
+                        {label}
+                        {required && <span className={styles.requiredAsterisk}>*</span>}
+                      </span>
+
+                      {(name === "mobile_number" || name === "home_number") ? (
+                        <div className={styles.phoneInputGroup}>
+                          <select
+                            className={styles.countryInput}
+                            value={overseasAddress[name === "mobile_number" ? "mobile_country_code" : "home_country_code"]}
+                            disabled
+                          >
+                            <option value="+65">+65 (SG)</option>
+                            <option value="+60">+60 (MY)</option>
+                            <option value="+91">+91 (IN)</option>
+                            <option value="+1">+1 (US)</option>
+                            <option value="+44">+44 (UK)</option>
+                            <option value="+61">+61 (AU)</option>
+                            <option value="+81">+81 (JP)</option>
+                            <option value="+86">+86 (CN)</option>
+                          </select>
+
+                          <input
+                            type={type}
+                            placeholder="Contact Number"
+                            className={styles.input}
+                            name={name}
+                            value={overseasAddress[name]}
+                            disabled
+                          />
+                        </div>
+                      ) : (
+                        <input
+                          type={type}
+                          className={styles.input}
+                          name={name}
+                          value={overseasAddress[name]}
+                          disabled
+                        />
+                      )}
                     </div>
-                    ) : (
-                      <input type={field.type} className="input" />
-                  )}
-                </div>
-              ))}
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>
 
-        <div className="form-container">
-            <h2
-              className="section-title"
-              onClick={() => setShowMilitaryService((prev) => !prev)}
-              style={{ cursor: "pointer" }}
-            >
+        <div className={styles.formContainer}>
+          <h2
+            className={styles.sectionTitle}
+            onClick={() => setShowMilitaryService((prev) => !prev)}
+            style={{ cursor: "pointer" }}
+          >
+            <span className={styles.sectionTitleText}>
               Military Service
-            </h2>
+            </span>
+            <div className={styles.sectionArrow}>
+              {showMilitaryService ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
+          </h2>
 
-            {showMilitaryService && (
-              <div className="form-section">
-                <div>
-                  <span className="label-text">
-                    Finished National Service?<span className="required-asterisk">*</span>
-                  </span>
-                  <select
-                    className="input"
-                    defaultValue=""
-                    onChange={(e) => setNsStatus(e.target.value)}
-                  >
-                    <option value="" disabled>Select</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                    <option value="Not Applicable">Not Applicable</option>
-                  </select>
-                </div>
-
-                {nsStatus === "Yes" && (
-                  <>
-                    
-                    <div className="military-period-group">
-                      <span className="label-text">
-                        Service Period From<span className="required-asterisk">*</span>
-                      </span>
-                      <div className="period-inputs">
-                        <input
-                          type="number"
-                          className="input no-spinner"
-                          placeholder="Year"
-                          min="1960"
-                          max="2100"
-                        />
-                        <select className="input">
-                          <option value="" disabled>Month</option>
-                          {[
-                            "January", "February", "March", "April", "May", "June",
-                            "July", "August", "September", "October", "November", "December",
-                          ].map((month) => (
-                            <option key={month} value={month}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="military-period-group">
-                      <span className="label-text">
-                        To<span className="required-asterisk">*</span>
-                      </span>
-                      <div className="period-inputs">
-                        <input
-                          type="number"
-                          className="input no-spinner"
-                          placeholder="Year"
-                          min="1960"
-                          max="2100"
-                        />
-                        <select className="input">
-                          <option value="" disabled>Month</option>
-                          {[
-                            "January", "February", "March", "April", "May", "June",
-                            "July", "August", "September", "October", "November", "December",
-                          ].map((month) => (
-                            <option key={month} value={month}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    
-
-                    {/* Next line: Rank, Unit, etc. */}
-                    {[
-                      { label: "Rank", type: "text" },
-                      { label: "Unit", type: "text" },
-                      { label: "Vocation", type: "text" },
-                    ].map((field, i) => (
-                      <div key={i}>
-                        <span className="label-text">
-                          {field.label}<span className="required-asterisk">*</span>
-                        </span>
-                        <input type={field.type} className="input" />
-                      </div>
-                    ))}
-
-                    <div className="date-input-wrapper">
-                      <span className="label-text">
-                        Date of Next Camp<span className="required-asterisk">*</span>
-                      </span>
-                      <CssBaseline />
-                      <LocalizationProvider dateAdapter={AdapterDateFns}>
-                        <DatePicker
-                          value={dateOfNextCamp}
-                          onChange={(newValue) => setDateOfNextCamp(newValue)}
-                          format="dd/MM/yyyy"
-                          slotProps={{
-                            textField: {
-                              variant: "outlined",
-                              size: "small",
-                              fullWidth: true,
-                              InputProps: {
-                                sx: {
-                                  backgroundColor: darkMode ? "#3a3a3a" : "#fff",
-                                  color: darkMode ? "#fff" : "#000",
-                                  borderColor: darkMode ? "#555" : "#ccc",
-                                  '& .MuiInputBase-input': {
-                                    color: darkMode ? "#fff" : "#000",
-                                  },
-                                  '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: darkMode ? "#777" : "#ccc",
-                                  },
-                                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: darkMode ? "#aaa" : "#666",
-                                  },
-                                },
-                              },
-                            },
-                          }}
-                          sx={{
-                            '& .MuiPickersPopper-root': {
-                              backgroundColor: darkMode ? '#2c2c2c' : '#fff',
-                              color: darkMode ? '#fff' : '#000',
-                            },
-                          }}
-                        />
-                      </LocalizationProvider>
-                    </div>
-
-
-
-
-                    
-                    <div>
-                      <span className="label-text">
-                        Operationally Ready?<span className="required-asterisk">*</span>
-                      </span>
+          {showMilitaryService && (
+            <div className={styles.formSection}>
+              <div className={styles.inputGroup}>
+                <span className={styles.labelText}>
+                  NS Status<span className={styles.requiredAsterisk}>*</span>
+                </span>
+                <select
+                  className={styles.input}
+                  name="ns_status"
+                  value={militaryService.ns_status}
+                  disabled
+                >
+                  <option value="" disabled>Select</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Not Completed">Not Completed</option>
+                  <option value="Exempted">Exempted</option>
+                  <option value="Not Applicable">Not Applicable</option>
+                </select>
+              </div>
+              
+              {militaryService.ns_status === "Completed" && (
+                <>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Service Period From<span className={styles.requiredAsterisk}>*</span>
+                    </span>
+                    <div className={styles.periodInputs}>
                       <select
-                        className="input"
-                        value={isOperationallyReady}
-                        onChange={(e) => setIsOperationallyReady(e.target.value)}
+                        className={styles.input}
+                        name="service_from_year"
+                        value={militaryService.service_from_year}
+                        disabled
                       >
-                        <option value="" disabled>Select</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
+                        <option value="" disabled>Select Year</option>
+                        {generateYearOptions().map(year => (
+                          <option key={year} value={year.toString()}>{year}</option>
+                        ))}
+                      </select>
+
+                      <select
+                        className={styles.input}
+                        name="service_from_month"
+                        value={militaryService.service_from_month}
+                        disabled
+                      >
+                        <option value="" disabled>Month</option>
+                        {[
+                          "January", "February", "March", "April", "May", "June",
+                          "July", "August", "September", "October", "November", "December",
+                        ].map((month) => (
+                          <option key={month} value={month}>{month}</option>
+                        ))}
                       </select>
                     </div>
-
-                    {isOperationallyReady === "Yes" && (
-                      <>
-                        <div>
-                          <span className="label-text">Unit (NSman) </span>
-                          <input type="text" className="input" placeholder="e.g., 3rd Infantry Battalion" />
-                        </div>
-
-                        <div>
-                          <span className="label-text">Vocation (NSman) </span>
-                          <input type="text" className="input" placeholder="e.g., Combat Engineer" />
-                        </div>
-                      </>
-                    )}
-                  </>
-                )}
-
-                {(nsStatus === "No" || nsStatus === "Not Applicable") && (
-                  <div>
-                    <span className="label-text">
-                      Please state your reason <span className="required-asterisk">*</span>
-                    </span>
-                    <textarea className="input" rows={3} placeholder="Your reason here..." />
                   </div>
-                )}
-              </div>
-            )}
+
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      To<span className={styles.requiredAsterisk}>*</span>
+                    </span>
+                    <div className={styles.periodInputs}>
+                      <select
+                        className={styles.input}
+                        name="service_to_year"
+                        value={militaryService.service_to_year}
+                        disabled
+                      >
+                        <option value="" disabled>Select Year</option>
+                        {generateYearOptions().map(year => (
+                          <option key={year} value={year.toString()}>{year}</option>
+                        ))}
+                      </select>
+
+                      <select
+                        className={styles.input}
+                        name="service_to_month"
+                        value={militaryService.service_to_month}
+                        disabled
+                      >
+                        <option value="" disabled>Month</option>
+                        {[
+                          "January", "February", "March", "April", "May", "June",
+                          "July", "August", "September", "October", "November", "December",
+                        ].map((month) => (
+                          <option key={month} value={month}>{month}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {[
+                    { label: "Rank", type: "text", name: "rank", placeholder: "e.g., 3SG" },
+                    { label: "Unit", type: "text", name: "unit", placeholder: "e.g., 3rd Infantry Battalion" },
+                    { label: "Vocation", type: "text", name: "vocation", placeholder: "e.g., Combat Engineer" },
+                  ].map((field, i) => (
+                    <div key={i} className={styles.inputGroup}>
+                      <span className={styles.labelText}>
+                        {field.label}
+                        <span className={styles.requiredAsterisk}>*</span>
+                      </span>
+                      <input
+                        type={field.type}
+                        className={styles.input}
+                        name={field.name}
+                        value={militaryService[field.name as MilitaryServiceKeys] ?? ""}
+                        placeholder={field.placeholder}
+                        disabled
+                      />
+                    </div>
+                  ))}
+
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Date of Next Camp
+                    </span>
+                    <input
+                      type="date"
+                      className={styles.input}
+                      name="next_camp_date"
+                      value={militaryService.next_camp_date 
+                        ? new Date(militaryService.next_camp_date).toISOString().split('T')[0]
+                        : ""
+                      }
+                      disabled
+                    />
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Operationally Ready?<span className={styles.requiredAsterisk}>*</span>
+                    </span>
+                    <select
+                      className={styles.input}
+                      name="is_operationally_ready"
+                      value={militaryService.is_operationally_ready}
+                      disabled
+                    >
+                      <option value="" disabled>Select</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </div>
+
+                  {militaryService.is_operationally_ready === "Yes" && (
+                    <>
+                      <div className={styles.inputGroup}>
+                        <span className={styles.labelText}>Unit (NSman)</span>
+                        <input 
+                          type="text" 
+                          className={styles.input} 
+                          placeholder="e.g., 3rd Infantry Battalion"
+                          name="nsman_unit"
+                          value={militaryService.nsman_unit}
+                          disabled
+                        />
+                      </div>
+
+                      <div className={styles.inputGroup}>
+                        <span className={styles.labelText}>Vocation (NSman)</span>
+                        <input 
+                          type="text" 
+                          className={styles.input} 
+                          placeholder="e.g., Combat Engineer"
+                          name="nsman_vocation"
+                          value={militaryService.nsman_vocation}
+                          disabled
+                        />
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+              {(militaryService.ns_status !== "Completed") && (
+                <div className={styles.inputGroup}>
+                  <span className={styles.labelText}>
+                    Please state your reason <span className={styles.requiredAsterisk}>*</span>
+                  </span>
+                  <textarea
+                    className={styles.input}
+                    rows={3}
+                    placeholder="Please elaborate. If you do not know the date for enrollment yet, you can write yet to enroll. Otherwise please provide the date of enrollment or the reason you are exempted."
+                    name="ns_exemption_reason"
+                    value={militaryService.ns_exemption_reason}
+                    disabled
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       
-        <div className="form-buttons">
-            <button className="btn submit" onClick={() => navigate("/hr/applicant-details/education")}>Next</button>
+        <div className={styles.formButtons}>
+          <button 
+            className={`${styles.btn} ${styles.btnSave}`} 
+            onClick={() => navigate("/hr/applicants")}
+          >
+            Back to All Applicants
+          </button>
+          <button 
+            className={`${styles.btnSubmit} ${styles.submit}`} 
+            onClick={() => navigate(`/hr/applicant-details/education?userId=${userId}`)}
+          >
+            Next →
+          </button>
         </div>
       </div>
-    </div>
-      
-    
+    </div>   
   );
 };
 

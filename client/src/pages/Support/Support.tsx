@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { ChevronUp, ChevronDown, Trash2 } from "lucide-react";
 import axios from "axios";
 import styles from "../Education/Education.module.css"; 
@@ -8,7 +7,6 @@ import supportStyles from "./Support.module.css";
 const Support: React.FC = () => {
   const [showReferences, setShowReferences] = useState(true);
   const [showAttachments, setShowAttachments] = useState(true);
-  const navigate = useNavigate();
 
   // Type definitions
   type ReferenceRecord = {
@@ -343,7 +341,7 @@ const Support: React.FC = () => {
         });
         setAttachments(updatedAttachments);
       }
-
+      window.dispatchEvent(new Event("profile-completeness-updated"));
       alert("Draft saved!");
     } catch (error: any) {
       console.error("Save draft error:", error);
@@ -453,7 +451,7 @@ const Support: React.FC = () => {
         });
         setAttachments(updatedAttachments);
       }
-
+      window.dispatchEvent(new Event("profile-completeness-updated"));
       alert("Records updated!");
     } catch (error: any) {
       console.error("Update error:", error);

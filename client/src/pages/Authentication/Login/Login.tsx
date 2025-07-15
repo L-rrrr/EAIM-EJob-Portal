@@ -11,7 +11,7 @@ import { useTheme } from "../../../hooks/useTheme";
 
 type LoginFormInputs = {
   role: string;
-  username: string;
+  email: string;
   password: string;
 };
 
@@ -30,7 +30,7 @@ const Login = () => {
     
     try {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/login`, {
-        username: data.username,
+        email: data.email,
         password: data.password,
         role: data.role,
       });
@@ -111,16 +111,16 @@ const Login = () => {
 
           {/* Email Input */}
           <div className={authStyles.formGroup}>
-            <label htmlFor="username" className={authStyles.label}>
+            <label htmlFor="email" className={authStyles.label}>
               <Mail size={18} />
               Email Address
             </label>
             <div className={authStyles.inputWrapper}>
               <input
-                id="username"
+                id="email"
                 type="email"
                 placeholder="Enter your email"
-                {...register("username", { 
+                {...register("email", { 
                   required: "Email is required",
                   pattern: {
                     value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
@@ -134,10 +134,10 @@ const Login = () => {
                     }
                   }
                 })}
-                className={`${authStyles.input} ${errors.username ? authStyles.inputError : ''}`}
+                className={`${authStyles.input} ${errors.email ? authStyles.inputError : ''}`}
               />
             </div>
-            {errors.username && <p className={authStyles.errorMessage}>{errors.username.message}</p>}
+            {errors.email && <p className={authStyles.errorMessage}>{errors.email.message}</p>}
           </div>
 
           {/* Password Input */}

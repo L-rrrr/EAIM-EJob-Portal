@@ -4,6 +4,15 @@ import { ChevronDown, ChevronUp, Upload } from "lucide-react";
 import styles from "./Apply.module.css";
 import axios from "axios";
 
+const TOTAL_SECTIONS = 11;
+const SECTION_TABLES = {
+  personal: 4,
+  education: 1,
+  work: 2,
+  family: 2,
+  support: 2,
+};
+
 const Apply: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -12,6 +21,11 @@ const Apply: React.FC = () => {
   const [showAttachment, setShowAttachment] = useState(true);
   const [showPositionDetails, setShowPositionDetails] = useState(true);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [personalParticularsCompleted, setPersonalParticularsCompleted] = useState(false);
+  const [educationCompleted, setEducationCompleted] = useState(false);
+  const [workCompleted, setWorkCompleted] = useState(false);
+  const [familyCompleted, setFamilyCompleted] = useState(false);
+  const [supportCompleted, setSupportCompleted] = useState(false);
 
   const [jobInfo] = useState({
     job_id: jobData?.job_id || null,
@@ -35,8 +49,6 @@ const Apply: React.FC = () => {
     totalWorkExperience: "",
     relevantWorkExperience: ""
   });
-
-  const [profileCompleteness] = useState(50);
 
   // File validation
   const validateFile = (file: File): string | null => {
@@ -64,6 +76,54 @@ const Apply: React.FC = () => {
 
     return null;
   };
+
+  useEffect(() => {
+    const fetchCompleteness = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const [
+          personalRes,
+          educationRes,
+          workRes,
+          familyRes,
+          supportRes
+        ] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/personal-particulars-completeness`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/education-completeness`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/work-completeness`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/family-completeness`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/support-completeness`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        setPersonalParticularsCompleted(personalRes.data.complete);
+        setEducationCompleted(educationRes.data.complete);
+        setWorkCompleted(workRes.data.complete);
+        setFamilyCompleted(familyRes.data.complete);
+        setSupportCompleted(supportRes.data.complete);
+      } catch (e) {
+        setPersonalParticularsCompleted(false);
+        setEducationCompleted(false);
+        setWorkCompleted(false);
+        setFamilyCompleted(false);
+        setSupportCompleted(false);
+      }
+    };
+    fetchCompleteness();
+
+
+
+    const handler = () => fetchCompleteness();
+    window.addEventListener("profile-completeness-updated", handler);
+    return () => window.removeEventListener("profile-completeness-updated", handler);
+  }, []);
+
+  const completedTables =
+    (personalParticularsCompleted ? SECTION_TABLES.personal : 0) +
+    (educationCompleted ? SECTION_TABLES.education : 0) +
+    (workCompleted ? SECTION_TABLES.work : 0) +
+    (familyCompleted ? SECTION_TABLES.family : 0) +
+    (supportCompleted ? SECTION_TABLES.support : 0);
+
+  const profileCompleteness = Math.floor((completedTables / TOTAL_SECTIONS) * 100);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -131,6 +191,11 @@ const Apply: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (profileCompleteness < 100) {
+      alert("Please complete your profile before submitting your application.");
+      return;
+    }
+
     const isValid = validateAllFields();
     
     if (!isValid) {
@@ -515,7 +580,7 @@ const Apply: React.FC = () => {
                 <input
                   type="text"
                   className={styles.input}
-                  placeholder="e.g., 3 years"
+                  placeholder="e.g., 3"
                   value={positionDetails.totalWorkExperience}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -547,7 +612,7 @@ const Apply: React.FC = () => {
                 <input
                   type="text"
                   className={styles.input}
-                  placeholder="e.g., 2 years"
+                  placeholder="e.g., 2"
                   value={positionDetails.relevantWorkExperience}
                   onChange={(e) => {
                     const value = e.target.value;

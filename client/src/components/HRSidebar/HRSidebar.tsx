@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import "./HRSidebar.css";
+import { Link, useSearchParams } from "react-router-dom";
+import styles from "../Sidebar/Sidebar.module.css";
+
 import {
   PanelLeft,
   User,
@@ -8,7 +9,6 @@ import {
   Contact,
   Briefcase,
   BookOpen,
-  MessageCircleQuestion
 } from "lucide-react";
 
 type Section = {
@@ -17,37 +17,47 @@ type Section = {
   path: string;
 };
 
-const profileSections: Section[] = [
-  { label: "Personal Particulars", icon: <User size={16} />, path: "/hr/applicant-details/personal-particulars" },
-  { label: "Education", icon: <GraduationCap size={16} />, path: "/hr/applicant-details/education" },
-  { label: "Work & Skills", icon: <Briefcase size={16} />, path: "/hr/applicant-details/work" },
-  { label: "Family Background", icon: <Contact size={16} />, path: "/hr/applicant-details/family" },
-  { label: "Supporting Materials", icon: <BookOpen size={16} />, path: "/hr/applicant-details/support" },
-  { label: "Find Out More", icon: <MessageCircleQuestion size={16} />, path: "/hr/applicant-details/background-check" }
-];
+interface HRSidebarProps {
+  applicantName?: string;
+}
 
-const Sidebar: React.FC = () => {
+const HRSidebar: React.FC<HRSidebarProps> = ({ applicantName }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const [searchParams] = useSearchParams();
+  const userId = searchParams.get('userId');
+
+  // Update hrSections to include userId in the path
+  const hrSections: Section[] = [
+    { label: "Personal Particulars", icon: <User size={16} />, path: `/hr/applicant-details/personal-particulars?userId=${userId}` },
+    { label: "Education", icon: <GraduationCap size={16} />, path: `/hr/applicant-details/education?userId=${userId}` },
+    { label: "Work & Skills", icon: <Briefcase size={16} />, path: `/hr/applicant-details/work?userId=${userId}` },
+    { label: "Family Background", icon: <Contact size={16} />, path: `/hr/applicant-details/family?userId=${userId}` },
+    { label: "Supporting Materials", icon: <BookOpen size={16} />, path: `/hr/applicant-details/support?userId=${userId}` },
+  ];
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
   };
 
   return (
-    <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
-      <div className="sidebar-header">
-        {!collapsed && <h3 className="sidebar-title">Alice Tan</h3>}
-        <button onClick={toggleSidebar} className="toggle-button">
+    <div className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
+      <div className={styles.sidebarHeader}>
+        {!collapsed && (
+          <h3 className={styles.sidebarTitle}>
+            {applicantName ? `${applicantName}'s Details` : "Applicant Details"}
+          </h3>
+        )}
+        <button onClick={toggleSidebar} className={styles.toggleButton}>
           <PanelLeft size={20} />
         </button>
       </div>
 
       {!collapsed && (
         <>
-          <ul className="profile-sections">
-            {profileSections.map((section, index) => (
-              <li key={index} className="profile-item">
-                <Link to={section.path} className="profile-label">
+          <ul className={styles.profileSections}>
+            {hrSections.map((section, index) => (
+              <li key={index} className={styles.profileItem}>
+                <Link to={section.path} className={styles.profileLabel}>
                   {section.icon} {section.label}
                 </Link>
               </li>
@@ -59,4 +69,4 @@ const Sidebar: React.FC = () => {
   );
 };
 
-export default Sidebar;
+export default HRSidebar;

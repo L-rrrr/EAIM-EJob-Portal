@@ -96,7 +96,7 @@ const AvailableJobs: React.FC = () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/jobs`);
         if (res.data.success) {
-          setJobs(res.data.data);
+          setJobs(res.data.data.filter((job: Job) => job.hiring_status === "Hiring"));
         }
       } catch (error) {
         console.error("Failed to fetch jobs", error);

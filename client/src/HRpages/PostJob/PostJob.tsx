@@ -7,7 +7,6 @@ import styles from "./PostJob.module.css";
 
 import {
   Plus,
-  Edit,
   Eye,
   Calendar,
   Users,
@@ -105,7 +104,6 @@ const TiptapEditor = ({
 };
 
 const PostJob: React.FC = () => {
-  const [mode, setMode] = useState("post");
   const [responsibilities, setResponsibilities] = useState("");
   const [requirements, setRequirements] = useState("");
   const [jobTitle, setJobTitle] = useState("");
@@ -191,24 +189,8 @@ const PostJob: React.FC = () => {
         <div className={styles.formPanel}>
           <div className={styles.formHeader}>
             <h2 className={styles.formTitle}>
-              {mode === "post" ? "📝 Post New Job" : "✏️ Edit Job"}
+              📝 Post New Job
             </h2>
-            <div className={styles.toggleButtons}>
-              <button
-                className={`${styles.toggleBtn} ${mode === "post" ? styles.active : ""}`}
-                onClick={() => setMode("post")}
-              >
-                <Plus size={16} />
-                Post Job
-              </button>
-              <button
-                className={`${styles.toggleBtn} ${mode === "edit" ? styles.active : ""}`}
-                onClick={() => setMode("edit")}
-              >
-                <Edit size={16} />
-                Edit Job
-              </button>
-            </div>
           </div>
 
           <form className={styles.postJobForm} onSubmit={handleSubmit}>
@@ -309,12 +291,9 @@ const PostJob: React.FC = () => {
             </div>
 
             <div className={styles.formActions}>
-              <button type="button" className={styles.cancelBtn}>
-                Cancel
-              </button>
               <button type="submit" className={styles.submitBtn}>
                 <Plus size={16} />
-                {mode === "post" ? "Post Job" : "Save Changes"}
+                Post Job
               </button>
             </div>
           </form>
@@ -323,7 +302,7 @@ const PostJob: React.FC = () => {
         {/* BOTTOM SECTION: REQUISITION LIST */}
         <div className={styles.requisitionPanel}>
           <div className={styles.tableHeader}>
-            <h2 className={styles.tableTitle}>📋 Requisition List</h2>
+            <h2 className={styles.tableTitle}>📋 Job Requisition List</h2>
             <div className={styles.tableStats}>
               <span className={styles.totalCount}>{requisitions.length} Pending Requests</span>
             </div>

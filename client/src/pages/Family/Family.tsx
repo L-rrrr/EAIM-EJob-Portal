@@ -245,7 +245,7 @@ const Family: React.FC = () => {
         }));
         setEmergencyContacts(updatedContacts);
       }
-
+      window.dispatchEvent(new Event("profile-completeness-updated"));
       alert("Draft saved!");
     } catch (error) {
       console.error("Save draft error:", error);
@@ -307,7 +307,7 @@ const Family: React.FC = () => {
         }));
         setEmergencyContacts(updatedContacts);
       }
-      
+      window.dispatchEvent(new Event("profile-completeness-updated"));
       alert("Family information updated!");
     } catch (error) {
       console.error("Update error:", error);

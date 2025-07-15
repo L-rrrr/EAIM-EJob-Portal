@@ -1,106 +1,204 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "./ApplicantEducation.css";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import styles from "../../pages/Education/Education.module.css";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import axios from "axios";
 
 const ApplicantEducation: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const userId = searchParams.get('userId');
   const [showEducationBackground, setShowEducationBackground] = useState(true);
   const [showScholarshipAwards, setShowScholarshipAwards] = useState(true);
   const [showOtherQualifications, setShowOtherQualifications] = useState(true);
-  const navigate = useNavigate();
+  const currentYear = new Date().getFullYear();
+
+  // Generate year options from current year down to 1960
+  const generateYearOptions = () => {
+    const years = [];
+    for (let year = currentYear; year >= 1960; year--) {
+      years.push(year);
+    }
+    return years;
+  };
   
-  const [educationRecords, setEducationRecords] = useState([
+  type EducationRecord = {
+    id: number;
+    education_id?: number;
+    isHighestQualification: string;
+    levelOfQualification: string;
+    institute: string;
+    qualificationAttained: string;
+    yearFrom: string;
+    yearTo: string;
+  };
+
+  type ScholarshipRecord = {
+    id: number;
+    scholarship_id?: number;
+    organization: string;
+    description: string;
+    certificate: string;
+    fromMonth: string;
+    fromYear: string;
+    toMonth: string;
+    toYear: string;
+  };
+
+  type OtherQualificationRecord = {
+    id: number;
+    qualification_id?: number;
+    organization: string;
+    course: string;
+    certificate: string;
+    fromMonth: string;
+    fromYear: string;
+    toMonth: string;
+    toYear: string;
+  };
+
+  const [educationRecords, setEducationRecords] = useState<EducationRecord[]>([
     {
       id: 1,
-      hasHighestQualification: "",
+      isHighestQualification: "",
       levelOfQualification: "",
       institute: "",
       qualificationAttained: "",
       yearFrom: "",
-      yearTo: ""
-    }
+      yearTo: "",
+    },
   ]);
 
-  const updateEducationRecord = (id: number, field: string, value: string) => {
-  if (field === 'hasHighestQualification' && value === 'Yes') {
-    const updatedRecords = educationRecords.map(record =>
-      record.id === id
-        ? { ...record, hasHighestQualification: 'Yes' }
-        : { ...record, hasHighestQualification: 'No' }
-    );
-    setEducationRecords(updatedRecords);
-  } else {
-    setEducationRecords(educationRecords.map(record =>
-      record.id === id ? { ...record, [field]: value } : record
-    ));
-  }
-};
+  const [scholarshipAwards, setScholarshipAwards] = useState<ScholarshipRecord[]>([]);
+  const [otherQualifications, setOtherQualifications] = useState<OtherQualificationRecord[]>([]);
 
-const [scholarshipAwards, setScholarshipAwards] = useState([
-  {
-    id: 1,
-    organization: "",
-    description: "",
-    fromMonth: "",
-    fromYear: "",
-    toMonth: "",
-    toYear: "",
-    certificate: ""
-  }
-]);
+  useEffect(() => {
+    const fetchApplicantEducationData = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-const updateScholarshipAward = (id: number, field: string, value: string) => {
-  setScholarshipAwards(scholarshipAwards.map(record =>
-    record.id === id ? { ...record, [field]: value } : record
-  ));
-};
+        if (!userId) {
+          console.error("No user ID provided");
+          return;
+        }
 
+        // Fetch applicant education data based on user ID
+        const educationResponse = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/get-applicant-education/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-const [otherQualifications, setOtherQualifications] = useState([
-  {
-    id: 1,
-    organization: "",
-    course: "",
-    fromMonth: "",
-    fromYear: "",
-    toMonth: "",
-    toYear: "",
-    certificate: ""
-  }
-]);
+        if (educationResponse.data && educationResponse.data.success) {
+          const data = educationResponse.data.data;
+          
+          // Set education records
+          if (data.education && Array.isArray(data.education) && data.education.length > 0) {
+            const records = data.education.map((rec: any) => ({
+              id: rec.education_id,
+              education_id: rec.education_id,
+              isHighestQualification: rec.is_highest_qualification || "",
+              levelOfQualification: rec.level_of_qualification || "",
+              institute: rec.institute || "",
+              qualificationAttained: rec.qualification_attained || "",
+              yearFrom: rec.year_from ? String(rec.year_from) : "",
+              yearTo: rec.year_to ? String(rec.year_to) : "",
+            }));
+            setEducationRecords(records);
+          } else {
+            // Set default empty record if no data
+            setEducationRecords([{
+              id: 1,
+              isHighestQualification: "",
+              levelOfQualification: "",
+              institute: "",
+              qualificationAttained: "",
+              yearFrom: "",
+              yearTo: "",
+            }]);
+          }
 
-const updateOtherQualifications = (id: number, field: string, value: string) => {
-  setOtherQualifications(otherQualifications.map(record =>
-    record.id === id ? { ...record, [field]: value } : record
-  ));
-};
+          // Set scholarship awards
+          if (data.scholarships && Array.isArray(data.scholarships) && data.scholarships.length > 0) {
+            const scholarships = data.scholarships.map((rec: any) => ({
+              id: rec.scholarship_id,
+              scholarship_id: rec.scholarship_id,
+              organization: rec.organization || "",
+              description: rec.description || "",
+              certificate: rec.certificate || "",
+              fromMonth: rec.from_month || "",
+              fromYear: rec.from_year || "",
+              toMonth: rec.to_month || "",
+              toYear: rec.to_year || "",
+            }));
+            setScholarshipAwards(scholarships);
+          } else {
+            setScholarshipAwards([]);
+          }
 
+          // Set other qualifications
+          if (data.qualifications && Array.isArray(data.qualifications) && data.qualifications.length > 0) {
+            const qualifications = data.qualifications.map((rec: any) => ({
+              id: rec.qualification_id,
+              qualification_id: rec.qualification_id,
+              organization: rec.organization || "",
+              course: rec.course || "",
+              certificate: rec.certificate || "",
+              fromMonth: rec.from_month || "",
+              fromYear: rec.from_year || "",
+              toMonth: rec.to_month || "",
+              toYear: rec.to_year || "",
+            }));
+            setOtherQualifications(qualifications);
+          } else {
+            setOtherQualifications([]);
+          }
+        }
+      } catch (error: any) {
+        console.error("Failed to fetch applicant education data", error);
+      }
+    };
+
+    fetchApplicantEducationData();
+  }, [userId]);
 
   return (
-    <div className="main-panel">
-      <div className="form-wrapper">
+    <div className={styles.mainPanel}>
+      <div className={styles.formWrapper}>
 
         {/* Education Background */}
-        <div className="form-container">
+        <div className={styles.formContainer}>
           <h2
-            className="section-title"
+            className={styles.sectionTitle}
             onClick={() => setShowEducationBackground(prev => !prev)}
           >
-            Education Background
+            <span className={styles.sectionTitleText}>
+              Education Background
+            </span>
+            <div className={styles.sectionArrow}>
+              {showEducationBackground ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
           </h2>
           {showEducationBackground && (
             <div>
+              <div className={styles.labelHint}>
+                Please provide your most recent qualification for the first record.
+              </div>
+              
               {educationRecords.map((record, index) => (
-                <div key={record.id} className={`form-section ${index > 0 ? 'record' : ''}`}>
-                  {index > 0}
+                <div key={record.id} className={`${styles.formSection} ${index > 0 ? styles.record : ''}`}>
                   
-                  <div>
-                    <span className="label-text">
-                      Highest Qualification?<span className="required-asterisk">*</span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Highest Qualification?<span className={styles.requiredAsterisk}>*</span>
                     </span>
                     <select
-                      className="input"
-                      value={record.hasHighestQualification}
-                      onChange={(e) => updateEducationRecord(record.id, 'hasHighestQualification', e.target.value)}
+                      className={styles.input}
+                      value={record.isHighestQualification}
+                      disabled
                     >
                       <option value="" disabled>Select</option>
                       <option value="Yes">Yes</option>
@@ -108,14 +206,14 @@ const updateOtherQualifications = (id: number, field: string, value: string) => 
                     </select>
                   </div>
 
-                  <div>
-                    <span className="label-text">
-                      Level of Qualification<span className="required-asterisk">*</span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Level of Qualification<span className={styles.requiredAsterisk}>*</span>
                     </span>
                     <select 
-                      className="input" 
+                      className={styles.input} 
                       value={record.levelOfQualification}
-                      onChange={(e) => updateEducationRecord(record.id, 'levelOfQualification', e.target.value)}
+                      disabled
                     >
                       <option value="" disabled>Select</option>
                       <option value="PSLE">PSLE</option>
@@ -127,58 +225,62 @@ const updateOtherQualifications = (id: number, field: string, value: string) => 
                     </select>
                   </div>
 
-                  <div>
-                    <span className="label-text">
-                      Institute / University<span className="required-asterisk">*</span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Institute / University<span className={styles.requiredAsterisk}>*</span>
                     </span>
                     <input 
                       type="text" 
-                      className="input" 
+                      className={styles.input} 
                       placeholder="e.g. NUS, ITE College West"
                       value={record.institute}
-                      onChange={(e) => updateEducationRecord(record.id, 'institute', e.target.value)}
+                      disabled
                     />
                   </div>
 
-                  <div>
-                    <span className="label-text">
-                      Qualification Attained<span className="required-asterisk">*</span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Qualification Attained<span className={styles.requiredAsterisk}>*</span>
                     </span>
                     <input 
                       type="text" 
-                      className="input" 
+                      className={styles.input} 
                       placeholder="e.g. BSc in Computing"
                       value={record.qualificationAttained}
-                      onChange={(e) => updateEducationRecord(record.id, 'qualificationAttained', e.target.value)}
+                      disabled
                     />
                   </div>
 
-                  <div>
-                    <span className="label-text">
-                      Year From<span className="required-asterisk">*</span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Year From<span className={styles.requiredAsterisk}>*</span>
                     </span>
-                    <input 
-                      type="number" 
-                      className="input no-spinner" 
-                      min="1960" 
-                      max="2100"
+                    <select 
+                      className={styles.input} 
                       value={record.yearFrom}
-                      onChange={(e) => updateEducationRecord(record.id, 'yearFrom', e.target.value)}
-                    />
+                      disabled
+                    >
+                      <option value="">Select Year</option>
+                      {generateYearOptions().map(year => (
+                        <option key={year} value={year.toString()}>{year}</option>
+                      ))}
+                    </select>
                   </div>
 
-                  <div>
-                    <span className="label-text">
-                      Year To<span className="required-asterisk">*</span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Year To<span className={styles.requiredAsterisk}>*</span>
                     </span>
-                    <input 
-                      type="number" 
-                      className="input no-spinner" 
-                      min="1960" 
-                      max="2100"
+                    <select 
+                      className={styles.input} 
                       value={record.yearTo}
-                      onChange={(e) => updateEducationRecord(record.id, 'yearTo', e.target.value)}
-                    />
+                      disabled
+                    >
+                      <option value="">Select Year</option>
+                      {generateYearOptions().map(year => (
+                        <option key={year} value={year.toString()}>{year}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               ))}
@@ -187,202 +289,267 @@ const updateOtherQualifications = (id: number, field: string, value: string) => 
         </div>
 
         {/* Scholarship / Awards */}
-        <div className="form-container">
+        <div className={styles.formContainer}>
           <h2
-            className="section-title"
+            className={styles.sectionTitle}
             onClick={() => setShowScholarshipAwards(prev => !prev)}
           >
-            Scholarship / Awards
+            <span className={styles.sectionTitleText}>
+              Scholarship / Awards (Optional)
+            </span>
+            <div className={styles.sectionArrow}>
+              {showScholarshipAwards ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
           </h2>
           {showScholarshipAwards && (
             <div>
-              {scholarshipAwards.map((record, index) => (
-                <div key={record.id} className={`form-section ${index > 0 ? 'record' : ''}`}>
-                  {index > 0}
+              {scholarshipAwards.length === 0 && (
+                <div className={styles.noRecordsMessage}>
+                  No scholarship/award records found.
+                </div>
+              )}
 
-                  <div>
-                    <span className="label-text">Institute / Organization Name</span>
+              {scholarshipAwards.map((record) => (
+                <div key={record.id} className={`${styles.formSection} ${styles.record}`}>
+
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Institute / Organization Name<span className={styles.requiredAsterisk}>*</span>
+                    </span>
                     <input
                       type="text"
-                      className="input"
+                      className={styles.input}
                       value={record.organization}
-                      onChange={(e) => updateScholarshipAward(record.id, 'organization', e.target.value)}
+                      disabled
                     />
                   </div>
 
-                  <div>
-                    <span className="label-text">Description of Award</span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Description of Award<span className={styles.requiredAsterisk}>*</span>
+                    </span>
                     <input
                       type="text"
-                      className="input"
+                      className={styles.input}
                       value={record.description}
-                      onChange={(e) => updateScholarshipAward(record.id, 'description', e.target.value)}
+                      disabled
                     />
                   </div>
 
-                  <div>
-                    <span className="label-text">Certificate Awarded</span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Certificate Awarded<span className={styles.requiredAsterisk}>*</span>
+                    </span>
                     <input
                       type="text"
-                      className="input"
+                      className={styles.input}
                       value={record.certificate}
-                      onChange={(e) => updateScholarshipAward(record.id, 'certificate', e.target.value)}
+                      disabled
                     />
                   </div>
 
-                  <div>
-                    <span className="label-text">Period From</span>
-                    <div className="input-pair">
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Period From<span className={styles.requiredAsterisk}>*</span>
+                    </span>
+                    <div className={styles.inputPair}>
                       <select
-                        className="input"
+                        className={styles.input}
                         value={record.fromMonth}
-                        onChange={(e) => updateScholarshipAward(record.id, 'fromMonth', e.target.value)}
+                        disabled
                       >
                         <option value="">Month</option>
                         {["January","February","March","April","May","June","July","August","September","October","November","December"].map(m => (
                           <option key={m} value={m}>{m}</option>
                         ))}
                       </select>
-                      <input
-                        type="text"
-                        className="input"
-                        placeholder="Year"
+
+                      <select
+                        className={styles.input}
                         value={record.fromYear}
-                        onChange={(e) => updateScholarshipAward(record.id, 'fromYear', e.target.value)}
-                      />
+                        disabled
+                      >
+                        <option value="">Year</option>
+                        {generateYearOptions().map(year => (
+                          <option key={year} value={year.toString()}>{year}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
-                  <div>
-                    <span className="label-text">To</span>
-                    <div className="input-pair">
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      To<span className={styles.requiredAsterisk}>*</span>
+                    </span>
+                    <div className={styles.inputPair}>
                       <select
-                        className="input"
+                        className={styles.input}
                         value={record.toMonth}
-                        onChange={(e) => updateScholarshipAward(record.id, 'toMonth', e.target.value)}
+                        disabled
                       >
                         <option value="">Month</option>
                         {["January","February","March","April","May","June","July","August","September","October","November","December"].map(m => (
                           <option key={m} value={m}>{m}</option>
                         ))}
                       </select>
-                      <input
-                        type="text"
-                        className="input"
-                        placeholder="Year"
+                      <select
+                        className={styles.input}
                         value={record.toYear}
-                        onChange={(e) => updateScholarshipAward(record.id, 'toYear', e.target.value)}
-                      />
+                        disabled
+                      >
+                        <option value="">Year</option>
+                        {generateYearOptions().map(year => (
+                          <option key={year} value={year.toString()}>{year}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
-
-                  
-                
               ))}
             </div>
           )}
         </div>
 
-
         {/* Other Qualifications */}
-        <div className="form-container">
+        <div className={styles.formContainer}>
           <h2
-            className="section-title"
+            className={styles.sectionTitle}
             onClick={() => setShowOtherQualifications(prev => !prev)}
           >
-            Other Professional Qualifications
+            <span className={styles.sectionTitleText}>
+              Other Professional Qualifications (Optional)
+            </span>
+            <div className={styles.sectionArrow}>
+              {showOtherQualifications ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
           </h2>
           {showOtherQualifications && (
             <div>
-              {otherQualifications.map((record, index) => (
-                <div key={record.id} className={`form-section ${index > 0 ? 'record' : ''}`}>
-                  {index > 0}
+              {otherQualifications.length === 0 && (
+                <div className={styles.noRecordsMessage}>
+                  No qualification records found.
+                </div>
+              )}
 
-                  <div>
-                    <span className="label-text">Institute / Organization Name</span>
+              {otherQualifications.map((record) => (
+                <div key={record.id} className={`${styles.formSection} ${styles.record}`}>
+
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Institute / Organization Name<span className={styles.requiredAsterisk}>*</span>
+                    </span>
                     <input
                       type="text"
-                      className="input"
+                      className={styles.input}
                       value={record.organization}
-                      onChange={(e) => updateOtherQualifications(record.id, 'organization', e.target.value)}
+                      disabled
                     />
                   </div>
 
-                  <div>
-                    <span className="label-text">Course Attended</span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Course Attended<span className={styles.requiredAsterisk}>*</span>
+                    </span>
                     <input
                       type="text"
-                      className="input"
+                      className={styles.input}
                       value={record.course}
-                      onChange={(e) => updateOtherQualifications(record.id, 'description', e.target.value)}
+                      disabled
                     />
                   </div>
 
-                  <div>
-                    <span className="label-text">Certificate Awarded</span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Certificate Awarded<span className={styles.requiredAsterisk}>*</span>
+                    </span>
                     <input
                       type="text"
-                      className="input"
+                      className={styles.input}
                       value={record.certificate}
-                      onChange={(e) => updateOtherQualifications(record.id, 'certificate', e.target.value)}
+                      disabled
                     />
                   </div>
 
-                  <div>
-                    <span className="label-text">Period From</span>
-                    <div className="input-pair">
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Period From<span className={styles.requiredAsterisk}>*</span>
+                    </span>
+                    <div className={styles.inputPair}>
                       <select
-                        className="input"
+                        className={styles.input}
                         value={record.fromMonth}
-                        onChange={(e) => updateOtherQualifications(record.id, 'fromMonth', e.target.value)}
+                        disabled
                       >
                         <option value="">Month</option>
                         {["January","February","March","April","May","June","July","August","September","October","November","December"].map(m => (
                           <option key={m} value={m}>{m}</option>
                         ))}
                       </select>
-                      <input
-                        type="text"
-                        className="input"
-                        placeholder="Year"
+                      <select
+                        className={styles.input}
                         value={record.fromYear}
-                        onChange={(e) => updateOtherQualifications(record.id, 'fromYear', e.target.value)}
-                      />
+                        disabled
+                      >
+                        <option value="">Year</option>
+                        {generateYearOptions().map(year => (
+                          <option key={year} value={year.toString()}>{year}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
-                  <div>
-                    <span className="label-text">To</span>
-                    <div className="input-pair">
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      To<span className={styles.requiredAsterisk}>*</span>
+                    </span>
+                    <div className={styles.inputPair}>
                       <select
-                        className="input"
+                        className={styles.input}
                         value={record.toMonth}
-                        onChange={(e) => updateOtherQualifications(record.id, 'toMonth', e.target.value)}
+                        disabled
                       >
                         <option value="">Month</option>
                         {["January","February","March","April","May","June","July","August","September","October","November","December"].map(m => (
                           <option key={m} value={m}>{m}</option>
                         ))}
                       </select>
-                      <input
-                        type="text"
-                        className="input"
-                        placeholder="Year"
+                      <select
+                        className={styles.input}
                         value={record.toYear}
-                        onChange={(e) => updateOtherQualifications(record.id, 'toYear', e.target.value)}
-                      />
+                        disabled
+                      >
+                        <option value="">Year</option>
+                        {generateYearOptions().map(year => (
+                          <option key={year} value={year.toString()}>{year}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
               ))}
-
             </div>
           )}
         </div>
 
-        <div className="form-buttons">
-          <button className="btn submit" onClick={() => navigate("/hr/applicant-details/work")}>Next</button>
+        <div className={styles.formButtons}>
+          <button 
+            className={`${styles.btn} ${styles.save}`} 
+            onClick={() => navigate("/hr/applicants")}
+          >
+            Back to All Applicants
+          </button>
+          <button 
+            className={`${styles.btn} ${styles.submit}`} 
+            onClick={() => navigate(`/hr/applicant-details/personal-particulars?userId=${userId}`)}
+          >
+            ← Previous
+          </button>
+          <button 
+            className={`${styles.btn} ${styles.submit}`} 
+            onClick={() => navigate(`/hr/applicant-details/work?userId=${userId}`)}
+          >
+            Next →
+          </button>
         </div>
       </div>
     </div>

@@ -163,7 +163,7 @@ const handleSaveDraft = async (e?: React.MouseEvent) => {
       }));
       setOtherQualifications(updatedQualifications);
     }
-
+    window.dispatchEvent(new Event("profile-completeness-updated"));
     alert("Draft saved!");
   } catch (error) {
     console.error("Save draft error:", error);
@@ -246,7 +246,7 @@ const handleUpdate = async (e?: React.MouseEvent) => {
       }));
       setOtherQualifications(updatedQualifications);
     }
-    
+    window.dispatchEvent(new Event("profile-completeness-updated"));
     alert("Education background updated!");
   } catch (error) {
     console.error("Update error:", error);

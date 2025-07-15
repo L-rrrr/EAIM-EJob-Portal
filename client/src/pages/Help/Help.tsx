@@ -21,7 +21,7 @@ const faqs: FAQ[] = [
   },
   {
     question: "Can I edit my application after submission?",
-    answer: "Unfortunately, once an application is submitted, it cannot be modified. We recommend carefully reviewing all information before clicking the submit button. You can track your submitted applications on the Jobs Applied page.",
+    answer: "Unfortunately, once an application is submitted, it cannot be modified. We recommend carefully reviewing all information before clicking the submit button. You can track your submitted applications on the Jobs Applied page. You can still change your profile information at any time by visiting your Profile page, but it will only affect future applications.",
     category: "jobs"
   },
   {
@@ -56,7 +56,7 @@ const faqs: FAQ[] = [
   },
   {
     question: "How will I know if my application was received?",
-    answer: "You'll receive an email confirmation immediately after submitting your application. You can also check the status of all your applications on the Jobs Applied page, which shows current status and any scheduled interviews.",
+    answer: "All the applied jobs will appear on the Jobs Applied page. You can check the status of all your applications, which shows current status and any scheduled interviews.",
     category: "general"
   }
 ];

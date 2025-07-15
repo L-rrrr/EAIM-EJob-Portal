@@ -22,14 +22,9 @@
     "axios": "^1.9.0",
     "lucide-react": "^0.511.0",
     "react": "^19.1.0",
-    "react-big-calendar": "^1.19.4",
-    "react-calendar": "^6.0.0",
-    "react-datepicker": "^8.4.0",
     "react-dom": "^19.1.0",
-    "react-flags-select": "^2.5.0",
     "react-hook-form": "^7.56.4",
     "react-router-dom": "^6.28.0",
-    "react-select": "^5.10.1",
     "recharts": "^3.0.2"
   },
   "devDependencies": {
@@ -37,6 +32,7 @@
     "@types/react": "^19.1.2",
     "@types/react-big-calendar": "^1.16.2",
     "@types/react-dom": "^19.1.2",
+    "@types/react-select-country-list": "^2.2.3",
     "@vitejs/plugin-react": "^4.4.1",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",

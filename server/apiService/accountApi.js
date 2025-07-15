@@ -2,6 +2,7 @@ const db = require("../dbConn");
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { get } = require("http");
 
 const postJobs = async (req, res) => {
   const {jobTitle, jobCategory, jobType, hiringStatus,jobRequirements, jobResponsibilities, seekersRequired } = req.body;
@@ -40,9 +41,59 @@ const postJobs = async (req, res) => {
   }
 }
 
+const updateJob = async (req, res) => {
+  const { job_id, jobTitle, jobCategory, jobType, hiringStatus, jobRequirements, jobResponsibilities, seekersRequired } = req.body;
+
+  try {
+    if (!job_id) {
+      return res.status(400).json({ success: false, message: "Job ID is required" });
+    }
+
+    const updateSql = `
+      UPDATE tbl_jobs SET
+        title = ?,
+        job_category = ?,
+        job_type = ?,
+        hiring_status = ?,
+        job_requirements = ?,
+        job_responsibilities = ?,
+        seekers_required = ?
+      WHERE job_id = ?
+    `;
+    
+    const result = await db.executeQuery(updateSql, [
+      jobTitle, 
+      jobCategory, 
+      jobType, 
+      hiringStatus, 
+      jobRequirements, 
+      jobResponsibilities, 
+      seekersRequired, 
+      job_id
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    return res.status(200).json({ success: true, message: "Job updated successfully" });
+  } catch (e) {
+    console.error("Job update error:", e);
+    return res.status(500).json({ success: false, message: "Job update failed", error: e.message });
+  }
+};
+
 const getJobs = async (req, res) => {
   try {
-    const sql = "SELECT * FROM tbl_jobs ORDER BY posting_date DESC";
+    const sql = `
+      SELECT 
+        j.*,
+        COUNT(DISTINCT a.user_id) AS applicants_now
+      FROM tbl_jobs j
+      LEFT JOIN tbl_application a ON j.job_id = a.job_id
+      GROUP BY j.job_id
+      ORDER BY j.posting_date DESC
+    `;
     const jobs = await db.executeQuery(sql);
     return res.status(200).json({ success: true, data: jobs });
   } catch (e) {
@@ -50,6 +101,46 @@ const getJobs = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error", error: e.message });
   }
 };
+
+// Add this function to accountApi.js
+const deleteJob = async (req, res) => {
+  try {
+    const job_id = req.params.id;
+
+    if (!job_id) {
+      return res.status(400).json({ success: false, message: "Job ID is required" });
+    }
+
+    // Check if job exists
+    const checkSql = `SELECT title FROM tbl_jobs WHERE job_id = ?`;
+    const existingJob = await db.executeQuery(checkSql, [job_id]);
+
+    if (existingJob.length === 0) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    // Delete the job
+    const deleteSql = `DELETE FROM tbl_jobs WHERE job_id = ?`;
+    const result = await db.executeQuery(deleteSql, [job_id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(500).json({ success: false, message: "Failed to delete job" });
+    }
+
+    return res.status(200).json({ 
+      success: true, 
+      message: `Job "${existingJob[0].title}" deleted successfully` 
+    });
+  } catch (e) {
+    console.error("Job deletion error:", e);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Job deletion failed", 
+      error: e.message 
+    });
+  }
+};
+
 
 const bookmarkJob = async (req, res) => {
   try {
@@ -2475,7 +2566,6 @@ const replaceAttachmentFile = async (req, res) => {
 
 
 // Application functions
-// Add this function to accountApi.js
 const submitApplication = async (req, res) => {
   try {
     const user_id = req.user.user_id;
@@ -2635,10 +2725,721 @@ const getAppliedJobs = async (req, res) => {
   }
 };
 
+// Get applicants' information
+// Add this simplified function to accountApi.js
+const getApplicants = async (req, res) => {
+  try {
+    const sql = `
+      SELECT 
+        a.application_id,
+        a.user_id,
+        a.job_id,
+        a.applied_date,
+        a.application_status,
+        a.interview_date,
+        pp.full_name as applicant_name,
+        pp.email,
+        j.title as job_title,
+        j.job_category
+      FROM tbl_application a
+      LEFT JOIN tbl_personal_particulars pp ON a.user_id = pp.user_id
+      LEFT JOIN tbl_jobs j ON a.job_id = j.job_id
+      WHERE a.application_status IS NOT NULL
+      ORDER BY a.applied_date DESC
+    `;
+
+    const applicants = await db.executeQuery(sql);
+
+    // Format the data to match your frontend expectations
+    const formattedApplicants = applicants.map(applicant => ({
+      application_id: applicant.application_id,
+      user_id: applicant.user_id,
+      job_id: applicant.job_id,
+      name: applicant.applicant_name || 'Unknown Applicant',
+      email: applicant.email,
+      job: applicant.job_title || 'Unknown Position',
+      job_category: applicant.job_category,
+      applied: formatDate(applicant.applied_date),
+      interview: formatDate(applicant.interview_date),
+      status: applicant.application_status || 'Pending review'
+    }));
+
+    return res.status(200).json({ 
+      success: true, 
+      data: formattedApplicants 
+    });
+  } catch (e) {
+    console.error("Failed to fetch applicants:", e);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Server error", 
+      error: e.message 
+    });
+  }
+};
+
+// Helper function to format dates
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+  
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  
+  return `${day}-${month}-${year}`;
+};
+
+
+// Get applicant's personal particulars
+const getApplicantPersonalParticulars = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    // Get personal particulars
+    const personalSql = `SELECT * FROM tbl_personal_particulars WHERE user_id = ?`;
+    const personalData = await db.executeQuery(personalSql, [userId]);
+
+    // Get Singapore address
+    const sgAddressSql = `SELECT * FROM tbl_sg_address WHERE user_id = ?`;
+    const sgAddressData = await db.executeQuery(sgAddressSql, [userId]);
+
+    // Get overseas address
+    const overseasSql = `SELECT * FROM tbl_overseas_address WHERE user_id = ?`;
+    const overseasData = await db.executeQuery(overseasSql, [userId]);
+
+    // Get military service
+    const militarySql = `SELECT * FROM tbl_military_service WHERE user_id = ?`;
+    const militaryData = await db.executeQuery(militarySql, [userId]);
+
+    const responseData = {
+      personalParticulars: personalData.length > 0 ? personalData[0] : null,
+      sgAddress: sgAddressData.length > 0 ? sgAddressData[0] : null,
+      overseasAddress: overseasData.length > 0 ? overseasData[0] : null,
+      militaryService: militaryData.length > 0 ? militaryData[0] : null
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: responseData
+    });
+  } catch (e) {
+    console.error("Failed to fetch applicant data:", e);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: e.message
+    });
+  }
+};
+
+// Get applicant's education background
+const getApplicantEducation = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    // Get education background
+    const educationSql = `SELECT * FROM tbl_education_background WHERE user_id = ? ORDER BY education_id ASC`;
+    const educationData = await db.executeQuery(educationSql, [userId]);
+
+    // Get scholarship awards
+    const scholarshipSql = `SELECT * FROM tbl_scholarship_awards WHERE user_id = ? ORDER BY scholarship_id ASC`;
+    const scholarshipData = await db.executeQuery(scholarshipSql, [userId]);
+
+    // Get other qualifications
+    const qualificationsSql = `SELECT * FROM tbl_other_qualifications WHERE user_id = ? ORDER BY qualification_id ASC`;
+    const qualificationsData = await db.executeQuery(qualificationsSql, [userId]);
+
+    const responseData = {
+      education: educationData,
+      scholarships: scholarshipData,
+      qualifications: qualificationsData
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: responseData
+    });
+  } catch (e) {
+    console.error("Failed to fetch applicant education data:", e);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: e.message
+    });
+  }
+};
+
+// Get applicant's work experience
+const getApplicantWork = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    // Get work experience
+    const workSql = `SELECT * FROM tbl_work_experience WHERE user_id = ? ORDER BY work_id ASC`;
+    const workData = await db.executeQuery(workSql, [userId]);
+
+    // Get teaching experience
+    const teachingSql = `SELECT * FROM tbl_teaching_experience WHERE user_id = ? ORDER BY teaching_id ASC`;
+    const teachingData = await db.executeQuery(teachingSql, [userId]);
+
+    // Get skills
+    const skillsSql = `SELECT * FROM tbl_skills WHERE user_id = ? ORDER BY skill_id ASC`;
+    const skillsData = await db.executeQuery(skillsSql, [userId]);
+
+    // Get languages
+    const languagesSql = `SELECT * FROM tbl_languages WHERE user_id = ? ORDER BY language_id ASC`;
+    const languagesData = await db.executeQuery(languagesSql, [userId]);
+
+    const responseData = {
+      workExperience: workData,
+      teachingExperience: teachingData,
+      skills: skillsData,
+      languages: languagesData
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: responseData
+    });
+  } catch (e) {
+    console.error("Failed to fetch applicant work data:", e);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: e.message
+    });
+  }
+};
+
+// Add to accountApi.js
+// filepath: e:\cs internship\EAIM-Internship\server\apiService\accountApi.js
+
+const getApplicantFamily = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    // Get family background
+    const familySql = `SELECT * FROM tbl_family_background WHERE user_id = ? ORDER BY record_id ASC`;
+    const familyData = await db.executeQuery(familySql, [userId]);
+
+    // Get emergency contacts
+    const emergencySql = `SELECT * FROM tbl_emergency_contact WHERE user_id = ? ORDER BY contact_id ASC`;
+    const emergencyData = await db.executeQuery(emergencySql, [userId]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        family: familyData,
+        emergency: emergencyData
+      }
+    });
+  } catch (e) {
+    console.error("Failed to fetch applicant family data:", e);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: e.message
+    });
+  }
+};
+
+// Applicant support functions
+const getApplicantSupport = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    // Get references
+    const referencesSql = `SELECT * FROM tbl_references WHERE user_id = ? ORDER BY reference_id ASC`;
+    const referencesData = await db.executeQuery(referencesSql, [userId]);
+
+    // Get attachments
+    const attachmentsSql = `SELECT * FROM tbl_attachments WHERE user_id = ? ORDER BY attachment_id ASC`;
+    const attachmentsData = await db.executeQuery(attachmentsSql, [userId]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        references: referencesData,
+        attachments: attachmentsData
+      }
+    });
+  } catch (e) {
+    console.error("Failed to fetch applicant support data:", e);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: e.message
+    });
+  }
+};
+
+// Save interview details
+const scheduleInterview = async (req, res) => {
+  try {
+    const {
+      user_id,
+      job_id,
+      applicant,
+      job,
+      interview_date,
+      meeting_format,
+      start_time,
+      end_time,
+      venue,
+      add_to_my_calendar,
+      additional_notes
+    } = req.body;
+
+    const sql = `
+      INSERT INTO tbl_interview (
+        user_id, job_id, applicant, job, interview_date, meeting_format,
+        start_time, end_time, venue, add_to_my_calendar, additional_notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    await db.executeQuery(sql, [
+      user_id || null,
+      job_id || null,
+      applicant || null,
+      job || null,
+      interview_date || null,
+      meeting_format || null,
+      start_time || null,
+      end_time || null,
+      venue || null,
+      add_to_my_calendar ? 1 : 0,
+      additional_notes || null
+    ]);
+
+    const updateAppSql = `
+      UPDATE tbl_application
+      SET application_status = 'Interview Scheduled',
+          interview_date = ?
+      WHERE user_id = ? AND job_id = ?
+    `;
+    await db.executeQuery(updateAppSql, [
+      interview_date || null,
+      user_id || null,
+      job_id || null
+    ]);
+
+    return res.status(201).json({ success: true, message: "Interview scheduled successfully" });
+  } catch (e) {
+    console.error("Failed to schedule interview:", e);
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Get pending applicants information (status = 'Pending' or similar)
+const getPendingApplicants = async (req, res) => {
+  try {
+    const sql = `
+      SELECT 
+        a.application_id,
+        a.user_id,
+        a.job_id,
+        a.applied_date,
+        pp.full_name AS applicant_name,
+        j.title AS job_title
+      FROM tbl_application a
+      LEFT JOIN tbl_personal_particulars pp ON a.user_id = pp.user_id
+      LEFT JOIN tbl_jobs j ON a.job_id = j.job_id
+      WHERE a.application_status = 'Pending'
+      ORDER BY a.applied_date DESC
+    `;
+    const rows = await db.executeQuery(sql);
+    const data = rows.map(row => ({
+      id: row.application_id,
+      user_id: row.user_id,
+      job_id: row.job_id,
+      name: row.applicant_name || "Unknown",
+      job: row.job_title || "Unknown",
+      date: row.applied_date
+    }));
+    return res.status(200).json({ success: true, data });
+  } catch (e) {
+    console.error("Failed to fetch pending applicants:", e);
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+const getAllApplicants = async (req, res) => {
+  try {
+    const sql = `
+      SELECT DISTINCT pp.user_id, pp.full_name
+      FROM tbl_personal_particulars pp
+      INNER JOIN tbl_application a ON a.user_id = pp.user_id
+      WHERE pp.full_name IS NOT NULL AND pp.full_name != ''
+    `;
+    const rows = await db.executeQuery(sql);
+    return res.status(200).json({ success: true, data: rows });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+const getAllJobs = async (req, res) => {
+  try {
+    const sql = `SELECT job_id, title FROM tbl_jobs WHERE hiring_status = 'Hiring' ORDER BY posting_date DESC`;
+    const rows = await db.executeQuery(sql);
+    return res.status(200).json({ success: true, data: rows });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Update interview details
+const updateInterview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      user_id,
+      job_id,
+      applicant,
+      job,
+      interview_date,
+      meeting_format,
+      start_time,
+      end_time,
+      venue,
+      add_to_my_calendar,
+      additional_notes
+    } = req.body;
+
+    const sql = `
+      UPDATE tbl_interview SET
+        user_id = ?,
+        job_id = ?,
+        applicant = ?,
+        job = ?,
+        interview_date = ?,
+        meeting_format = ?,
+        start_time = ?,
+        end_time = ?,
+        venue = ?,
+        add_to_my_calendar = ?,
+        additional_notes = ?
+      WHERE interview_id = ?
+    `;
+
+    await db.executeQuery(sql, [
+      user_id || null,
+      job_id || null,
+      applicant || null,
+      job || null,
+      interview_date || null,
+      meeting_format || null,
+      start_time || null,
+      end_time || null,
+      venue || null,
+      add_to_my_calendar ? 1 : 0,
+      additional_notes || null,
+      id
+    ]);
+
+    return res.status(200).json({ success: true, message: "Interview updated successfully" });
+  } catch (e) {
+    console.error("Failed to update interview:", e);
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Get interview information
+const getAllInterviews = async (req, res) => {
+  try {
+    const sql = `SELECT * FROM tbl_interview ORDER BY interview_date DESC, start_time DESC`;
+    const rows = await db.executeQuery(sql);
+    return res.status(200).json({ success: true, data: rows });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Delete interview 
+const deleteInterview = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get user_id and job_id for the interview to update the application
+    const getSql = `SELECT user_id, job_id FROM tbl_interview WHERE interview_id = ?`;
+    const rows = await db.executeQuery(getSql, [id]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: "Interview not found" });
+    }
+    const { user_id, job_id } = rows[0];
+
+    // Delete the interview
+    const deleteSql = `DELETE FROM tbl_interview WHERE interview_id = ?`;
+    await db.executeQuery(deleteSql, [id]);
+
+    // Update the application status back to Pending and clear interview_date
+    const updateAppSql = `
+      UPDATE tbl_application
+      SET application_status = 'Pending',
+          interview_date = NULL
+      WHERE user_id = ? AND job_id = ?
+    `;
+    await db.executeQuery(updateAppSql, [user_id, job_id]);
+
+    return res.status(200).json({ success: true, message: "Interview deleted and application status reverted to Pending" });
+  } catch (e) {
+    console.error("Failed to delete interview:", e);
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Update Application Status
+const updateApplicationStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const allowed = ["Pending", "Reviewing", "Accepted", "Rejected"];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status" });
+    }
+    const sql = `
+      UPDATE tbl_application
+      SET application_status = ?
+      WHERE application_id = ?
+    `;
+    await db.executeQuery(sql, [status, id]);
+    return res.status(200).json({ success: true, message: "Status updated" });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Check if the user has completed their personal particulars
+const checkPersonalParticularsCompleteness = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+
+    // Check all 4 tables for is_draft = 'N'
+    const sqls = [
+      `SELECT is_draft FROM tbl_personal_particulars WHERE user_id = ?`,
+      `SELECT is_draft FROM tbl_sg_address WHERE user_id = ?`,
+      `SELECT is_draft FROM tbl_overseas_address WHERE user_id = ?`,
+      `SELECT is_draft FROM tbl_military_service WHERE user_id = ?`
+    ];
+
+    const results = await Promise.all(sqls.map(sql => db.executeQuery(sql, [user_id])));
+
+    // Each result is an array, check if each has a record and is_draft === 'N'
+    const allComplete = results.every(rows => rows.length > 0 && rows[0].is_draft === 'N');
+
+    return res.status(200).json({ success: true, complete: allComplete });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Check if the user has completed their education background
+const checkEducationCompleteness = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+
+    // Check education background (must have at least one record and is_draft = 'N')
+    const eduRows = await db.executeQuery(
+      `SELECT is_draft FROM tbl_education_background WHERE user_id = ?`,
+      [user_id]
+    );
+    const eduComplete = eduRows.length > 0 && eduRows.every(row => row.is_draft === 'N');
+
+    // Scholarship and other qualifications are optional: complete if empty or all N
+    const scholarshipRows = await db.executeQuery(
+      `SELECT is_draft FROM tbl_scholarship_awards WHERE user_id = ?`,
+      [user_id]
+    );
+    const scholarshipComplete =
+      scholarshipRows.length === 0 || scholarshipRows.every(row => row.is_draft === 'N');
+
+    const qualificationRows = await db.executeQuery(
+      `SELECT is_draft FROM tbl_other_qualifications WHERE user_id = ?`,
+      [user_id]
+    );
+    const qualificationComplete =
+      qualificationRows.length === 0 || qualificationRows.every(row => row.is_draft === 'N');
+
+    const allComplete = eduComplete && scholarshipComplete && qualificationComplete;
+
+    return res.status(200).json({ success: true, complete: allComplete });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Work & Skills completeness
+const checkWorkCompleteness = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    // Work experience (optional)
+    const workRows = await db.executeQuery(
+      `SELECT is_draft FROM tbl_work_experience WHERE user_id = ?`,
+      [user_id]
+    );
+    const workComplete = workRows.length === 0 || workRows.every(row => row.is_draft === 'N');
+    // Teaching experience (optional)
+    const teachingRows = await db.executeQuery(
+      `SELECT is_draft FROM tbl_teaching_experience WHERE user_id = ?`,
+      [user_id]
+    );
+    const teachingComplete = teachingRows.length === 0 || teachingRows.every(row => row.is_draft === 'N');
+    // Skills (required)
+    const skillsRows = await db.executeQuery(
+      `SELECT is_draft FROM tbl_skills WHERE user_id = ?`,
+      [user_id]
+    );
+    const skillsComplete = skillsRows.length > 0 && skillsRows.every(row => row.is_draft === 'N');
+    // Languages (required)
+    const langRows = await db.executeQuery(
+      `SELECT is_draft FROM tbl_languages WHERE user_id = ?`,
+      [user_id]
+    );
+    const langComplete = langRows.length > 0 && langRows.every(row => row.is_draft === 'N');
+    const allComplete = workComplete && teachingComplete && skillsComplete && langComplete;
+    return res.status(200).json({ success: true, complete: allComplete });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Family completeness
+const checkFamilyCompleteness = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    // Family background (required)
+    const familyRows = await db.executeQuery(
+      `SELECT is_draft FROM tbl_family_background WHERE user_id = ?`,
+      [user_id]
+    );
+    const familyComplete = familyRows.length > 0 && familyRows.every(row => row.is_draft === 'N');
+    // Emergency contact (required)
+    const emergencyRows = await db.executeQuery(
+      `SELECT is_draft FROM tbl_emergency_contact WHERE user_id = ?`,
+      [user_id]
+    );
+    const emergencyComplete = emergencyRows.length > 0 && emergencyRows.every(row => row.is_draft === 'N');
+    const allComplete = familyComplete && emergencyComplete;
+    return res.status(200).json({ success: true, complete: allComplete });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Support completeness
+const checkSupportCompleteness = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    // References (required: at least 2)
+    const refRows = await db.executeQuery(
+      `SELECT is_draft FROM tbl_references WHERE user_id = ?`,
+      [user_id]
+    );
+    const refComplete = refRows.length >= 2 && refRows.every(row => row.is_draft === 'N');
+    // Attachments (required: at least 1)
+    const attRows = await db.executeQuery(
+      `SELECT is_draft FROM tbl_attachments WHERE user_id = ?`,
+      [user_id]
+    );
+    const attComplete = attRows.length >= 1 && attRows.every(row => row.is_draft === 'N');
+    const allComplete = refComplete && attComplete;
+    return res.status(200).json({ success: true, complete: allComplete });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Get full application details for an applicant
+
+const getFullApplicantProfile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) return res.status(400).json({ success: false, message: "User ID required" });
+
+    // Fetch all sections in parallel
+    const [personal, education, work, family, support] = await Promise.all([
+      module.exports.getApplicantPersonalParticulars({ params: { userId } }, { json: d => d }),
+      module.exports.getApplicantEducation({ params: { userId } }, { json: d => d }),
+      module.exports.getApplicantWork({ params: { userId } }, { json: d => d }),
+      module.exports.getApplicantFamily({ params: { userId } }, { json: d => d }),
+      module.exports.getApplicantSupport({ params: { userId } }, { json: d => d }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        personal: personal.data,
+        education: education.data,
+        work: work.data,
+        family: family.data,
+        support: support.data,
+      }
+    });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Get user info from tbl_users
+const getUserInfo = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    const sql = `SELECT first_name, last_name, email, nationality FROM tbl_users WHERE user_id = ?`;
+    const rows = await db.executeQuery(sql, [user_id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    return res.status(200).json({ success: true, user: rows[0] });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Update user info in tbl_users
+const updateUserInfo = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    const { first_name, last_name, email, nationality } = req.body;
+    const sql = `
+      UPDATE tbl_users
+      SET first_name = ?, last_name = ?, email = ?, nationality = ?
+      WHERE user_id = ?
+    `;
+    await db.executeQuery(sql, [first_name, last_name, email, nationality, user_id]);
+    return res.status(200).json({ success: true, message: "User profile updated" });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
 
 module.exports = {
   postJobs,
+  updateJob,
   getJobs,
+  deleteJob,
   bookmarkJob,
   getBookmarks,
   deleteBookmark,
@@ -2687,7 +3488,29 @@ module.exports = {
   uploadMiddleware: upload.single('file'),
   replaceAttachmentFile,
   submitApplication,
-  getAppliedJobs
+  getAppliedJobs,
+  getApplicants,
+  getApplicantPersonalParticulars,
+  getApplicantEducation,
+  getApplicantWork,
+  getApplicantFamily,
+  getApplicantSupport,
+  scheduleInterview,
+  updateInterview,
+  deleteInterview,
+  getAllInterviews,
+  getPendingApplicants,
+  getAllApplicants,
+  getAllJobs,
+  updateApplicationStatus,
+  checkPersonalParticularsCompleteness,
+  checkEducationCompleteness,
+  checkWorkCompleteness,
+  checkFamilyCompleteness,
+  checkSupportCompleteness,
+  getFullApplicantProfile,
+  getUserInfo,
+  updateUserInfo,
 };
 
 

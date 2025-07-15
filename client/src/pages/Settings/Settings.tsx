@@ -21,8 +21,8 @@ type PasswordChangeInputs = {
 };
 
 type ProfileInputs = {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   nationality: string;
 };
@@ -61,8 +61,8 @@ const Settings: React.FC = () => {
       
       if (response.data.success) {
         const userData = response.data.user;
-        setValue('firstName', userData.firstName);
-        setValue('lastName', userData.lastName);
+        setValue('first_name', userData.first_name);
+        setValue('last_name', userData.last_name);
         setValue('email', userData.email);
         setValue('nationality', userData.nationality);
       }
@@ -207,10 +207,10 @@ const Settings: React.FC = () => {
                     <input
                       type="text"
                       placeholder="Enter your first name"
-                      {...registerProfile("firstName", { required: "First name is required" })}
-                      className={`${styles.input} ${profileErrors.firstName ? styles.inputError : ''}`}
+                      {...registerProfile("first_name", { required: "First name is required" })}
+                      className={`${styles.input} ${profileErrors.first_name ? styles.inputError : ''}`}
                     />
-                    {profileErrors.firstName && <p className={styles.errorMessage}>{profileErrors.firstName.message}</p>}
+                    {profileErrors.first_name && <p className={styles.errorMessage}>{profileErrors.first_name.message}</p>}
                   </div>
 
                   <div className={styles.formGroup}>
@@ -221,10 +221,10 @@ const Settings: React.FC = () => {
                     <input
                       type="text"
                       placeholder="Enter your last name"
-                      {...registerProfile("lastName", { required: "Last name is required" })}
-                      className={`${styles.input} ${profileErrors.lastName ? styles.inputError : ''}`}
+                      {...registerProfile("last_name", { required: "Last name is required" })}
+                      className={`${styles.input} ${profileErrors.last_name ? styles.inputError : ''}`}
                     />
-                    {profileErrors.lastName && <p className={styles.errorMessage}>{profileErrors.lastName.message}</p>}
+                    {profileErrors.last_name && <p className={styles.errorMessage}>{profileErrors.last_name.message}</p>}
                   </div>
                 </div>
 
@@ -374,6 +374,11 @@ const Settings: React.FC = () => {
                   <Lock size={18} />
                   Change Password
                 </button>
+                {message && (
+                  <div className={`${styles.message} ${styles[messageType]}`}>
+                    {message}
+                  </div>
+                )}
               </form>
             </div>
           )}
@@ -441,13 +446,7 @@ const Settings: React.FC = () => {
               </div>
             </div>
           )}
-
-          {/* Message Display */}
-          {message && (
-            <div className={`${styles.message} ${styles[messageType]}`}>
-              {message}
-            </div>
-          )}
+          
         </div>
       </div>
     </div>

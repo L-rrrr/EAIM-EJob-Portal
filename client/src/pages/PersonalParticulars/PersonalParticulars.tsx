@@ -194,6 +194,8 @@ const PersonalParticulars: React.FC = () => {
           }
         ),
       ]);
+
+      window.dispatchEvent(new Event("profile-completeness-updated"));
       
       // Optional: Clear validation errors after successful save
       setValidationErrors({});
@@ -363,6 +365,7 @@ const PersonalParticulars: React.FC = () => {
         }
       );
 
+      window.dispatchEvent(new Event("profile-completeness-updated"));
       alert("Draft saved successfully!");
     } catch (error) {
       console.error("Failed to save draft", error);
@@ -700,310 +703,6 @@ type MilitaryServiceKeys =
             </div>
           )}
         </div>
-          {/* {showPersonalParticulars && (
-          <div className={styles.formSection}>
-            {personalParticularsFieldA.map(({ label, required, name, type, options }, i) => (
-              <div key={i} className={styles.inputGroup}>
-                <span className={styles.labelText}>
-                  {label}
-                  {required && <span className={styles.requiredAsterisk}>*</span>}
-                </span>
-
-                {type === "select" ? (
-                  <select
-                    className={styles.input}
-                    name={name}
-                    value={personalParticulars[name] as string}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setPersonalParticulars((prev) => ({ ...prev, [name]: value }));
-
-                      if (validationErrors[name]) {
-                        setValidationErrors((prev) => {
-                          const updated = { ...prev };
-                          delete updated[name];
-                          return updated;
-                        });
-                      }
-                    }}
-                    style={{
-                      borderColor: validationErrors[name] ? "red" : undefined,
-                    }}
-                  >
-                    <option value="" disabled>
-                      Select
-                    </option>
-                    {options?.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type={type}
-                    className={styles.input}
-                    name={name}
-                    value={(personalParticulars[name] as string) ?? ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setPersonalParticulars((prev) => ({ ...prev, [name]: value }));
-
-                      if (validationErrors[name]) {
-                        setValidationErrors((prev) => {
-                          const updated = { ...prev };
-                          delete updated[name];
-                          return updated;
-                        });
-                      }
-                    }}
-                    style={{
-                      borderColor: validationErrors[name] ? "red" : undefined,
-                    }}
-                  />
-                )}
-
-                {validationErrors[name] && (
-                  <div className={styles.errorMessage}>
-                    {validationErrors[name]}
-                  </div>
-                )}
-              </div>
-            ))} */}
-
-              {/* <div className={styles.dateInputWrapper}>
-                <span className={styles.labelText}>
-                  Date of Birth<span className={styles.requiredAsterisk}>*</span>
-                </span>
-                <div className={styles.datePickerContainer}>
-                  <CssBaseline />
-                  <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DatePicker
-                      value={personalParticulars.date_of_birth as Date | null}
-                      onChange={(newValue) => {
-                        setPersonalParticulars((prev) => ({
-                          ...prev,
-                          date_of_birth: newValue,
-                        }));
-
-                        if (validationErrors.date_of_birth && newValue) {
-                          setValidationErrors((prev) => {
-                            const updated = { ...prev };
-                            delete updated.date_of_birth;
-                            return updated;
-                          });
-                        }
-                      }}
-                      format="dd/MM/yyyy"
-                      slotProps={{
-                        textField: {
-                          variant: "outlined",
-                          size: "small",
-                          fullWidth: true,
-                          error: Boolean(validationErrors.date_of_birth),
-                          helperText: validationErrors.date_of_birth,
-                          InputProps: {
-                            sx: {
-                              backgroundColor: darkMode ? "#3a3a3a" : "#fff",
-                              color: darkMode ? "#fff" : "#000",
-                              borderColor: darkMode ? "#555" : "#ccc",
-                              "& .MuiInputBase-input": {
-                                color: darkMode ? "#fff" : "#000",
-                              },
-                              "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: darkMode ? "#777" : "#ccc",
-                              },
-                              "&:hover .MuiOutlinedInput-notchedOutline": {
-                                borderColor: darkMode ? "#aaa" : "#666",
-                              },
-                            },
-                          },
-                        },
-                      }}
-                      sx={{
-                        "& .MuiPickersPopper-root": {
-                          backgroundColor: darkMode ? "#2c2c2c" : "#fff",
-                          color: darkMode ? "#fff" : "#000",
-                        },
-                      }}
-                    />
-                  </LocalizationProvider>
-                </div>
-              </div> */}
-
-              {/* <div className={styles.inputGroup}>
-                <span className={styles.labelText}>
-                  Date of Birth<span className={styles.requiredAsterisk}>*</span>
-                </span>
-                <input
-                  type="date"
-                  className={styles.input}
-                  name="date_of_birth"
-                  value={personalParticulars.date_of_birth 
-                    ? personalParticulars.date_of_birth instanceof Date 
-                      ? personalParticulars.date_of_birth.toISOString().split('T')[0]
-                      : personalParticulars.date_of_birth.toString().split('T')[0]
-                    : ""
-                  }
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setPersonalParticulars((prev) => ({
-                      ...prev,
-                      date_of_birth: value ? new Date(value) : null,
-                    }));
-
-                    if (validationErrors.date_of_birth && value) {
-                      setValidationErrors((prev) => {
-                        const updated = { ...prev };
-                        delete updated.date_of_birth;
-                        return updated;
-                      });
-                    }
-                  }}
-                  style={{
-                    borderColor: validationErrors.date_of_birth ? "red" : undefined,
-                  }}
-                />
-                {validationErrors.date_of_birth && (
-                  <div className={styles.errorMessage}>
-                    {validationErrors.date_of_birth}
-                  </div>
-                )}
-              </div> */}
-
-              {/* {personalParticularFieldB.map(({ label, required, name, type, options }, i) => (
-                <div key={i} className={styles.inputGroup}>
-                  <span className={styles.labelText}>
-                    {label}
-                    {required && <span className={styles.requiredAsterisk}>*</span>}
-                  </span>
-
-                  {type === "select" ? (
-                    <select
-                      className={styles.input}
-                      name={name}
-                      value={personalParticulars[name] as string}
-                      onChange={(e) => {
-                        const newValue = e.target.value;
-                        setPersonalParticulars((prev) => ({ ...prev, [name]: newValue }));
-
-                        if (validationErrors[name] && newValue) {
-                          setValidationErrors((prev) => {
-                            const updated = { ...prev };
-                            delete updated[name];
-                            return updated;
-                          });
-                        }
-                      }}
-                      style={{
-                        borderColor: validationErrors[name] ? "red" : undefined,
-                      }}
-                    >
-                      <option value="" disabled>
-                        Select
-                      </option>
-                      {options?.map((opt) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      className={styles.input}
-                      name={name}
-                      value={(personalParticulars[name] as string) ?? ""}
-                      onChange={(e) => {
-                        const newValue = e.target.value;
-                        setPersonalParticulars((prev) => ({ ...prev, [name]: newValue }));
-
-                        if (validationErrors[name] && newValue.trim()) {
-                          setValidationErrors((prev) => {
-                            const updated = { ...prev };
-                            delete updated[name];
-                            return updated;
-                          });
-                        }
-                      }}
-                      style={{
-                        borderColor: validationErrors[name] ? "red" : undefined,
-                      }}
-                    />
-                  )}
-
-                  {validationErrors[name] && (
-                    <div className={styles.errorMessage}>
-                      {validationErrors[name]}
-                    </div>
-                  )}
-                </div>
-              ))} */}
-
-              {/* <div className={styles.dateInputWrapper}>
-                <span className={styles.labelText}>
-                  Passport Expiry Date<span className={styles.requiredAsterisk}>*</span>
-                </span>
-
-                <div className={styles.datePickerContainer}>
-                  <CssBaseline />
-                  <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DatePicker
-                      value={personalParticulars.passport_expiry as Date | null}
-                      onChange={(newValue) => {
-                        setPersonalParticulars((prev) => ({
-                          ...prev,
-                          passport_expiry: newValue,
-                        }));
-
-                        if (validationErrors.passport_expiry && newValue) {
-                          setValidationErrors((prev) => {
-                            const updated = { ...prev };
-                            delete updated.passport_expiry;
-                            return updated;
-                          });
-                        }
-                      }}
-                      format="dd/MM/yyyy"
-                      slotProps={{
-                        textField: {
-                          variant: "outlined",
-                          size: "small",
-                          fullWidth: true,
-                          error: Boolean(validationErrors.passport_expiry),
-                          helperText: validationErrors.passport_expiry,
-                          InputProps: {
-                            sx: {
-                              backgroundColor: darkMode ? "#3a3a3a" : "#fff",
-                              color: darkMode ? "#fff" : "#000",
-                              borderColor: darkMode ? "#555" : "#ccc",
-                              "& .MuiInputBase-input": {
-                                color: darkMode ? "#fff" : "#000",
-                              },
-                              "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: darkMode ? "#777" : "#ccc",
-                              },
-                              "&:hover .MuiOutlinedInput-notchedOutline": {
-                                borderColor: darkMode ? "#aaa" : "#666",
-                              },
-                            },
-                          },
-                        },
-                      }}
-                      sx={{
-                        "& .MuiPickersPopper-root": {
-                          backgroundColor: darkMode ? "#2c2c2c" : "#fff",
-                          color: darkMode ? "#fff" : "#000",
-                        },
-                      }}
-                    />
-                  </LocalizationProvider>
-                </div>
-              </div> */}
-            {/* </div>
-          )}
-        </div> */}
-
         <div className={styles.formContainer}>
           <h2
             className={styles.sectionTitle}
@@ -1030,7 +729,7 @@ type MilitaryServiceKeys =
                     type={type}
                     className={styles.input}
                     name={name}
-                    value={sgAddress[name]}
+                    value={sgAddress[name] ?? ""}
                     onChange={(e) => {
                       const value = e.target.value;
 
@@ -1125,7 +824,7 @@ type MilitaryServiceKeys =
                         <div className={styles.phoneInputGroup}>
                           <select
                             className={styles.countryInput}
-                            value={overseasAddress[name === "mobile_number" ? "mobile_country_code" : "home_country_code"]}
+                            value={overseasAddress[name === "mobile_number" ? "mobile_country_code" : "home_country_code"] ?? ""}
                             onChange={(e) => {
                               const codeKey = name === "mobile_number" ? "mobile_country_code" : "home_country_code";
                               setOverseasAddress((prev) => ({ ...prev, [codeKey]: e.target.value }));
@@ -1154,7 +853,7 @@ type MilitaryServiceKeys =
                             placeholder="Contact Number"
                             className={styles.input}
                             name={name}
-                            value={overseasAddress[name]}
+                            value={overseasAddress[name] ?? ""}
                             onChange={(e) => {
                               const value = e.target.value;
                               setOverseasAddress((prev) => ({ ...prev, [name]: value }));
@@ -1176,7 +875,7 @@ type MilitaryServiceKeys =
                           type={type}
                           className={styles.input}
                           name={name}
-                          value={overseasAddress[name]}
+                          value={overseasAddress[name] ?? ""}
                           onChange={(e) => {
                             const value = e.target.value;
                             setOverseasAddress((prev) => ({ ...prev, [name]: value }));
@@ -1439,73 +1138,6 @@ type MilitaryServiceKeys =
                     </div>
                   ))}
 
-                  {/* <div className={styles.dateInputWrapper}>
-                    <span className={styles.labelText}>
-                      Date of Next Camp
-                    </span>
-                    <div className={styles.datePickerContainer}>
-                      <CssBaseline />
-                      <LocalizationProvider dateAdapter={AdapterDateFns}>
-                        <DatePicker
-                          value={
-                            militaryService.next_camp_date
-                              ? new Date(militaryService.next_camp_date)
-                              : null
-                          }
-                          onChange={(newValue) => {
-                            setMilitaryService((prev) => ({
-                              ...prev,
-                              next_camp_date:
-                                newValue instanceof Date && !isNaN(newValue.getTime())
-                                  ? newValue.toISOString()
-                                  : "",
-                            }));
-
-                            if (validationErrors.date_of_next_camp && newValue) {
-                              setValidationErrors((prev) => {
-                                const updated = { ...prev };
-                                delete updated.date_of_next_camp;
-                                return updated;
-                              });
-                            }
-                          }}
-                          format="dd/MM/yyyy"
-                          slotProps={{
-                            textField: {
-                              variant: "outlined",
-                              size: "small",
-                              fullWidth: true,
-                              error: Boolean(validationErrors.date_of_next_camp),
-                              helperText: validationErrors.date_of_next_camp,
-                              InputProps: {
-                                sx: {
-                                  backgroundColor: darkMode ? "#3a3a3a" : "#fff",
-                                  color: darkMode ? "#fff" : "#000",
-                                  borderColor: darkMode ? "#555" : "#ccc",
-                                  "& .MuiInputBase-input": {
-                                    color: darkMode ? "#fff" : "#000",
-                                  },
-                                  "& .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: darkMode ? "#777" : "#ccc",
-                                  },
-                                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: darkMode ? "#aaa" : "#666",
-                                  },
-                                },
-                              },
-                            },
-                          }}
-                          sx={{
-                            "& .MuiPickersPopper-root": {
-                              backgroundColor: darkMode ? "#2c2c2c" : "#fff",
-                              color: darkMode ? "#fff" : "#000",
-                            },
-                          }}
-                        />
-                      </LocalizationProvider>
-                    </div>
-                  </div> */}
-
                   <div className={styles.inputGroup}>
                     <span className={styles.labelText}>
                       Date of Next Camp
@@ -1592,7 +1224,7 @@ type MilitaryServiceKeys =
                           className={styles.input} 
                           placeholder="e.g., 3rd Infantry Battalion"
                           name="nsman_unit"
-                          value={militaryService.nsman_unit}
+                          value={militaryService.nsman_unit ?? ""}
                           onChange={(e) => {
                             const value = e.target.value;
                             setMilitaryService((prev) => ({ ...prev, nsman_unit: value }));
@@ -1607,7 +1239,7 @@ type MilitaryServiceKeys =
                           className={styles.input} 
                           placeholder="e.g., Combat Engineer"
                           name="nsman_vocation"
-                          value={militaryService.nsman_vocation}
+                          value={militaryService.nsman_vocation ?? ""}
                           onChange={(e) => {
                             const value = e.target.value;
                             setMilitaryService((prev) => ({ ...prev, nsman_vocation: value }));

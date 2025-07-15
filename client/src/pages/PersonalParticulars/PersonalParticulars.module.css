@@ -7,7 +7,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  height: calc(100vh - 85px);
+  min-height: calc(100vh - 85px);
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   color: #1e293b;
   padding: 2rem;
@@ -414,21 +414,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   box-shadow: 0 8px 20px rgba(124, 58, 237, 0.5);
 }
 
-/* Special styling for Material-UI DatePicker in dark mode */
-:global(.dark) .MuiInputBase-root {
-  background-color: #334155 !important;
-  color: #f8fafc !important;
-  border-radius: 12px !important;
-}
-
-:global(.dark) .MuiOutlinedInput-notchedOutline {
-  border-color: #475569 !important;
-}
-
-:global(.dark) .MuiInputBase-input {
-  color: #f8fafc !important;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
   .mainPanel {
@@ -505,13 +490,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 }
 
-/* Material-UI DatePicker padding fixes */
-.css-gfka5e-MuiPickersSectionList-root-MuiPickersInputBase-sectionsContainer-MuiPickersOutlinedInput-sectionsContainer,
-.css-15395ss-MuiPickersSectionList-root-MuiPickersInputBase-sectionsContainer-MuiPickersOutlinedInput-sectionsContainer,
-.css-xln5lr-MuiPickersSectionList-root-MuiPickersInputBase-sectionsContainer-MuiPickersOutlinedInput-sectionsContainer {
-  padding: 0.875rem 0 !important;
-}
-
 
 /* Date picker calendar icon styling */
 .input[type="date"]::-webkit-calendar-picker-indicator {
@@ -528,4 +506,21 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23f472b6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") no-repeat;
 }
 
+.loadingContainer, .errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
 
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}

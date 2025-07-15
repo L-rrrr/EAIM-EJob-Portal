@@ -22,7 +22,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 0;
+  margin-bottom: 1rem;
   width: 100%;
   background: linear-gradient(135deg, #B3238B, #7c3aed);
   padding: 1.5rem;
@@ -120,7 +120,7 @@
 .completeness {
   font-size: 0.95rem;
   font-weight: 600;
-  margin: 1.5rem 0 1rem 0;
+  margin: 0rem 0 1rem 0;
   padding: 0 1.5rem;
   color: #64748b;
   display: flex;

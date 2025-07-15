@@ -9,7 +9,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  height: calc(100vh - 85px);
+  min-height: calc(100vh - 85px);
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   color: #1e293b;
   padding: 2rem;
@@ -640,4 +640,77 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     padding: 0.75rem 1.25rem;
     font-size: 0.85rem;
   }
+}
+
+/* Add these styles to Education.module.css */
+.applicantHeader {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  border-left: 4px solid #3b82f6;
+}
+
+.applicantHeader h2 {
+  margin: 0 0 0.5rem 0;
+  color: #1e40af;
+  font-size: 1.5rem;
+}
+
+.applicantHeader p {
+  margin: 0;
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.loadingContainer, .errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.backBtn {
+  background: #6b7280 !important;
+}
+
+.backBtn:hover {
+  background: #4b5563 !important;
+}
+
+.errorContainer h2 {
+  color: #dc2626;
+  margin-bottom: 1rem;
+}
+
+.errorContainer p {
+  color: #64748b;
+  margin-bottom: 2rem;
+}
+
+.noRecordsMessage {
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  padding: 2rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px dashed #d1d5db;
 }

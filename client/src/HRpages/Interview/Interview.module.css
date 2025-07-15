@@ -241,12 +241,12 @@
   border-radius: 2px;
 }
 
-.legendColor.confirmed {
+.legendColor.upcoming {
   background: linear-gradient(135deg, #10b981, #059669);
 }
 
-.legendColor.pending {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+.legendColor.completed {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
 }
 
 .customCalendar {
@@ -335,6 +335,7 @@
   gap: 0.25rem;
   min-height: 16px;
   overflow: hidden;
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
 }
 
 .eventBar:hover {
@@ -342,16 +343,12 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.eventBar.confirmed {
+.eventBar.upcoming {
   background: linear-gradient(135deg, #10b981, #059669);
 }
 
-.eventBar.pending {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-}
-
-.eventBar.cancelled {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+.eventBar.completed {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
 }
 
 .eventTime {
@@ -378,7 +375,19 @@
 /* SIDEBAR */
 .sidebar {
   flex: 1;
-  max-width: 350px;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem; /* Add this line for spacing between panels */
+}
+
+.pendingHeader {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24); /* yellow gradient */
+  color: #fffbe8;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* space between icon and title */
 }
 
 .sidebarPanel {
@@ -392,6 +401,9 @@
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
   padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* space between icon and title */
 }
 
 .sidebarTitle {
@@ -416,10 +428,11 @@
   margin-bottom: 0.75rem;
   transition: all 0.2s ease;
   cursor: pointer;
+  background: linear-gradient(135deg, #f0f9ff 60%, #e0e7ff 100%);
 }
 
 .upcomingItem:hover {
-  background-color: #f9fafb;
+  background: linear-gradient(135deg, #dbeafe 60%, #c7d2fe 100%);
   border-color: #d1d5db;
 }
 
@@ -456,6 +469,9 @@
   font-size: 0.75rem;
   color: #6b7280;
   margin: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
 }
 
 .statusBadge {
@@ -504,6 +520,7 @@
 .editBtn:hover {
   background: #e5e7eb;
   color: #374151;
+  border: 1px solid #9ca3af;
 }
 
 .emptyState {
@@ -526,6 +543,14 @@
   font-size: 0.875rem;
 }
 
+.appliedOnLabel {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #6b7280;
+  display: block;
+  margin-bottom: 0.1rem;
+}
+
 /* MODAL */
 .modal {
   position: fixed;
@@ -545,7 +570,7 @@
   background: white;
   border-radius: 12px;
   width: 100%;
-  max-width: 600px;
+  max-width: 740px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -761,10 +786,6 @@
   border-color: #334155;
 }
 
-:global(.dark) .calendarHeader {
-  background: linear-gradient(135deg, #334155, #475569);
-}
-
 :global(.dark) .dayHeader {
   color: #cbd5e1;
   border-right-color: #475569;
@@ -802,11 +823,12 @@
 }
 
 :global(.dark) .upcomingItem {
+  background: #1e293b;
   border-color: #334155;
 }
 
 :global(.dark) .upcomingItem:hover {
-  background-color: #334155;
+  background: linear-gradient(135deg, #334155 60%, #475569 100%);
   border-color: #475569;
 }
 
@@ -1001,3 +1023,141 @@
     margin-bottom: 0.25rem;
   }
 }
+
+.inputError {
+  border: 1.5px solid #dc2626 !important;
+  background: #fff0f0;
+}
+.fieldError {
+  color: #dc2626;
+  font-size: 0.8em;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+/* ...existing code... */
+
+.pendingList {
+  padding: 1rem;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.pendingItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #f0f9ff 60%, #e0e7ff 100%);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.pendingItem:hover {
+  background: linear-gradient(135deg, #dbeafe 60%, #c7d2fe 100%);
+  border-color: #d1d5db;
+}
+
+.pendingTime {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+
+.pendingDateLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.pendingContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.pendingApplicantName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.25rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pendingJobTitle {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.pendingActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Responsive: stack info on small screens */
+@media (max-width: 600px) {
+  .pendingItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem 0.5rem;
+  }
+  .pendingTime, .pendingContent, .pendingActions {
+    min-width: 0;
+    text-align: left;
+  }
+}
+
+/* Dark mode */
+:global(.dark) .pendingItem {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(.dark) .pendingItem:hover {
+  background: linear-gradient(135deg, #334155 60%, #475569 100%);
+  border-color: #475569;
+}
+
+:global(.dark) .pendingDateLabel {
+  color: #cbd5e1;
+}
+
+:global(.dark) .pendingApplicantName {
+  color: #f8fafc;
+}
+
+:global(.dark) .pendingJobTitle {
+  color: #94a3b8;
+}
+
+:global(.dark) .addBtn {
+  background: #334155;
+  border-color: #475569;
+  color: #10b981;
+}
+
+:global(.dark) .addBtn:hover {
+  background: #059669;
+  color: #fff;
+  border-color: #10b981;
+}
+
+:global(.dark) .appliedOnLabel {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+

@@ -1,99 +1,213 @@
-import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import axios from "axios";
+import styles from "../../pages/Education/Education.module.css"; 
+import supportStyles from "../../pages/Support/Support.module.css";
 
 const ApplicantSupport: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const userId = searchParams.get('userId');
   const [showReferences, setShowReferences] = useState(true);
   const [showAttachments, setShowAttachments] = useState(true);
 
-  const [references, setReferences] = useState([
-    { id: 1, name: "", occupation: "", contactNo: "", relationship: "" },
-    { id: 2, name: "", occupation: "", contactNo: "", relationship: "" },
+  // Type definitions
+  type ReferenceRecord = {
+    id: number;
+    reference_id?: number;
+    name: string;
+    occupation: string;
+    contactNo: string;
+    relationship: string;
+  };
+
+  type AttachmentRecord = {
+    id: number;
+    attachment_id?: number;
+    documentType: string;
+    documentName: string;
+    file: File | null;
+    file_name?: string;
+    file_path?: string;
+    file_size?: number;
+    file_type?: string;
+  };
+
+  // State with first 2 records being compulsory
+  const [references, setReferences] = useState<ReferenceRecord[]>([
+    { id: 1, reference_id: undefined, name: "", occupation: "", contactNo: "", relationship: "" },
+    { id: 2, reference_id: undefined, name: "", occupation: "", contactNo: "", relationship: "" },
   ]);
 
-  const [attachments, setAttachments] = useState([
-    { id: 1, documentType: "Resume", documentName: "", file: null }
+  const [attachments, setAttachments] = useState<AttachmentRecord[]>([
+    { id: 1, attachment_id: undefined, documentType: "Resume", documentName: "", file: null }
   ]);
 
-  const deleteReference = (id: number) => {
-    if (references.length > 2) {
-      setReferences(references.filter(ref => ref.id !== id));
-    }
-  };
+  useEffect(() => {
+    const fetchApplicantSupportData = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-  const updateReference = (id: number, field: string, value: string) => {
-    setReferences(references.map(ref =>
-      ref.id === id ? { ...ref, [field]: value } : ref
-    ));
-  };
+        if (!userId) {
+          console.error("No user ID provided");
+          return;
+        }
 
-  const deleteAttachment = (id: number) => {
-    if (attachments.length > 1) {
-      setAttachments(attachments.filter(att => att.id !== id));
-    }
-  };
+        // Fetch applicant support data based on user ID
+        const supportResponse = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/get-applicant-support/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-  const updateAttachment = (id: number, field: string, value: string | File | null) => {
-    setAttachments(attachments.map(att =>
-      att.id === id ? { ...att, [field]: value } : att
-    ));
+        if (supportResponse.data && supportResponse.data.success) {
+          const data = supportResponse.data.data;
+
+          // Set references
+          if (data.references && Array.isArray(data.references) && data.references.length > 0) {
+            const referenceRecords = data.references.map((rec: any, index: number) => ({
+              id: index + 1,
+              reference_id: rec.reference_id,
+              name: rec.name || "",
+              occupation: rec.occupation || "",
+              contactNo: rec.contact_no || "",
+              relationship: rec.relationship || "",
+            }));
+
+            // Ensure we always have at least 2 records for references
+            while (referenceRecords.length < 2) {
+              referenceRecords.push({
+                id: referenceRecords.length + 1,
+                reference_id: undefined,
+                name: "",
+                occupation: "",
+                contactNo: "",
+                relationship: "",
+              });
+            }
+
+            setReferences(referenceRecords);
+          }
+
+          // Set attachments
+          if (data.attachments && Array.isArray(data.attachments) && data.attachments.length > 0) {
+            const attachmentRecords = data.attachments.map((rec: any, index: number) => ({
+              id: index + 1,
+              attachment_id: rec.attachment_id,
+              documentType: rec.document_type || "",
+              documentName: rec.document_name || "",
+              file: null,
+              file_name: rec.file_name || "",
+              file_path: rec.file_path || "",
+              file_size: rec.file_size || 0,
+              file_type: rec.file_type || "",
+            }));
+
+            // Ensure we always have at least 1 record (Resume)
+            while (attachmentRecords.length < 1) {
+              attachmentRecords.push({
+                id: attachmentRecords.length + 1,
+                attachment_id: undefined,
+                documentType: attachmentRecords.length === 0 ? "Resume" : "",
+                documentName: "",
+                file: null,
+              });
+            }
+
+            setAttachments(attachmentRecords);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch applicant support data", error);
+      }
+    };
+
+    fetchApplicantSupportData();
+  }, [userId]);
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
-    <div className="main-panel">
-      <div className="form-wrapper">
+    <div className={styles.mainPanel}>
+      <div className={styles.formWrapper}>
 
         {/* References Section */}
-        <div className="form-container">
-          <h2 className="section-title" onClick={() => setShowReferences(prev => !prev)}>
-            References
+        <div className={styles.formContainer}>
+          <h2
+            className={supportStyles.sectionTitle}
+            onClick={() => setShowReferences(prev => !prev)}
+          >
+            <span className={styles.sectionTitleText}>
+              References
+            </span>
+            <div className={styles.sectionArrow}>
+              {showReferences ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
           </h2>
           {showReferences && (
             <div>
+              <div className={styles.labelHint}>
+                Please provide at least 2 references. The first 2 references are required.
+              </div>
+
               {references.map((ref, index) => (
-                <div key={ref.id} className={`form-section ${index >= 2 ? "record" : ""}`}>
-                  {index >= 2 && (
-                    <div className="delete-btn" onClick={() => deleteReference(ref.id)}>
-                      <Trash2 size={16} />
-                    </div>
-                  )}
+                <div key={ref.id} className={`${styles.formSection} ${index >= 2 ? styles.record : ""}`}>
 
-                  <div>
-                    <span className="label-text">Referee Name<span className="required-asterisk">*</span></span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Referee Name<span className={styles.requiredAsterisk}>*</span>
+                    </span>
                     <input
                       type="text"
-                      className="input"
+                      className={styles.input}
                       value={ref.name}
-                      onChange={(e) => updateReference(ref.id, 'name', e.target.value)}
+                      disabled
                     />
                   </div>
 
-                  <div>
-                    <span className="label-text">Occupation<span className="required-asterisk">*</span></span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Occupation<span className={styles.requiredAsterisk}>*</span>
+                    </span>
                     <input
                       type="text"
-                      className="input"
+                      className={styles.input}
                       value={ref.occupation}
-                      onChange={(e) => updateReference(ref.id, 'occupation', e.target.value)}
+                      disabled
                     />
                   </div>
 
-                  <div>
-                    <span className="label-text">Contact No.<span className="required-asterisk">*</span></span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Contact No.<span className={styles.requiredAsterisk}>*</span>
+                    </span>
                     <input
                       type="text"
-                      className="input"
+                      className={styles.input}
                       value={ref.contactNo}
-                      onChange={(e) => updateReference(ref.id, 'contactNo', e.target.value)}
+                      disabled
                     />
                   </div>
 
-                  <div>
-                    <span className="label-text">Relationship<span className="required-asterisk">*</span></span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Relationship<span className={styles.requiredAsterisk}>*</span>
+                    </span>
                     <input
                       type="text"
-                      className="input"
+                      className={styles.input}
                       value={ref.relationship}
-                      onChange={(e) => updateReference(ref.id, 'relationship', e.target.value)}
+                      disabled
                     />
                   </div>
                 </div>
@@ -103,72 +217,108 @@ const ApplicantSupport: React.FC = () => {
         </div>
 
         {/* Attachments Section */}
-        <div className="form-container">
-          <h2 className="section-title" onClick={() => setShowAttachments(prev => !prev)}>
-            Attachments
+        <div className={styles.formContainer}>
+          <h2
+            className={supportStyles.sectionTitle}
+            onClick={() => setShowAttachments(prev => !prev)}
+          >
+            <span className={styles.sectionTitleText}>
+              Attachments
+            </span>
+            <div className={styles.sectionArrow}>
+              {showAttachments ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
           </h2>
           {showAttachments && (
             <div>
+              <div className={styles.labelHint}>
+                Resume is compulsory. You can add more attachments if needed.
+              </div>
+
               {attachments.map((att, index) => (
-                <div key={att.id} className={`form-section ${index > 0 ? "record" : ""}`}>
-                  {index > 0 && (
-                    <div className="delete-btn" onClick={() => deleteAttachment(att.id)}>
-                      <Trash2 size={16} />
-                    </div>
-                  )}
+                <div key={att.id} className={`${styles.formSection} ${index > 0 ? styles.record : ""}`}>
 
-                  
-                    <div className="attachment-type">
-                      <span className="label-text">
-                        Document Type<span className="required-asterisk">*</span>
-                      </span>
-
-                      {index === 0 ? (
-                        <input
-                          type="text"
-                          className="input"
-                          value="Resume"
-                          disabled
-                        />
-                      ) : (
-                        <select
-                          className="input"
-                          value={att.documentType}
-                          onChange={(e) => updateAttachment(att.id, 'documentType', e.target.value)}
-                        >
-                          <option value="">-- Select Document Type --</option>
-                          <option value="Cover Letter">Cover Letter</option>
-                          <option value="Certificate">Certificate</option>
-                          <option value="Photo">Photo</option>
-                          <option value="Passport">Passport</option>
-                          <option value="Others">Others</option>
-                        </select>
-                      )}
-                    </div>
-
-
-                    <div className="attachment-name">
-                      <span className="label-text">Document Name<span className="required-asterisk">*</span></span>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Document Type<span className={styles.requiredAsterisk}>*</span>
+                    </span>
+                    {index === 0 ? (
                       <input
                         type="text"
-                        className="input"
-                        value={att.documentName}
-                        onChange={(e) => updateAttachment(att.id, 'documentName', e.target.value)}
+                        className={styles.input}
+                        value="Resume"
+                        disabled
                       />
+                    ) : (
+                      <select
+                        className={styles.input}
+                        value={att.documentType}
+                        disabled
+                      >
+                        <option value="">-- Select Document Type --</option>
+                        <option value="Resume">Resume</option>
+                        <option value="Cover Letter">Cover Letter</option>
+                        <option value="Certificate">Certificate</option>
+                        <option value="Photo">Photo</option>
+                        <option value="Passport">Passport</option>
+                        <option value="Others">Others</option>
+                      </select>
+                    )}
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Document Name<span className={styles.requiredAsterisk}>*</span>
+                    </span>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      value={att.documentName}
+                      disabled
+                    />
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <span className={styles.labelText}>
+                      Browse... (Max 10MB)<span className={styles.requiredAsterisk}>*</span>
+                    </span>
+                    <input
+                      type="file"
+                      className={styles.input}
+                      disabled
+                    />
+
+                    <div className={supportStyles.fileHint}>
+                      Accepted formats: JPEG, JPG, PNG, GIF, PDF, DOC, DOCX, TXT, XLS, XLSX (Max: 10MB)
                     </div>
 
-                    <div className="attachment-upload">
-                      <span className="label-text invisible">Browse...</span>
-                      <input
-                        type="file"
-                        onChange={(e) => updateAttachment(att.id, 'file', e.target.files?.[0] || null)}
-                      />
-                    </div>
-                  
+                    {att.file_name && (
+                      <div style={{ fontSize: "0.85rem", marginTop: "0.25rem", color: "green" }}>
+                        Current file: {att.file_name}
+                        {att.file_size && ` (${formatFileSize(att.file_size)})`}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
+        </div>
+
+        <div className={styles.formButtons}>
+          <button 
+            className={`${styles.btn} ${styles.save}`} 
+            onClick={() => navigate("/hr/applicants")}
+          >
+            Back to All Applicants
+          </button>
+
+          <button 
+            className={`${styles.btn} ${styles.submit}`} 
+            onClick={() => navigate(`/hr/applicant-details/family?userId=${userId}`)}
+          >
+            ← Previous
+          </button>
         </div>
       </div>
     </div>

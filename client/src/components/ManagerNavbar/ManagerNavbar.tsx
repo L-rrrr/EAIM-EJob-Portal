@@ -1,7 +1,6 @@
-import "./ManagerNavbar.css";
-import { useState, useEffect, useRef, useContext } from "react";
+import styles from "./ManagerNavbar.module.css";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ColorModeContext } from "../../ThemeContext";
 import {
   User,
   LogOut,
@@ -13,7 +12,7 @@ import {
 import logo from "../../assets/EAIM-logo.png";
 
 const ManagerNavbar: React.FC = () => {
-  const { darkMode, toggleDarkMode } = useContext(ColorModeContext);
+  const [darkMode, setDarkMode] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("current-password");
@@ -23,6 +22,12 @@ const ManagerNavbar: React.FC = () => {
   const navigate = useNavigate();
 
   const email = "manager@eaim.edu.sg";
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setDarkMode(isDark);
+  }, []);
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,6 +40,14 @@ const ManagerNavbar: React.FC = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
+    document.documentElement.classList.toggle('dark', newDarkMode);
+  };
+
 
   const handleChangePassword = () => {
     if (newPassword !== confirmPassword) {
@@ -49,60 +62,60 @@ const ManagerNavbar: React.FC = () => {
   };
 
   return (
-    <nav className="manager-navbar">
-      <div className="navbar-left">
-        <img src={logo} alt="Logo" className="navbar-logo" />
-        <Link to="/manager/available-jobs" className="navbar-link">Current Jobs</Link>
-        <Link to="/manager/new-job" className="navbar-link">New Job Requisition</Link>
-        <Link to="/manager/interviews" className="navbar-link">Assess Interview</Link>
+    <nav className={styles.navbar}>
+      <div className={styles.navbarLeft}>
+        <img src={logo} alt="Logo" className={styles.navbarLogo} />
+        <Link to="/manager/available-jobs" className={styles.navbarLink}>Current Jobs</Link>
+        <Link to="/manager/new-job" className={styles.navbarLink}>Job Requisition</Link>
+        <Link to="/manager/assessment" className={styles.navbarLink}>Assessment</Link>
       </div>
 
-      <div className="navbar-right">
+      <div className={styles.navbarRight}>
         <button
-          className={`icon-button ${darkMode ? "dark" : ""}`}
+          className={`${styles.iconButton} ${darkMode ? styles.dark : ""}`}
           onClick={toggleDarkMode}
           aria-label="Toggle dark mode"
         >
           {darkMode ? <Moon /> : <Sun />}
         </button>
 
-        <LogOut className="navbar-icon" onClick={() => navigate("/login")} />
+        <LogOut className={styles.navbarIcon} onClick={() => navigate("/login")} />
 
-        <div className="profile-wrapper" ref={profileRef}>
-          <User className="navbar-icon" onClick={() => setShowProfile(prev => !prev)} />
+        <div className={styles.profileWrapper} ref={profileRef}>
+          <User className={styles.navbarIcon} onClick={() => setShowProfile(prev => !prev)} />
           {showProfile && (
-            <div className="profile-popup">
+            <div className={styles.profilePopup}>
               <p><strong>Email:</strong> {email}</p>
 
-              <div className="password-row">
+              <div className={styles.passwordRow}>
                 <label>Current Password:</label>
-                <div className="password-field">
+                <div className={styles.passwordField}>
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     readOnly
                   />
-                  <button className="eye-button" onClick={() => setShowPassword(prev => !prev)} type="button">
+                  <button className={styles.eyeButton} onClick={() => setShowPassword(prev => !prev)} type="button">
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
 
               <label>New Password:</label>
-              <input className="edit-password-field"
+              <input className={styles.editPasswordField}
                 type="text"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
               />
 
               <label>Confirm New Password:</label>
-              <input className="edit-password-field"
+              <input className={styles.editPasswordField}
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
 
-              <button className="change-btn" onClick={handleChangePassword}>Change Password</button>
+              <button className={styles.changeBtn} onClick={handleChangePassword}>Change Password</button>
             </div>
           )}
         </div>

@@ -1,0 +1,610 @@
+.postJobContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 1.5rem;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  box-sizing: border-box;
+}
+
+.topSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.statsCard {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.statsCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.cardIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.totalJobsCard .cardIcon {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.pendingCard .cardIcon {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.activeCard .cardIcon {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+}
+
+.cardContent {
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0 0 0.25rem 0;
+}
+
+.cardValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+  display: block;
+}
+
+.cardSubtitle {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+.mainPanelsSection {
+  display: flex;
+  gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.formPanel {
+  flex: 3;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.formHeader {
+  background: linear-gradient(135deg, #B3238B 0%, #97006c 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.formTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.postJobForm {
+  padding: 2rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.formColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.formGroup label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.formInput,
+.formSelect {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background-color: white;
+  color: #374151;
+}
+
+.formInput:focus,
+.formSelect:focus {
+  outline: none;
+  border-color: #B3238B;
+  box-shadow: 0 0 0 3px rgba(179, 35, 139, 0.1);
+}
+
+.formInput::placeholder {
+  color: #9ca3af;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.submitBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #B3238B, #97006c);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitBtn:hover {
+  background: linear-gradient(135deg, #97006c, #7d1a5a);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(179, 35, 139, 0.3);
+}
+
+.requisitionPanel {
+  flex: 2;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.requisitionPanel .tableWrapper {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.tableHeader {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tableTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.tableStats {
+  display: flex;
+  align-items: center;
+}
+
+.totalCount {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.tableWrapper {
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.requisitionTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.requisitionTable th {
+  background-color: #f9fafb;
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.requisitionTable td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+.requisitionTable tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.statusBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.pending {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.approved {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.rejected {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.actionBtn {
+  padding: 0.375rem;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+
+.actionBtn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* MODAL */
+.modalOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.25);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  min-width: 320px;
+  max-width: 95vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  position: relative;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #b3238b;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modalBody {
+  font-size: 1rem;
+  color: #374151;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .postJobContainer {
+    padding: 1rem;
+  }
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .postJobForm {
+    padding: 1.5rem;
+  }
+  .formActions {
+    flex-direction: column;
+  }
+  .submitBtn {
+    width: 100%;
+    justify-content: center;
+  }
+  .requisitionTable {
+    font-size: 0.75rem;
+  }
+  .requisitionTable th,
+  .requisitionTable td {
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardValue {
+    font-size: 1.5rem;
+  }
+}
+
+
+/* TIPTAP EDITOR */
+.editorWrapper {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.editorWrapper:focus-within {
+  border-color: #B3238B;
+  box-shadow: 0 0 0 3px rgba(179, 35, 139, 0.1);
+}
+
+.tiptapToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.toolbarBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.toolbarBtn:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.toolbarBtn.isActive {
+  background-color: #B3238B;
+  color: white;
+}
+
+.tiptapEditor {
+  min-height: 150px;
+  padding: 1rem;
+  background-color: white;
+  color: #374151;
+  outline: none;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.tiptapEditor[data-placeholder]:before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
+}
+
+.tiptapEditor:focus[data-placeholder]:before {
+  display: none;
+}
+/* Add these dark mode rules at the end of your file for full dark mode support, matching PostJob.module.css */
+
+:global(.dark) .postJobContainer {
+  background-color: #0f172a;
+}
+
+:global(.dark) .statsCard,
+:global(.dark) .formPanel,
+:global(.dark) .requisitionPanel {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .formHeader {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+}
+
+:global(.dark) .tableHeader {
+  background: linear-gradient(135deg, #1e40af, #1e3a8a);
+}
+
+:global(.dark) .cardTitle,
+:global(.dark) .formTitle,
+:global(.dark) .tableTitle {
+  color: #f8fafc;
+}
+
+:global(.dark) .cardValue {
+  color: #f8fafc;
+}
+
+:global(.dark) .cardSubtitle,
+:global(.dark) .totalCount {
+  color: #94a3b8;
+}
+
+:global(.dark) .formGroup label {
+  color: #cbd5e1;
+}
+
+:global(.dark) .formInput,
+:global(.dark) .formSelect {
+  background-color: #334155;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+:global(.dark) .formInput:focus,
+:global(.dark) .formSelect:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+}
+
+:global(.dark) .formInput::placeholder {
+  color: #64748b;
+}
+
+:global(.dark) .editorWrapper {
+  border-color: #475569;
+}
+
+:global(.dark) .editorWrapper:focus-within {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+}
+
+:global(.dark) .tiptapToolbar {
+  background-color: #334155;
+  border-bottom-color: #475569;
+}
+
+:global(.dark) .toolbarBtn {
+  color: #94a3b8;
+}
+
+:global(.dark) .toolbarBtn:hover {
+  background-color: #475569;
+  color: #cbd5e1;
+}
+
+:global(.dark) .toolbarBtn.isActive {
+  background-color: #7c3aed;
+  color: white;
+}
+
+:global(.dark) .tiptapEditor {
+  background-color: #1e293b;
+  color: #cbd5e1;
+}
+
+:global(.dark) .tiptapEditor[data-placeholder]:before {
+  color: #64748b;
+}
+
+:global(.dark) .requisitionTable th {
+  background-color: #334155;
+  color: #cbd5e1;
+  border-bottom-color: #475569;
+}
+
+:global(.dark) .requisitionTable td {
+  color: #94a3b8;
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .requisitionTable tbody tr:hover {
+  background-color: #334155;
+}
+
+:global(.dark) .actionBtn {
+  background: #334155;
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+:global(.dark) .actionBtn:hover {
+  background: #475569;
+  color: #cbd5e1;
+}
+
+:global(.dark) .submitBtn {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+}
+
+:global(.dark) .submitBtn:hover {
+  background: linear-gradient(135deg, #5b21b6, #3b0764);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+:global(.dark) .modalContent {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+:global(.dark) .modalCloseBtn {
+  color: #7c3aed;
+}
+

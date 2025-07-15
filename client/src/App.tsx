@@ -40,6 +40,8 @@ import ManagerAvailableJobs from "./ManagerPages/ManagerAvailableJobs.tsx/Manage
 import ManagerLayout from "./ManagerPages/ManagerLayout";
 import JobRequisition from "./ManagerPages/JobRequisition/JobRequisition";
 import Settings from "./pages/Settings/Settings";
+import Assessment from "./ManagerPages/Assessment/Assessment";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // ------------------------ App Routes ------------------------
 
@@ -52,46 +54,51 @@ const AppRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Applicant routes */}
-      <Route path="/" element={<MainLayout />}>
-        <Route path="home" element={<Home />} />
-        <Route path="available-jobs" element={<AvailableJobs />} />
-        <Route path="jobs-applied" element={<JobsApplied />} />
-        <Route path="bookmark" element={<Bookmark />} />
-        <Route path="help" element={<Help />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="apply" element={<Apply />} />
+      <Route element={<ProtectedRoute allowedRoles={["Applicant"]} />}>
+        <Route path="/" element={<MainLayout />}>
+          <Route path="home" element={<Home />} />
+          <Route path="available-jobs" element={<AvailableJobs />} />
+          <Route path="jobs-applied" element={<JobsApplied />} />
+          <Route path="bookmark" element={<Bookmark />} />
+          <Route path="help" element={<Help />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="apply" element={<Apply />} />
 
-        <Route path="profile" element={<ProfileLayout />}>
-          <Route index element={<PersonalParticulars />} />
-          <Route path="personal-particulars" element={<PersonalParticulars />} />
-          <Route path="education" element={<Education />} />
-          <Route path="work" element={<Experience />} />
-          <Route path="family" element={<Family />} />
-          <Route path="support" element={<Support />} />
+          <Route path="profile" element={<ProfileLayout />}>
+            <Route path="personal-particulars" element={<PersonalParticulars />} />
+            <Route path="education" element={<Education />} />
+            <Route path="work" element={<Experience />} />
+            <Route path="family" element={<Family />} />
+            <Route path="support" element={<Support />} />
+          </Route>
         </Route>
       </Route>
 
       {/* HR routes */}
-      <Route path="/hr" element={<HRLayout />}>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="available-jobs" element={<HRAvailableJobs />} />
-        <Route path="applicants" element={<Applicants />} />
-        <Route path="applicant-details" element={<HRProfileLayout />}>
-          <Route index element={<ApplicantPersonalParticulars />} />
-          <Route path="personal-particulars" element={<ApplicantPersonalParticulars />} />
-          <Route path="education" element={<ApplicantEducation />} />
-          <Route path="work" element={<ApplicantExperience />} />
-          <Route path="family" element={<ApplicantFamily />} />
-          <Route path="support" element={<ApplicantSupport />} />
+      <Route element={<ProtectedRoute allowedRoles={["HR"]} />}>
+        <Route path="/hr" element={<HRLayout />}>
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="available-jobs" element={<HRAvailableJobs />} />
+          <Route path="applicants" element={<Applicants />} />
+          <Route path="applicant-details" element={<HRProfileLayout />}>
+            <Route path="personal-particulars" element={<ApplicantPersonalParticulars />} />
+            <Route path="education" element={<ApplicantEducation />} />
+            <Route path="work" element={<ApplicantExperience />} />
+            <Route path="family" element={<ApplicantFamily />} />
+            <Route path="support" element={<ApplicantSupport />} />
+          </Route>
+          <Route path="post-job" element={<PostJob />} />
+          <Route path="interview" element={<Interview />} />
+          {/* <Route path="application-form" element={<Apply />} /> */}
         </Route>
-        <Route path="post-job" element={<PostJob />} />
-        <Route path="interview" element={<Interview />} />
       </Route>
 
-      <Route path="/manager" element={<ManagerLayout />}>
-        <Route index element={<ManagerAvailableJobs />} />
-        <Route path="available-jobs" element={<ManagerAvailableJobs />} />
-        <Route path="new-job" element={<JobRequisition />} />
+      <Route element={<ProtectedRoute allowedRoles={["Manager"]} />}>
+        <Route path="/manager" element={<ManagerLayout />}>
+          <Route path="available-jobs" element={<ManagerAvailableJobs />} />
+          <Route path="new-job" element={<JobRequisition />} />
+          <Route path="assessment" element={<Assessment />} />
+        </Route>
       </Route>
 
     </Routes>

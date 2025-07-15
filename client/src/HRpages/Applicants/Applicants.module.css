@@ -73,7 +73,7 @@
 
 .applicantsTable th {
   background-color: #f8f9fa;
-  padding: 1rem 0.75rem;
+  padding: 1rem 0 1rem 0.75rem;
   text-align: left;
   font-weight: 600;
   color: #495057;
@@ -83,7 +83,7 @@
 }
 
 .applicantsTable td {
-  padding: 1rem 0.75rem;
+  padding: 1rem 0 1rem 0.75rem;
   border-bottom: 1px solid #e9ecef;
   vertical-align: middle;
   color: #495057;
@@ -95,7 +95,7 @@
 
 /* STATUS BADGES */
 .statusBadge {
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0rem;
   border-radius: 15px;
   font-size: 0.8rem;
   font-weight: 500;
@@ -133,11 +133,11 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .filterPanel.expanded {
-  width: 280px;
+  width: 300px;
 }
 
 .filterPanel.collapsed {
@@ -157,7 +157,7 @@
 
 .filterHeader h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
@@ -174,11 +174,7 @@
   font-size: 1.2rem;
   cursor: pointer;
   padding: 0rem;
-  border-radius: 50%;
-}
-
-.collapseToggle:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 40%;
 }
 
 .collapseToggle:focus {
@@ -186,9 +182,13 @@
 }
 
 .filterContent {
-  padding: 0.5rem;
+  flex: 1; /* Take remaining space */
   overflow-y: auto;
-  max-height: 600px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: 0; /* Important for flex scrolling */
 }
 
 /* COMPACT FILTER GROUPS */
@@ -207,8 +207,71 @@
 .filterGroup label {
   font-weight: 600;
   color: #495057;
-  font-size: 0.75rem;
+  font-size: 1rem;
   margin-bottom: 0.25rem;
+}
+
+/* Filter Actions */
+.filterActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.applyFilterBtn.compact,
+.resetFilterBtn.compact {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border: none;
+  text-align: center; 
+}
+
+.applyFilterBtn.compact {
+  background: linear-gradient(135deg, #B3238B 0%, #97006c 100%);
+  color: white;
+  padding-top: 0.5rem;
+}
+
+.applyFilterBtn.compact:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(179, 35, 139, 0.3);
+}
+
+.resetFilterBtn.compact {
+  background: #6b7280;
+  color: white;
+}
+
+.resetFilterBtn.compact:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+}
+
+/* Button Grid for better layout */
+.buttonGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* No results styling */
+.noResults {
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  padding: 2rem;
+}
+
+/* Filtered indicator */
+.filteredIndicator {
+  color: #ffffff;
+  font-weight: 500;
 }
 
 /* COMPACT BUTTONS */
@@ -218,18 +281,13 @@
   gap: 0.25rem;
 }
 
-.buttonGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.25rem;
-}
 
 .filterBtn.compact {
   padding: 0.5rem 0.75rem;
   background: white;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   font-weight: 500;
   text-align: center;
   color: #495057;
@@ -260,7 +318,7 @@
   padding: 0.5rem;
   border: 1px solid #e9ecef;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   width: 100%;
   box-sizing: border-box;
   background-color: white;
@@ -283,33 +341,16 @@
   margin: 0;
 }
 
-/* COMPACT APPLY BUTTON */
-.applyFilterBtn.compact {
-  margin: 0.75rem;
-  padding: 0.75rem;
-  background: linear-gradient(135deg, #B3238B 0%, #97006c 100%);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.applyFilterBtn.compact:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(179, 35, 139, 0.3);
-}
-
 /* SEARCH INPUT */
 .customSearchInput {
   padding: 0.5rem;
   border: 1px solid #e9ecef;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   width: 100%;
   box-sizing: border-box;
   background-color: white;
+  color: black;
 }
 
 .customSearchInput:focus {
@@ -366,6 +407,136 @@
   margin-top: 1rem;
   animation: slideUp 0.3s ease-out;
 }
+
+.analysisLevelGroup {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.analysisLevelLabel {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.75rem;
+  display: block;
+  font-size: 0.9rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.radioGroup {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Update the existing .radioOption class */
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+  position: relative;
+  min-width: fit-content;
+}
+
+.radioOption:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.radioOption input[type="radio"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  margin: 0;
+}
+
+.radioOption input[type="radio"]:checked {
+  border-color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.radioOption input[type="radio"]:checked::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+.radioOption input[type="radio"]:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+/* Update the radio option text */
+.radioOption span {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  user-select: none;
+}
+
+/* Selected state styling */
+.radioOption:has(input[type="radio"]:checked) {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.1);
+}
+
+.radioOption:has(input[type="radio"]:checked) span {
+  color: rgba(255, 255, 255, 1);
+  font-weight: 600;
+}
+
+.statusSelect {
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #495057;
+}
+
+.statusSelect option {
+  background: #ffffff;
+  color: #495057;
+}
+
+:global(.dark) .statusSelect {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .statusSelect option {
+  background: #1f2937;
+  color: #94a3b8;
+}
+
+
+
 
 @keyframes slideUp {
   from {
@@ -483,6 +654,52 @@
   padding: 2rem;
 }
 
+.aiPlaceholderContent {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+}
+
+.aiPlaceholderContent h4 {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.aiPlaceholderContent p {
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.startAnalysisBtn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  margin-top: 1rem;
+}
+
+.startAnalysisBtn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.startAnalysisBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
 .aiPanelFooter {
   background: #f8f9fa;
   padding: 1rem 2rem;
@@ -495,23 +712,24 @@
 .aiPanelActions {
   display: flex;
   gap: 1rem;
+  align-items: center;
 }
 
 .refreshAnalysis {
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #059669, #047857);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
   border: none;
+  padding: 0.75rem 1.5rem;
   border-radius: 6px;
-  font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 0.9rem;
 }
 
 .refreshAnalysis:hover {
-  background: linear-gradient(135deg, #047857, #065f46);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .aiPanelFooter small {
@@ -598,6 +816,22 @@
     gap: 1rem;
     align-items: flex-start;
   }
+
+  .radioGroup {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .radioOption {
+    padding: 0.6rem 1rem;
+    justify-content: flex-start;
+    width: 100%;
+  }
+  
+  .analysisLevelGroup {
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -624,6 +858,26 @@
   .filterBtn.compact {
     font-size: 0.65rem;
     padding: 0.4rem 0.5rem;
+  }
+
+  .radioOption {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .radioOption input[type="radio"] {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .radioOption input[type="radio"]:checked::before {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .analysisLevelLabel {
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
   }
 }
 
@@ -729,6 +983,29 @@
   color: #94a3b8;
 }
 
+:global(.dark) .analysisLevelGroup {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .radioOption {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .radioOption:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .radioOption:has(input[type="radio"]:checked) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+
+
+
 /* Date input calendar icon styling for filter panel */
 .dateInput::-webkit-calendar-picker-indicator {
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23B3238B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") no-repeat;
@@ -746,3 +1023,177 @@
 }
 
 
+
+
+.aiResponse :global(.ai-section-heading) {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 1.5rem 0 1rem 0;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+  border-left: 4px solid rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.aiResponse :global(.ai-section-divider) {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  margin: 1.5rem 0;
+  border-radius: 1px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.aiResponse :global(.ai-paragraph) {
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.7;
+  margin: 0.75rem 0;
+  text-align: justify;
+}
+
+.aiResponse :global(.ai-bullet-list) {
+  margin: 1rem 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.aiResponse :global(.ai-bullet-point) {
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  padding-left: 2rem;
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.aiResponse :global(.ai-bullet-point):before {
+  content: "•";
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: bold;
+  position: absolute;
+  left: 0.75rem;
+  top: 0.5rem;
+}
+
+.aiResponse :global(.ai-numbered-list) {
+  margin: 1rem 0;
+  padding-left: 0;
+  counter-reset: ai-counter;
+}
+
+.aiResponse :global(.ai-numbered-point) {
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  padding-left: 2.5rem;
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+  counter-increment: ai-counter;
+  list-style: none;
+}
+
+.aiResponse :global(.ai-numbered-point):before {
+  content: counter(ai-counter) ".";
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: bold;
+  position: absolute;
+  left: 0.75rem;
+  top: 0.5rem;
+}
+
+/* Enhanced bold and italic styles */
+.aiResponse strong {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.aiResponse em {
+  color: rgba(255, 255, 255, 0.9);
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .aiResponse :global(.ai-section-heading) {
+    font-size: 1.1rem;
+    padding: 0.5rem 0.75rem;
+    margin: 1rem 0 0.75rem 0;
+  }
+  
+  .aiResponse :global(.ai-bullet-point),
+  .aiResponse :global(.ai-numbered-point) {
+    padding: 0.4rem 0.5rem;
+    padding-left: 1.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .aiResponse :global(.ai-bullet-point):before,
+  .aiResponse :global(.ai-numbered-point):before {
+    left: 0.5rem;
+    top: 0.4rem;
+  }
+}
+
+
+.actionButtons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+/* Action Button Styling - matching HRAvailableJobs */
+.actionBtn {
+  padding: 0.4rem;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  text-decoration: none;
+}
+
+.actionBtn:hover {
+  background: #e9ecef;
+  color: #495057;
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.actionBtn:visited {
+  color: #6c757d;
+}
+
+.actionBtn:hover:visited {
+  color: #495057;
+}
+
+/* Dark mode support for action button */
+:global(.dark) .actionBtn {
+  background: #334155;
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+:global(.dark) .actionBtn:hover {
+  background: #475569;
+  color: #cbd5e1;
+}
+
+:global(.dark) .actionBtn:visited {
+  color: #94a3b8;
+}
+
+:global(.dark) .actionBtn:hover:visited {
+  color: #cbd5e1;
+}

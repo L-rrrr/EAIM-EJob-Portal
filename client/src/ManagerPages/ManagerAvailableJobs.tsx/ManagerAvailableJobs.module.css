@@ -124,7 +124,6 @@
   font-size: 0.8rem;
   font-weight: 500;
   text-transform: capitalize;
-  white-space: nowrap;
 }
 
 .hiring {
@@ -221,7 +220,6 @@
 .filterContent {
   padding: 0.5rem;
   overflow-y: auto;
-  max-height: 600px;
 }
 
 .filterActions {

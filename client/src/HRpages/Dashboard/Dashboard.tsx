@@ -8,13 +8,15 @@ import axios from "axios";
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [applicantsData, setApplicantsData] = useState<any[]>([]);
+
 
   type Job = {
     title: string;
     job_type: string;
     posting_date: string;
     seekers_required: number;
+    applicants_now?: number;
   };
 
   useEffect(() => {
@@ -32,6 +34,40 @@ const Dashboard: React.FC = () => {
     fetchJobs();
   }, []);
 
+  useEffect(() => {
+    const fetchApplicants = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/applicants`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        if (res.data.success) {
+          // Sort by date descending (most recent first)
+          const sorted = [...res.data.data].sort((a, b) => new Date(b.applied).getTime() - new Date(a.applied).getTime());
+          setApplicantsData(sorted);
+        }
+      } catch (error) {
+        console.error("Error fetching applicants:", error);
+      }
+    };
+    fetchApplicants();
+  }, []);
+
+  // Helper function to format date to dd-mm-yyyy
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}-${month}-${year}`;
+  };
+
   // Chart data
   const nationalityData = [
     { name: "Singaporean", value: 45, color: "#B3238B" },
@@ -41,22 +77,23 @@ const Dashboard: React.FC = () => {
   ];
 
   const statusData = [
-    { name: "Pending Review", value: 3, color: "#f59e0b" },
-    { name: "Shortlisted", value: 1, color: "#10b981" },
+    { name: "Pending", value: 3, color: "#f59e0b" },
+    { name: "Interview Scheduled", value: 1, color: "#10b981" },
+    { name: "Reviewing", value: 2, color: "#3b82f6" },
     { name: "Rejected", value: 1, color: "#ef4444" },
     { name: "Accepted", value: 1, color: "#059669" },
   ];
 
-  const applicantsData = [
-    { name: "Tan Wei Ling", job: "Admin Assistant", date: "2025-06-14", status: "Pending Review" },
-    { name: "Ali bin Salleh", job: "Preschool Teacher", date: "2025-06-15", status: "Interview Scheduled" },
-    { name: "Lim Hui Yi", job: "Operations Executive", date: "2025-06-13", status: "Shortlisted" },
-    { name: "Siti Nur Aisyah", job: "Cleaner", date: "2025-06-12", status: "Pending Review" },
-    { name: "Rajesh Kumar", job: "ICT Support Officer", date: "2025-06-11", status: "Rejected" },
-    { name: "Chua Min Jie", job: "Exam Coordinator", date: "2025-06-14", status: "Pending Review" },
-    { name: "Ng Wei Ting", job: "Finance Officer", date: "2025-06-13", status: "Shortlisted" },
-    { name: "Ahmad Zaki", job: "Security Officer", date: "2025-06-14", status: "Pending Review" },
-  ];
+  // const applicantsData = [
+  //   { name: "Tan Wei Ling", job: "Admin Assistant", date: "2025-06-14", status: "Pending Review" },
+  //   { name: "Ali bin Salleh", job: "Preschool Teacher", date: "2025-06-15", status: "Interview Scheduled" },
+  //   { name: "Lim Hui Yi", job: "Operations Executive", date: "2025-06-13", status: "Shortlisted" },
+  //   { name: "Siti Nur Aisyah", job: "Cleaner", date: "2025-06-12", status: "Pending Review" },
+  //   { name: "Rajesh Kumar", job: "ICT Support Officer", date: "2025-06-11", status: "Rejected" },
+  //   { name: "Chua Min Jie", job: "Exam Coordinator", date: "2025-06-14", status: "Pending Review" },
+  //   { name: "Ng Wei Ting", job: "Finance Officer", date: "2025-06-13", status: "Shortlisted" },
+  //   { name: "Ahmad Zaki", job: "Security Officer", date: "2025-06-14", status: "Pending Review" },
+  // ];
 
   return (
     <div className={styles.dashboardContent}>
@@ -77,7 +114,30 @@ const Dashboard: React.FC = () => {
             <div className={styles.cardBody}>
               <div className={styles.metricDisplay}>
                 <span className={styles.metricValue}>{jobs.length}</span>
-                <span className={styles.metricLabel}>Active job postings</span>
+                <span className={styles.metricLabel}>Job postings</span>
+              </div>
+            </div>
+          </div>
+
+          <div className={`${styles.statsCard} ${styles.totalApplicantsCard}`}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardIcon}>
+                <Users size={24} />
+              </div>
+              <div className={styles.cardTitleSection}>
+                <h3 className={styles.cardTitle}>Total Applicants</h3>
+                <span className={styles.cardSubtitle}>Unique applicants applied</span>
+              </div>
+            </div>
+            <div className={styles.cardBody}>
+              <div className={styles.metricDisplay}>
+                <span className={styles.metricValue}>
+                  {
+                    // Count unique applicants by name (or use applicant_id if available)
+                    Array.from(new Set(applicantsData.map(a => a.user_id))).length
+                  }
+                </span>
+                <span className={styles.metricLabel}>Applicants</span>
               </div>
             </div>
           </div>
@@ -88,7 +148,7 @@ const Dashboard: React.FC = () => {
                 <Users size={24} />
               </div>
               <div className={styles.cardTitleSection}>
-                <h3 className={styles.cardTitle}>Total Applicants</h3>
+                <h3 className={styles.cardTitle}>Total Applications</h3>
                 <span className={styles.cardSubtitle}>Current applications</span>
               </div>
             </div>
@@ -187,9 +247,9 @@ const Dashboard: React.FC = () => {
                       <tr key={index}>
                         <td>{job.title}</td>
                         <td>{job.job_type}</td>
-                        <td>{job.posting_date?.slice(0, 10)}</td>
+                        <td>{formatDate(job.posting_date)}</td>
                         <td>{job.seekers_required}</td>
-                        <td>0</td>
+                        <td>{job.applicants_now || 0}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -200,7 +260,7 @@ const Dashboard: React.FC = () => {
             {/* Applicants Table - Now wider */}
             <div className={styles.tableCard}>
               <div className={styles.tableHeader}>
-                <h3 className={styles.tableTitle}>Recent Applicants</h3>
+                <h3 className={styles.tableTitle}>Recent Applications</h3>
                 <button className={styles.viewDetailsBtn} onClick={() => navigate("/hr/applicants")}>
                   View All
                   <ArrowRight size={16} />
@@ -221,9 +281,9 @@ const Dashboard: React.FC = () => {
                       <tr key={index}>
                         <td>{applicant.name}</td>
                         <td>{applicant.job}</td>
-                        <td>{applicant.date}</td>
+                        <td>{formatDate(applicant.applied)}</td>
                         <td>
-                          <span className={`${styles.statusBadge} ${styles[applicant.status.toLowerCase().replace(/\s+/g, '')]}`}>
+                          <span className={`${styles.statusBadge} ${styles[applicant.status?.toLowerCase().replace(/\s+/g, '')]}`}>
                             {applicant.status}
                           </span>
                         </td>
