@@ -3,6 +3,45 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { get } = require("http");
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+const sendEmailToUser = async (req, res) => {
+  const { user_id, subject, message } = req.body;
+  if (!user_id || !subject || !message) {
+    return res.status(400).json({ success: false, message: "Missing required fields." });
+  }
+
+  // Get user email from tbl_users
+  const sql = `SELECT email FROM tbl_users WHERE user_id = ?`;
+  const users = await db.executeQuery(sql, [user_id]);
+  if (!users.length) {
+    return res.status(404).json({ success: false, message: "User not found." });
+  }
+  const to = users[0].email;
+
+  try {
+    await transporter.sendMail({
+      from: `"EAIM" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html: `<p>${message.replace(/\n/g, "<br/>")}</p>`,
+    });
+    return res.status(200).json({ success: true, message: "Email sent successfully." });
+  } catch (e) {
+    console.error("Failed to send email:", e);
+    return res.status(500).json({ success: false, message: "Failed to send email.", error: e.message });
+  }
+};
 
 const postJobs = async (req, res) => {
   const {jobTitle, jobCategory, jobType, hiringStatus,jobRequirements, jobResponsibilities, seekersRequired } = req.body;
@@ -3551,7 +3590,8 @@ module.exports = {
   getUserInfo,
   updateUserInfo,
   getApplicantNationalityStats,
-  getApplicationStatusStats
+  getApplicationStatusStats,
+  sendEmailToUser
 };
 
 

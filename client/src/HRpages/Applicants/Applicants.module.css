@@ -1197,3 +1197,135 @@
 :global(.dark) .actionBtn:hover:visited {
   color: #cbd5e1;
 }
+
+/* Email Modal Overlay and Modal */
+.emailModalOverlay {
+  position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
+.emailModal {
+  background: #fff;
+  color: #222;
+  padding: 2rem;
+  border-radius: 10px;
+  min-width: 600px;
+  max-width: 95vw;
+  box-shadow: 0 2px 24px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 0rem;
+  height: auto;
+}
+.emailModal h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #B3238B;
+}
+.emailModal label {
+  font-weight: 500;
+  color: #333;
+  display: block;
+}
+
+.emailInput {
+  width: 100%;
+  margin: 0.5rem 0 1rem 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #ffffff;
+  color: #222;
+  transition: border 0.2s;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.emailInput:focus {
+  outline: none;
+}
+
+.tiptapWrapper {
+  margin-top: 0.5rem;
+}
+
+.emailModalActions {
+  display: flex; gap: 1rem; margin-top: 0.5rem;
+}
+
+.sendEmailBtn {
+  background: linear-gradient(90deg, #B3238B 0%, #97006c 100%);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.sendEmailBtn:disabled {
+  background: #e5e7eb;
+  color: #aaa;
+  cursor: not-allowed;
+}
+.cancelEmailBtn {
+  background: #f3f4f6;
+  color: #333;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.cancelEmailBtn:hover {
+  background: #e5e7eb;
+}
+.emailStatus {
+  margin-top: 0.5rem;
+  font-size: 0.98rem;
+  font-weight: 500;
+  color: #B3238B;
+}
+
+/* DARK MODE SUPPORT */
+:global(.dark) .emailModal {
+  background: #1e293b;
+  color: #f3f4f6;
+  box-shadow: 0 2px 24px rgba(0,0,0,0.5);
+}
+:global(.dark) .emailModal h3 {
+  color: #f472b6;
+}
+:global(.dark) .emailModal label {
+  color: #f3f4f6;
+}
+:global(.dark) .emailInput {
+  background: #334155;
+  color: #f3f4f6;
+  border: 1px solid #475569;
+}
+:global(.dark) .emailInput:focus {
+  border-color: #f472b6;
+  background: #1e293b;
+}
+:global(.dark) .sendEmailBtn {
+  background: linear-gradient(90deg, #f472b6 0%, #B3238B 100%);
+  color: #fff;
+}
+:global(.dark) .sendEmailBtn:disabled {
+  background: #475569;
+  color: #aaa;
+}
+:global(.dark) .cancelEmailBtn {
+  background: #334155;
+  color: #f3f4f6;
+}
+:global(.dark) .cancelEmailBtn:hover {
+  background: #475569;
+}
+:global(.dark) .emailStatus {
+  color: #f472b6;
+}

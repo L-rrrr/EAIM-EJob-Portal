@@ -112,9 +112,9 @@ const PostJob: React.FC = () => {
   const [jobType, setJobType] = useState("Full-Time");
   const [seekersRequired, setSeekersRequired] = useState(1);
   const [requisitions, setRequisitions] = useState([
-    { id: 1, name: "Rachel Tan", jobTitle: "Preschool Teacher", requestedDate: "2025-06-10", status: "Pending" },
-    { id: 2, name: "James Lim", jobTitle: "Operations Executive", requestedDate: "2025-06-11", status: "Pending" },
-    { id: 3, name: "Aisyah Binte Rahman", jobTitle: "Finance Officer", requestedDate: "2025-06-12", status: "Pending" },
+    { id: 1, name: "Rachel Tan", jobTitle: "Preschool Teacher", requestedDate: "10-06-2025", status: "Pending" },
+    { id: 2, name: "James Lim", jobTitle: "Operations Executive", requestedDate: "11-06-2025", status: "Pending" },
+    { id: 3, name: "Aisyah Binte Rahman", jobTitle: "Finance Officer", requestedDate: "12-06-2025", status: "Pending" },
   ]);
 
   const handleSubmit = async (e: React.FormEvent) => {

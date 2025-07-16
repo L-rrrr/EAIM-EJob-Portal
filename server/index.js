@@ -165,6 +165,9 @@ app.get("/api/applicant-nationality-stats", authenticateToken, accountApi.getApp
 app.get("/api/application-status-stats", authenticateToken, accountApi.getApplicationStatusStats);
 
 
+// Send email to user endpoint
+app.post("/api/send-email", authenticateToken, accountApi.sendEmailToUser);
+
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
 });

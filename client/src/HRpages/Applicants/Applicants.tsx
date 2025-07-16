@@ -3,6 +3,7 @@ import styles from "./Applicants.module.css";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { Eye, Mail } from "lucide-react"; 
+import TiptapEditor from "../../components/TiptapEditor/TiptapEditor";
 
 const Applicants = () => {
   const [search, setSearch] = useState("");
@@ -13,6 +14,13 @@ const Applicants = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [analysisLevel, setAnalysisLevel] = useState("Basic");
+
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+  const [emailTargetUserId, setEmailTargetUserId] = useState<number | null>(null);
+  const [emailStatus, setEmailStatus] = useState("");
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   // Filter panel collapse state
   const [isFilterExpanded, setIsFilterExpanded] = useState(true);
@@ -369,8 +377,11 @@ const Applicants = () => {
                             <button
                               className={styles.actionBtn}
                               onClick={() => {
-                                // Email functionality will be added later
-                                console.log(`Email ${applicant.name} at ${applicant.email}`);
+                                setEmailTargetUserId(applicant.user_id);
+                                setShowEmailModal(true);
+                                setEmailSubject("");
+                                setEmailMessage("");
+                                setEmailStatus("");
                               }}
                               title="Send Email"
                             >
@@ -649,6 +660,69 @@ const Applicants = () => {
               )}
             </div>
             <small>Powered by OpenAI API</small>
+          </div>
+        </div>
+      )}
+
+      {showEmailModal && (
+        <div className={styles.emailModalOverlay}>
+          <div className={styles.emailModal}>
+            <h3>Send Email to Applicant</h3>
+            <label>
+              Subject:
+              <input
+                type="text"
+                value={emailSubject}
+                onChange={e => setEmailSubject(e.target.value)}
+                className={styles.emailInput}
+              />
+            </label>
+            <div className={styles.emailLabel}>
+              Message:
+              <div className={styles.tiptapWrapper}>
+                <TiptapEditor
+                  content={emailMessage}
+                  onChange={setEmailMessage}
+                />
+              </div>
+            </div>
+            <div className={styles.emailModalActions}>
+              <button
+                onClick={async () => {
+                  setIsSendingEmail(true);
+                  setEmailStatus("");
+                  try {
+                    const token = localStorage.getItem("token");
+                    await axios.post(
+                      `${import.meta.env.VITE_BACKEND_URL}/send-email`,
+                      {
+                        user_id: emailTargetUserId,
+                        subject: emailSubject,
+                        message: emailMessage,
+                      },
+                      { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    setEmailStatus("Email sent successfully!");
+                    setTimeout(() => setShowEmailModal(false), 1500);
+                  } catch (e) {
+                    setEmailStatus("Failed to send email.");
+                  } finally {
+                    setIsSendingEmail(false);
+                  }
+                }}
+                disabled={isSendingEmail || !emailSubject || !emailMessage}
+                className={styles.sendEmailBtn}
+              >
+                {isSendingEmail ? "Sending..." : "Send"}
+              </button>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className={styles.cancelEmailBtn}
+              >
+                Cancel
+              </button>
+            </div>
+            {emailStatus && <p className={styles.emailStatus}>{emailStatus}</p>}
           </div>
         </div>
       )}
