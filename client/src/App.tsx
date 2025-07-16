@@ -42,6 +42,7 @@ import JobRequisition from "./ManagerPages/JobRequisition/JobRequisition";
 import Settings from "./pages/Settings/Settings";
 import Assessment from "./ManagerPages/Assessment/Assessment";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ResetPassword from "./pages/Authentication/ResetPassword/ResetPassword";
 
 // ------------------------ App Routes ------------------------
 
@@ -52,6 +53,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Applicant routes */}
       <Route element={<ProtectedRoute allowedRoles={["Applicant"]} />}>

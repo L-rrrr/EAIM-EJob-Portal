@@ -9,6 +9,20 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applicantsData, setApplicantsData] = useState<any[]>([]);
+  const [nationalityData, setNationalityData] = useState<{ name: string; value: number; color: string }[]>([]);
+  const [statusData, setStatusData] = useState<{ name: string; value: number; color: string }[]>([]);
+
+  const nationalityColors = [
+    "#B3238B", "#7c3aed", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#059669", "#6366f1", "#f472b6", "#f87171"
+  ];
+
+    const statusColors = [
+      "#f59e0b", // Pending
+      "#10b981", // Interview Scheduled
+      "#3b82f6", // Reviewing
+      "#ef4444", // Rejected
+      "#059669", // Accepted
+    ];
 
 
   type Job = {
@@ -18,6 +32,58 @@ const Dashboard: React.FC = () => {
     seekers_required: number;
     applicants_now?: number;
   };
+
+  useEffect(() => {
+    const fetchNationalityStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/applicant-nationality-stats`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        if (res.data.success) {
+          // Map to chart data format
+          const chartData = res.data.data.map((row: any, idx: number) => ({
+            name: row.nationality,
+            value: row.count,
+            color: nationalityColors[idx % nationalityColors.length]
+          }));
+          setNationalityData(chartData);
+        }
+      } catch (error) {
+        console.error("Error fetching nationality stats:", error);
+      }
+    };
+    fetchNationalityStats();
+  }, []);
+
+  useEffect(() => {
+    const fetchStatusStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/application-status-stats`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        if (res.data.success) {
+          // Map to chart data format
+          const chartData = res.data.data.map((row: any, idx: number) => ({
+            name: row.application_status,
+            value: row.count,
+            color: statusColors[idx % statusColors.length]
+          }));
+          setStatusData(chartData);
+        }
+      } catch (error) {
+        console.error("Error fetching application status stats:", error);
+      }
+    };
+    fetchStatusStats();
+  }, []);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -67,33 +133,6 @@ const Dashboard: React.FC = () => {
     
     return `${day}-${month}-${year}`;
   };
-
-  // Chart data
-  const nationalityData = [
-    { name: "Singaporean", value: 45, color: "#B3238B" },
-    { name: "Malaysian", value: 30, color: "#7c3aed" },
-    { name: "Indian", value: 15, color: "#3b82f6" },
-    { name: "Others", value: 10, color: "#10b981" },
-  ];
-
-  const statusData = [
-    { name: "Pending", value: 3, color: "#f59e0b" },
-    { name: "Interview Scheduled", value: 1, color: "#10b981" },
-    { name: "Reviewing", value: 2, color: "#3b82f6" },
-    { name: "Rejected", value: 1, color: "#ef4444" },
-    { name: "Accepted", value: 1, color: "#059669" },
-  ];
-
-  // const applicantsData = [
-  //   { name: "Tan Wei Ling", job: "Admin Assistant", date: "2025-06-14", status: "Pending Review" },
-  //   { name: "Ali bin Salleh", job: "Preschool Teacher", date: "2025-06-15", status: "Interview Scheduled" },
-  //   { name: "Lim Hui Yi", job: "Operations Executive", date: "2025-06-13", status: "Shortlisted" },
-  //   { name: "Siti Nur Aisyah", job: "Cleaner", date: "2025-06-12", status: "Pending Review" },
-  //   { name: "Rajesh Kumar", job: "ICT Support Officer", date: "2025-06-11", status: "Rejected" },
-  //   { name: "Chua Min Jie", job: "Exam Coordinator", date: "2025-06-14", status: "Pending Review" },
-  //   { name: "Ng Wei Ting", job: "Finance Officer", date: "2025-06-13", status: "Shortlisted" },
-  //   { name: "Ahmad Zaki", job: "Security Officer", date: "2025-06-14", status: "Pending Review" },
-  // ];
 
   return (
     <div className={styles.dashboardContent}>
@@ -178,9 +217,9 @@ const Dashboard: React.FC = () => {
                       data={nationalityData}
                       cx="50%"
                       cy="50%"
-                      outerRadius={120} // Increased from 80
+                      outerRadius={120}
                       dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}%`}
+                      label={({ name, value }) => `${name}: ${value}`}
                     >
                       {nationalityData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -204,7 +243,7 @@ const Dashboard: React.FC = () => {
                       data={statusData}
                       cx="50%"
                       cy="50%"
-                      outerRadius={120} // Increased from 80
+                      outerRadius={120}
                       dataKey="value"
                       label={({ name, value }) => `${name}: ${value}`}
                     >

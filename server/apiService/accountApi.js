@@ -3439,16 +3439,37 @@ const updateUserInfo = async (req, res) => {
 const getApplicantNationalityStats = async (req, res) => {
   try {
     const sql = `
-      SELECT nationality, COUNT(*) as count
-      FROM tbl_users
-      WHERE role = 'Applicant' AND nationality IS NOT NULL AND nationality != ''
-      GROUP BY nationality
+      SELECT u.nationality, COUNT(*) as count
+      FROM tbl_users u
+      INNER JOIN (
+        SELECT DISTINCT user_id FROM tbl_application
+      ) a ON u.user_id = a.user_id
+      WHERE u.nationality IS NOT NULL AND u.nationality != ''
+      GROUP BY u.nationality
       ORDER BY count DESC
     `;
     const rows = await db.executeQuery(sql);
     return res.status(200).json({ success: true, data: rows });
   } catch (e) {
     console.error("Failed to fetch applicant nationality stats:", e);
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Get application status statistics
+const getApplicationStatusStats = async (req, res) => {
+  try {
+    const sql = `
+      SELECT application_status, COUNT(*) as count
+      FROM tbl_application
+      WHERE application_status IS NOT NULL AND application_status != ''
+      GROUP BY application_status
+      ORDER BY count DESC
+    `;
+    const rows = await db.executeQuery(sql);
+    return res.status(200).json({ success: true, data: rows });
+  } catch (e) {
+    console.error("Failed to fetch application status stats:", e);
     return res.status(500).json({ success: false, message: "Server error", error: e.message });
   }
 };
@@ -3529,7 +3550,8 @@ module.exports = {
   getFullApplicantProfile,
   getUserInfo,
   updateUserInfo,
-  getApplicantNationalityStats
+  getApplicantNationalityStats,
+  getApplicationStatusStats
 };
 
 

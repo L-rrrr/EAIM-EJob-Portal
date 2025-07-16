@@ -24,6 +24,12 @@ app.use(compression());
 app.post("/api/register", authApi.register);
 app.post("/api/login", authApi.login);
 app.post("/api/change-password", authenticateToken, authApi.changePassword);
+app.post("/api/forgot-password", authApi.forgotPassword);
+app.post("/api/reset-password", authApi.resetPassword);
+
+// Email verification endpoints
+app.post("/api/request-register-code", authApi.requestRegisterCode);
+app.post("/api/verify-register-code", authApi.verifyRegisterCode);
 
 //Jobs endpoints
 app.post("/api/post-jobs", accountApi.postJobs);
@@ -151,6 +157,13 @@ app.get("/api/get-full-applicant-profile/:userId", authenticateToken, accountApi
 // User profile endpoints
 app.get("/api/user-profile", authenticateToken, accountApi.getUserInfo);
 app.put("/api/update-profile", authenticateToken, accountApi.updateUserInfo);
+
+// Get applicants' nationality statistics
+app.get("/api/applicant-nationality-stats", authenticateToken, accountApi.getApplicantNationalityStats);
+
+// Get application status statistics
+app.get("/api/application-status-stats", authenticateToken, accountApi.getApplicationStatusStats);
+
 
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);

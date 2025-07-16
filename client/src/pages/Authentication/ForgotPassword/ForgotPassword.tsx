@@ -4,7 +4,7 @@ import authStyles from "../AuthStyles.module.css";
 import EAIM from "../../../assets/EAIM.png";
 import background from "../../../assets/background4.jpg";
 import axios from "axios";
-import { Mail, Sun, Moon} from "lucide-react";
+import { Mail, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 
 type ForgotPasswordInputs = {
@@ -17,9 +17,7 @@ const ForgotPassword: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverMessage, setServerMessage] = useState("");
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
-  const [darkMode, setDarkMode] = useState(() => {
-    return document.documentElement.classList.contains('dark');
-  });
+  const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
@@ -31,26 +29,15 @@ const ForgotPassword: React.FC = () => {
   const onSubmit = async (data: ForgotPasswordInputs) => {
     setIsLoading(true);
     setServerMessage("");
-    
     try {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/forgot-password`, {
         email: data.email,
       });
-
-      if (response.data.success) {
-        setServerMessage("Password reset link sent to your email address!");
-        setMessageType('success');
-        setTimeout(() => navigate("/login"), 3000);
-      } else {
-        setServerMessage("Failed to send reset link: " + response.data.message);
-        setMessageType('error');
-      }
+      setServerMessage("If this email exists, a reset link has been sent.");
+      setMessageType('success');
+      setTimeout(() => navigate("/login"), 4000);
     } catch (error: any) {
-      if (error.response && error.response.data) {
-        setServerMessage("Error: " + error.response.data.message);
-      } else {
-        setServerMessage("Server error. Please try again.");
-      }
+      setServerMessage("Server error. Please try again.");
       setMessageType('error');
     } finally {
       setIsLoading(false);
@@ -69,7 +56,6 @@ const ForgotPassword: React.FC = () => {
           {darkMode ? <Sun size={18} /> : <Moon size={18} />}
         </button>
 
-
         <div className={authStyles.logoSection}>
           <img src={EAIM} className={authStyles.logo} alt="EAIM Logo" />
           <h1 className={authStyles.title}>Reset Password</h1>
@@ -77,7 +63,6 @@ const ForgotPassword: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className={authStyles.authForm}>
-          {/* Email Input */}
           <div className={authStyles.formGroup}>
             <label htmlFor="email" className={authStyles.label}>
               <Mail size={18} />
@@ -101,7 +86,6 @@ const ForgotPassword: React.FC = () => {
             {errors.email && <p className={authStyles.errorMessage}>{errors.email.message}</p>}
           </div>
 
-          {/* Submit Button */}
           <button 
             type="submit" 
             className={`${authStyles.submitButton} ${isLoading ? authStyles.loading : ''}`}
@@ -114,14 +98,12 @@ const ForgotPassword: React.FC = () => {
             )}
           </button>
 
-          {/* Server Message */}
           {serverMessage && (
             <p className={`${authStyles.serverMessage} ${authStyles[messageType]}`}>
               {serverMessage}
             </p>
           )}
 
-          {/* Links */}
           <div className={authStyles.linksSection}>
             <Link to="/login" className={authStyles.link}>
               Remember your password? <span>Sign in</span>
@@ -132,7 +114,6 @@ const ForgotPassword: React.FC = () => {
           </div>
         </form>
 
-        {/* Footer */}
         <div className={authStyles.footer}>
           <p>&copy; 2025 EAIM. All rights reserved.</p>
         </div>
