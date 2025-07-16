@@ -98,7 +98,7 @@ const HRNavbar: React.FC = () => {
               </div>
 
               <div className={styles.passwordRow}>
-                <label><strong>Current Password:</strong></label>
+                <label>Current Password:</label>
                 <div className={styles.passwordField}>
                   <input
                     type={showPassword ? "text" : "password"}

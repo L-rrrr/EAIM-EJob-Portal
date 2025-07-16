@@ -3436,6 +3436,23 @@ const updateUserInfo = async (req, res) => {
   }
 };
 
+const getApplicantNationalityStats = async (req, res) => {
+  try {
+    const sql = `
+      SELECT nationality, COUNT(*) as count
+      FROM tbl_users
+      WHERE role = 'Applicant' AND nationality IS NOT NULL AND nationality != ''
+      GROUP BY nationality
+      ORDER BY count DESC
+    `;
+    const rows = await db.executeQuery(sql);
+    return res.status(200).json({ success: true, data: rows });
+  } catch (e) {
+    console.error("Failed to fetch applicant nationality stats:", e);
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
 module.exports = {
   postJobs,
   updateJob,
@@ -3512,6 +3529,7 @@ module.exports = {
   getFullApplicantProfile,
   getUserInfo,
   updateUserInfo,
+  getApplicantNationalityStats
 };
 
 

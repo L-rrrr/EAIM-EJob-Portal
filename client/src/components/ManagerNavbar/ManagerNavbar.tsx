@@ -82,11 +82,19 @@ const ManagerNavbar: React.FC = () => {
         <LogOut className={styles.navbarIcon} onClick={() => navigate("/login")} />
 
         <div className={styles.profileWrapper} ref={profileRef}>
-          <User className={styles.navbarIcon} onClick={() => setShowProfile(prev => !prev)} />
+          <User
+            className={styles.navbarIcon}
+            onClick={() => {
+              setShowProfile(prev => !prev);
+              setPassword(""); // Clear password when opening, like HRNavbar
+              setShowPassword(false);
+            }}
+          />
           {showProfile && (
             <div className={styles.profilePopup}>
-              <p><strong>Email:</strong> {email}</p>
-
+              <div className={styles.username}>
+                <p><strong>Email:</strong> {email}</p>
+              </div>
               <div className={styles.passwordRow}>
                 <label>Current Password:</label>
                 <div className={styles.passwordField}>
@@ -95,27 +103,15 @@ const ManagerNavbar: React.FC = () => {
                     value={password}
                     readOnly
                   />
-                  <button className={styles.eyeButton} onClick={() => setShowPassword(prev => !prev)} type="button">
+                  <button
+                    className={styles.eyeButton}
+                    onClick={() => setShowPassword(prev => !prev)}
+                    type="button"
+                  >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
-
-              <label>New Password:</label>
-              <input className={styles.editPasswordField}
-                type="text"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-
-              <label>Confirm New Password:</label>
-              <input className={styles.editPasswordField}
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-
-              <button className={styles.changeBtn} onClick={handleChangePassword}>Change Password</button>
             </div>
           )}
         </div>
