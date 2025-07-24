@@ -168,6 +168,38 @@ app.get("/api/application-status-stats", authenticateToken, accountApi.getApplic
 // Send email to user endpoint
 app.post("/api/send-email", authenticateToken, accountApi.sendEmailToUser);
 
+// Save application full details endpoint
+app.post("/api/save-application-full-details", authenticateToken, accountApi.saveApplicationFullDetails);
+
+// Get country list endpoint
+app.get("/api/countries", authenticateToken, accountApi.getCountryList);
+
+// Save job requisition endpoint
+app.post("/api/save-job-requisition", authenticateToken, accountApi.saveJobRequisition);
+app.put("/api/update-job-requisition/:id", authenticateToken, accountApi.updateJobRequisition);
+// Get all job requisitions by a manager
+app.get("/api/my-job-requisitions", authenticateToken, accountApi.getMyJobRequisitions);
+// Get all job requisitions by all managers
+app.get("/api/all-job-requisitions", authenticateToken, accountApi.getAllJobRequisitionsWithRequestor);
+
+
+// Get a specific job requisition's details 
+app.get("/api/job-requisition/:id", authenticateToken, accountApi.getJobRequisitionDetails);
+app.put("/api/job-requisition/:id/review", authenticateToken, accountApi.reviewJobRequisition);
+
+// Assign manager to review candidate endpoint
+app.get("/api/managers", authenticateToken, accountApi.getAllManagers);
+app.post("/api/assign-manager-to-application", authenticateToken, accountApi.assignManagerToApplication);
+app.get("/api/manager-review-applications", authenticateToken, accountApi.getManagerReviewApplications);
+
+// Save assessment results endpoint
+app.get("/api/get-assessment-details/:application_id", authenticateToken, accountApi.getAssessmentDetails);
+app.post("/api/save-assessment", authenticateToken, accountApi.saveAssessment);
+
+// Delete job requisition and post job endpoint
+app.post("/api/job-requisition/:id/post-job", authenticateToken, accountApi.postVerifiedRequisitionAsJob);
+
+
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
 });

@@ -5,6 +5,7 @@ const fs = require('fs');
 const { get } = require("http");
 const nodemailer = require("nodemailer");
 
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
@@ -32,7 +33,7 @@ const sendEmailToUser = async (req, res) => {
   try {
     await transporter.sendMail({
       from: `"EAIM" <${process.env.SMTP_USER}>`,
-      to,
+      to: to,
       subject,
       html: `<p>${message.replace(/\n/g, "<br/>")}</p>`,
     });
@@ -2780,7 +2781,8 @@ const getApplicants = async (req, res) => {
         pp.full_name as applicant_name,
         pp.email,
         j.title as job_title,
-        j.job_category
+        j.job_category,
+        a.assessment_done
       FROM tbl_application a
       LEFT JOIN tbl_personal_particulars pp ON a.user_id = pp.user_id
       LEFT JOIN tbl_jobs j ON a.job_id = j.job_id
@@ -2801,7 +2803,8 @@ const getApplicants = async (req, res) => {
       job_category: applicant.job_category,
       applied: formatDate(applicant.applied_date),
       interview: formatDate(applicant.interview_date),
-      status: applicant.application_status || 'Pending review'
+      status: applicant.application_status || 'Pending review',
+      assessment_done: applicant.assessment_done === "Yes"
     }));
 
     return res.status(200).json({ 
@@ -3040,6 +3043,7 @@ const getApplicantSupport = async (req, res) => {
 const scheduleInterview = async (req, res) => {
   try {
     const {
+      application_id, // <-- must be sent from frontend!
       user_id,
       job_id,
       applicant,
@@ -3055,12 +3059,25 @@ const scheduleInterview = async (req, res) => {
 
     const sql = `
       INSERT INTO tbl_interview (
-        user_id, job_id, applicant, job, interview_date, meeting_format,
+        interview_id, user_id, job_id, applicant, job, interview_date, meeting_format,
         start_time, end_time, venue, add_to_my_calendar, additional_notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        user_id = VALUES(user_id),
+        job_id = VALUES(job_id),
+        applicant = VALUES(applicant),
+        job = VALUES(job),
+        interview_date = VALUES(interview_date),
+        meeting_format = VALUES(meeting_format),
+        start_time = VALUES(start_time),
+        end_time = VALUES(end_time),
+        venue = VALUES(venue),
+        add_to_my_calendar = VALUES(add_to_my_calendar),
+        additional_notes = VALUES(additional_notes)
     `;
 
     await db.executeQuery(sql, [
+      application_id, // interview_id
       user_id || null,
       job_id || null,
       applicant || null,
@@ -3078,12 +3095,11 @@ const scheduleInterview = async (req, res) => {
       UPDATE tbl_application
       SET application_status = 'Interview Scheduled',
           interview_date = ?
-      WHERE user_id = ? AND job_id = ?
+      WHERE application_id = ?
     `;
     await db.executeQuery(updateAppSql, [
       interview_date || null,
-      user_id || null,
-      job_id || null
+      application_id
     ]);
 
     return res.status(201).json({ success: true, message: "Interview scheduled successfully" });
@@ -3240,7 +3256,7 @@ const deleteInterview = async (req, res) => {
       UPDATE tbl_application
       SET application_status = 'Pending',
           interview_date = NULL
-      WHERE user_id = ? AND job_id = ?
+      WHERE user_id = ? AND job_id = ?g
     `;
     await db.executeQuery(updateAppSql, [user_id, job_id]);
 
@@ -3256,7 +3272,16 @@ const updateApplicationStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const allowed = ["Pending", "Reviewing", "Accepted", "Rejected"];
+    const allowed = [
+      "Pending",
+      "Reviewing",
+      "Assessed",
+      "Interview Scheduled",
+      "Offer Made",
+      "Not Selected",
+      "Offer Accepted",
+      "Offer Declined"
+    ];
     if (!allowed.includes(status)) {
       return res.status(400).json({ success: false, message: "Invalid status" });
     }
@@ -3513,6 +3538,593 @@ const getApplicationStatusStats = async (req, res) => {
   }
 };
 
+const saveApplicationFullDetails = async (req, res) => {
+  try {
+    const {
+      application_id,
+      user_id,
+      job_id,
+      personal_particulars,
+      singapore_address,
+      overseas_address,
+      military_service,
+      education_background,
+      scholarship_awards,
+      other_qualifications,
+      work_experience,
+      teaching_experience,
+      skills,
+      languages,
+      family_background,
+      emergency_contact,
+      references,
+      attachments,
+      apply_info
+    } = req.body;
+
+    const sql = `
+      INSERT INTO tbl_application_full_details (
+        application_id, user_id, job_id,
+        personal_particulars, singapore_address, overseas_address, military_service,
+        education_background, scholarship_awards, other_qualifications,
+        work_experience, teaching_experience, skills, languages,
+        family_background, emergency_contact, \`references\`, attachments, apply_info, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+      ON DUPLICATE KEY UPDATE
+        personal_particulars = VALUES(personal_particulars),
+        singapore_address = VALUES(singapore_address),
+        overseas_address = VALUES(overseas_address),
+        military_service = VALUES(military_service),
+        education_background = VALUES(education_background),
+        scholarship_awards = VALUES(scholarship_awards),
+        other_qualifications = VALUES(other_qualifications),
+        work_experience = VALUES(work_experience),
+        teaching_experience = VALUES(teaching_experience),
+        skills = VALUES(skills),
+        languages = VALUES(languages),
+        family_background = VALUES(family_background),
+        emergency_contact = VALUES(emergency_contact),
+        \`references\` = VALUES(\`references\`),
+        attachments = VALUES(attachments),
+        apply_info = VALUES(apply_info)
+    `;
+
+    await db.executeQuery(sql, [
+      application_id, user_id, job_id,
+      personal_particulars, singapore_address, overseas_address, military_service,
+      education_background, scholarship_awards, other_qualifications,
+      work_experience, teaching_experience, skills, languages,
+      family_background, emergency_contact, references, attachments, apply_info
+    ]);
+    console.log("Saving application full details:", req.body);
+    return res.status(200).json({ success: true, message: "Full application details saved." });
+  } catch (e) {
+    console.error("Failed to save application full details:", e);
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+const getCountryList = async (req, res) => {
+  try {
+    const sql = `SELECT name FROM vw_country ORDER BY name ASC`;
+    const countries = await db.executeQuery(sql);
+    return res.status(200).json({ success: true, data: countries.map(c => c.name) });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+const saveJobRequisition = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    const {
+      jobTitle,
+      jobCategory,
+      jobType,
+      jobRequirements,
+      jobResponsibilities,
+      seekersRequired
+    } = req.body;
+
+    const postingDate = new Date(Date.now() + 8 * 60 * 60 * 1000) // UTC+8
+      .toISOString()
+      .slice(0, 10)
+      .replace("T", " "); // format: 'YYYY-MM-DD'
+
+    const sql = `
+      INSERT INTO tbl_job_requisition (
+        user_id,
+        job_title,
+        job_category,
+        job_type,
+        job_requirements,
+        job_responsibilities,
+        seekers_required,
+        posting_date,
+        requisition_status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    await db.executeQuery(sql, [
+      user_id,
+      jobTitle,
+      jobCategory,
+      jobType,
+      jobRequirements,
+      jobResponsibilities,
+      seekersRequired,
+      postingDate,
+      'Pending'
+    ]);
+
+    return res.status(201).json({ success: true, message: "Job requisition submitted successfully" });
+  } catch (e) {
+    console.error("Failed to save job requisition:", e);
+    return res.status(500).json({ success: false, message: "Failed to save job requisition", error: e.message });
+  }
+};
+
+const updateJobRequisition = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    const { id } = req.params;
+    const {
+      jobTitle,
+      jobCategory,
+      jobType,
+      jobRequirements,
+      jobResponsibilities,
+      seekersRequired,
+      requisition_status
+    } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Job requisition ID is required" });
+    }
+
+    const updateSql = `
+      UPDATE tbl_job_requisition
+      SET
+        job_title = ?,
+        job_category = ?,
+        job_type = ?,
+        job_requirements = ?,
+        job_responsibilities = ?,
+        seekers_required = ?,
+        requisition_status = ?
+      WHERE job_requisition_id = ? AND user_id = ?
+    `;
+
+    const result = await db.executeQuery(updateSql, [
+      jobTitle,
+      jobCategory,
+      jobType,
+      jobRequirements,
+      jobResponsibilities,
+      seekersRequired,
+      requisition_status,
+      id,
+      user_id,
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Job requisition not found or not owned by user" });
+    }
+
+    return res.status(200).json({ success: true, message: "Job requisition updated successfully" });
+  } catch (e) {
+    console.error("Failed to update job requisition:", e);
+    return res.status(500).json({ success: false, message: "Failed to update job requisition", error: e.message });
+  }
+};
+
+// Retrieve job requisitions for the current user
+const getMyJobRequisitions = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    const sql = `
+      SELECT *
+      FROM tbl_job_requisition
+      WHERE user_id = ?
+      ORDER BY posting_date DESC
+    `;
+    const rows = await db.executeQuery(sql, [user_id]);
+    return res.status(200).json({ success: true, data: rows });
+  } catch (e) {
+    console.error("Failed to fetch job requisitions:", e);
+    return res.status(500).json({ success: false, message: "Failed to fetch job requisitions", error: e.message });
+  }
+};
+
+// Get all users with role 'Manager'
+const getAllManagers = async (req, res) => {
+  try {
+    const sql = `SELECT user_id, first_name, last_name, email FROM tbl_users WHERE role = 'Manager'`;
+    const managers = await db.executeQuery(sql);
+    return res.status(200).json({ success: true, data: managers });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+const assignManagerToApplication = async (req, res) => {
+  try {
+    const { application_id, manager_id } = req.body;
+    if (!application_id || !manager_id) {
+      return res.status(400).json({ success: false, message: "Missing application_id or manager_id" });
+    }
+    // Optionally check if manager exists and is a manager
+    const checkSql = `SELECT * FROM tbl_users WHERE user_id = ? AND role = 'Manager'`;
+    const managers = await db.executeQuery(checkSql, [manager_id]);
+    if (managers.length === 0) {
+      return res.status(400).json({ success: false, message: "Invalid manager ID" });
+    }
+    // Update the application
+    const updateSql = `
+      UPDATE tbl_application
+      SET assigned_manager_id = ?
+      WHERE application_id = ?
+    `;
+    await db.executeQuery(updateSql, [manager_id, application_id]);
+    return res.status(200).json({ success: true, message: "Manager assigned to application." });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Get applications assigned to the current manager for review
+const getManagerReviewApplications = async (req, res) => {
+  try {
+    const manager_id = req.user.user_id;
+
+    // Get all applications assigned to this manager
+    const sql = `
+      SELECT 
+        a.application_id,
+        pp.full_name AS candidate_name,
+        pp.date_of_birth,
+        j.title AS job_title,
+        a.current_salary,
+        a.expected_salary,
+        a.interview_date,
+        i.start_time AS interview_time,
+        (SELECT ass.assessment_date FROM tbl_assessment ass WHERE ass.application_id = a.application_id LIMIT 1) AS assessment_date,
+        (SELECT COUNT(*) FROM tbl_assessment ass WHERE ass.application_id = a.application_id) AS is_assessed
+      FROM tbl_application a
+      LEFT JOIN tbl_personal_particulars pp ON a.user_id = pp.user_id
+      LEFT JOIN tbl_jobs j ON a.job_id = j.job_id
+      LEFT JOIN tbl_interview i ON a.application_id = i.interview_id
+      WHERE a.assigned_manager_id = ?
+      ORDER BY a.interview_date DESC, a.application_id DESC
+    `;
+    const rows = await db.executeQuery(sql, [manager_id]);
+
+    // Split into pending and completed
+    const pending = [];
+    const completed = [];
+    rows.forEach(row => {
+      const app = {
+        application_id: row.application_id,
+        candidate_name: row.candidate_name || "Unknown",
+        date_of_birth: row.date_of_birth,
+        job_title: row.job_title || "Unknown",
+        current_salary: row.current_salary,
+        expected_salary: row.expected_salary,
+        interview_date: row.interview_date,
+        interview_time: row.interview_time,
+      };
+      if (row.is_assessed > 0) {
+        completed.push({
+          ...app,
+          assessment_date: row.assessment_date
+        });
+      } else {
+        pending.push(app);
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      pending,
+      completed
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+const saveAssessment = async (req, res) => {
+  try {
+    const {
+      application_id,
+      candidate_name,
+      age,
+      department,
+      position,
+      current_salary,
+      expected_salary,
+      interviewer,
+      notice_period,
+      interview_date,
+      interview_time,
+      q1, q1_remark,
+      q2, q2_remark,
+      q3, q3_remark,
+      q4, q4_remark,
+      q5, q5_remark,
+      q6, q6_remark,
+      q7, q7_remark,
+      q8, q8_remark,
+      q9, q9_remark,
+      q10, q10_remark,
+      q11, q11_remark,
+      q12, q12_remark,
+      q13, q13_remark,
+      q14,
+      comments
+    } = req.body;
+
+    if (!application_id) {
+      return res.status(400).json({ success: false, message: "Missing application_id" });
+    }
+
+    // Get current date in YYYY-MM-DD (Singapore time)
+    const sgDate = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+
+    const sql = `
+      INSERT INTO tbl_assessment (
+        application_id, candidate_name, age, department, position,
+        current_salary, expected_salary, interviewer, notice_period,
+        interview_date, interview_time,
+        q1, q1_remark, q2, q2_remark, q3, q3_remark, q4, q4_remark,
+        q5, q5_remark, q6, q6_remark, q7, q7_remark, q8, q8_remark,
+        q9, q9_remark, q10, q10_remark, q11, q11_remark, q12, q12_remark,
+        q13, q13_remark, q14, comments, assessment_date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        candidate_name = VALUES(candidate_name),
+        age = VALUES(age),
+        department = VALUES(department),
+        position = VALUES(position),
+        current_salary = VALUES(current_salary),
+        expected_salary = VALUES(expected_salary),
+        interviewer = VALUES(interviewer),
+        notice_period = VALUES(notice_period),
+        interview_date = VALUES(interview_date),
+        interview_time = VALUES(interview_time),
+        q1 = VALUES(q1), q1_remark = VALUES(q1_remark),
+        q2 = VALUES(q2), q2_remark = VALUES(q2_remark),
+        q3 = VALUES(q3), q3_remark = VALUES(q3_remark),
+        q4 = VALUES(q4), q4_remark = VALUES(q4_remark),
+        q5 = VALUES(q5), q5_remark = VALUES(q5_remark),
+        q6 = VALUES(q6), q6_remark = VALUES(q6_remark),
+        q7 = VALUES(q7), q7_remark = VALUES(q7_remark),
+        q8 = VALUES(q8), q8_remark = VALUES(q8_remark),
+        q9 = VALUES(q9), q9_remark = VALUES(q9_remark),
+        q10 = VALUES(q10), q10_remark = VALUES(q10_remark),
+        q11 = VALUES(q11), q11_remark = VALUES(q11_remark),
+        q12 = VALUES(q12), q12_remark = VALUES(q12_remark),
+        q13 = VALUES(q13), q13_remark = VALUES(q13_remark),
+        q14 = VALUES(q14), comments = VALUES(comments),
+        assessment_date = VALUES(assessment_date)
+    `;
+
+    await db.executeQuery(sql, [
+      application_id, candidate_name, age, department, position,
+      current_salary, expected_salary, interviewer, notice_period,
+      interview_date, interview_time,
+      q1, q1_remark, q2, q2_remark, q3, q3_remark, q4, q4_remark,
+      q5, q5_remark, q6, q6_remark, q7, q7_remark, q8, q8_remark,
+      q9, q9_remark, q10, q10_remark, q11, q11_remark, q12, q12_remark,
+      q13, q13_remark, q14, comments, sgDate
+    ]);
+
+    const updateAppSql = `
+      UPDATE tbl_application
+      SET assessment_done = 'Yes',
+          application_status = 'Assessed'
+      WHERE application_id = ?
+    `;
+    await db.executeQuery(updateAppSql, [application_id]);
+
+    return res.status(200).json({ success: true, message: "Assessment saved." });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+const getAssessmentDetails = async (req, res) => {
+  try {
+    const { application_id } = req.params;
+    const sql = `SELECT * FROM tbl_assessment WHERE application_id = ? LIMIT 1`;
+    const rows = await db.executeQuery(sql, [application_id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Assessment not found" });
+    }
+    return res.status(200).json({ success: true, assessment: rows[0] });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+const getAllJobRequisitionsWithRequestor = async (req, res) => {
+  try {
+    const sql = `
+      SELECT 
+        r.job_requisition_id,
+        r.job_title,
+        r.posting_date,
+        r.requisition_status,
+        r.user_id,
+        u.first_name,
+        u.last_name
+      FROM tbl_job_requisition r
+      LEFT JOIN tbl_users u ON r.user_id = u.user_id
+      ORDER BY r.posting_date DESC
+    `;
+    const rows = await db.executeQuery(sql);
+
+    // Format requestor name
+    const data = rows.map(row => ({
+      job_requisition_id: row.job_requisition_id,
+      job_title: row.job_title,
+      posting_date: row.posting_date,
+      requisition_status: row.requisition_status,
+      user_id: row.user_id,
+      requestor_name: row.first_name && row.last_name
+        ? `${row.first_name} ${row.last_name}`
+        : row.first_name || row.last_name || "—"
+    }));
+
+    return res.status(200).json({ success: true, data });
+  } catch (e) {
+    console.error("Failed to fetch job requisitions with requestor:", e);
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Update job requisition status and details
+const reviewJobRequisition = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      jobTitle,
+      jobCategory,
+      jobType,
+      jobRequirements,
+      jobResponsibilities,
+      seekersRequired,
+      requisition_status,
+      remarks
+    } = req.body;
+
+    if (!id || !requisition_status) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    // Get current values first
+    const selectSql = `SELECT * FROM tbl_job_requisition WHERE job_requisition_id = ?`;
+    const rows = await db.executeQuery(selectSql, [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Job requisition not found" });
+    }
+    const current = rows[0];
+
+    // Use provided value or keep current
+    const updateSql = `
+      UPDATE tbl_job_requisition
+      SET
+        job_title = ?,
+        job_category = ?,
+        job_type = ?,
+        job_requirements = ?,
+        job_responsibilities = ?,
+        seekers_required = ?,
+        requisition_status = ?,
+        remarks = ?
+      WHERE job_requisition_id = ?
+    `;
+
+    const result = await db.executeQuery(updateSql, [
+      jobTitle !== undefined ? jobTitle : current.job_title,
+      jobCategory !== undefined ? jobCategory : current.job_category,
+      jobType !== undefined ? jobType : current.job_type,
+      jobRequirements !== undefined ? jobRequirements : current.job_requirements,
+      jobResponsibilities !== undefined ? jobResponsibilities : current.job_responsibilities,
+      seekersRequired !== undefined ? seekersRequired : current.seekers_required,
+      requisition_status,
+      remarks !== undefined ? remarks : current.remarks,
+      id
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Job requisition not found" });
+    }
+
+    return res.status(200).json({ success: true, message: "Job requisition updated" });
+  } catch (e) {
+    console.error("Failed to review job requisition:", e);
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+// Get job requisition details by ID
+const getJobRequisitionDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sql = `
+      SELECT 
+        r.*,
+        u.first_name,
+        u.last_name
+      FROM tbl_job_requisition r
+      LEFT JOIN tbl_users u ON r.user_id = u.user_id
+      WHERE r.job_requisition_id = ?
+    `;
+    const rows = await db.executeQuery(sql, [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Job requisition not found" });
+    }
+    const row = rows[0];
+    row.requestor_name = row.first_name && row.last_name
+      ? `${row.first_name} ${row.last_name}`
+      : row.first_name || row.last_name || "—";
+    return res.status(200).json({ success: true, data: row });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+const postVerifiedRequisitionAsJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get the requisition details
+    const selectSql = `SELECT * FROM tbl_job_requisition WHERE job_requisition_id = ? AND requisition_status = 'Verified'`;
+    const rows = await db.executeQuery(selectSql, [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Verified requisition not found" });
+    }
+    const reqData = rows[0];
+
+    // Insert into tbl_jobs
+    const insertSql = `
+      INSERT INTO tbl_jobs (
+        title,
+        job_category,
+        job_type,
+        hiring_status,
+        job_requirements,
+        job_responsibilities,
+        seekers_required,
+        posting_date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    await db.executeQuery(insertSql, [
+      reqData.job_title,
+      reqData.job_category,
+      reqData.job_type,
+      "Hiring",
+      reqData.job_requirements,
+      reqData.job_responsibilities,
+      reqData.seekers_required,
+      new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 19).replace("T", " ")
+    ]);
+
+    // Delete the requisition
+    const deleteSql = `DELETE FROM tbl_job_requisition WHERE job_requisition_id = ?`;
+    await db.executeQuery(deleteSql, [id]);
+
+    return res.status(200).json({ success: true, message: "Job posted and requisition removed." });
+  } catch (e) {
+    console.error("Failed to post job from requisition:", e);
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+
 module.exports = {
   postJobs,
   updateJob,
@@ -3591,10 +4203,22 @@ module.exports = {
   updateUserInfo,
   getApplicantNationalityStats,
   getApplicationStatusStats,
-  sendEmailToUser
+  sendEmailToUser,
+  saveApplicationFullDetails,
+  getCountryList,
+  saveJobRequisition,
+  updateJobRequisition,
+  getMyJobRequisitions,
+  getAllJobRequisitionsWithRequestor,
+  getAllManagers,
+  assignManagerToApplication,
+  getManagerReviewApplications,
+  saveAssessment,
+  getAssessmentDetails,
+  getJobRequisitionDetails,
+  reviewJobRequisition,
+  postVerifiedRequisitionAsJob,
 };
-
-
 
 
 // let testFunction = async (req, res) => {

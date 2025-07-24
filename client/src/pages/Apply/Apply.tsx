@@ -197,35 +197,79 @@ const Apply: React.FC = () => {
     }
 
     const isValid = validateAllFields();
-    
-    if (!isValid) {
-      return;
-    }
+    if (!isValid) return;
 
     try {
       const token = localStorage.getItem("token");
-
       if (!token) {
         alert("Authentication token not found. Please log in again.");
         return;
       }
 
-      // Create FormData for file upload
+      // 1. Fetch all relevant info from backend
+      const [
+        personalParticularsRes,
+        sgAddressRes,
+        overseasAddressRes,
+        militaryServiceRes,
+        educationBackgroundRes,
+        scholarshipAwardsRes,
+        otherQualificationsRes,
+        workExperienceRes,
+        teachingExperienceRes,
+        skillsRes,
+        languagesRes,
+        familyBackgroundRes,
+        emergencyContactRes,
+        referencesRes,
+        attachmentsRes
+      ] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-personal-particulars`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-sg-address`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-overseas-address`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-military-service`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-education`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-scholarship-awards`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-other-qualifications`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-work-experience`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-teaching-experience`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-skills`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-languages`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-family-background`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-emergency-contact`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-references`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-attachments`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+
+      // 2. Prepare the data as JSON strings or IDs as needed
+      const fullDetails = {
+        personal_particulars: JSON.stringify(personalParticularsRes.data.data || {}),
+        // singapore_address: sgAddressRes.data.data?.address_id || null,
+        singapore_address: JSON.stringify(sgAddressRes.data.data || {}),
+        // overseas_address: overseasAddressRes.data.data?.address_id || null,
+        overseas_address: JSON.stringify(overseasAddressRes.data.data || {}),
+        // military_service: militaryServiceRes.data.data?.service_id || null,
+        military_service: JSON.stringify(militaryServiceRes.data.data || {}),
+        education_background: JSON.stringify(educationBackgroundRes.data.data || []),
+        scholarship_awards: JSON.stringify(scholarshipAwardsRes.data.data || []),
+        other_qualifications: JSON.stringify(otherQualificationsRes.data.data || []),
+        work_experience: JSON.stringify(workExperienceRes.data.data || []),
+        teaching_experience: JSON.stringify(teachingExperienceRes.data.data || []),
+        skills: JSON.stringify(skillsRes.data.data || []),
+        languages: JSON.stringify(languagesRes.data.data || []),
+        family_background: JSON.stringify(familyBackgroundRes.data.data || []),
+        emergency_contact: JSON.stringify(emergencyContactRes.data.data || []),
+        references: JSON.stringify(referencesRes.data.data || []),
+        attachments: JSON.stringify(attachmentsRes.data.data || []),
+        apply_info: JSON.stringify(positionDetails),
+      };
+
+      // 3. Submit application and get application_id
       const formData = new FormData();
-      
-      // Add job information
-      if (jobInfo.job_id) {
-        formData.append('job_id', jobInfo.job_id.toString());
-      }
-      
-      // Add attachment data
+      if (jobInfo.job_id) formData.append('job_id', jobInfo.job_id.toString());
       formData.append('documentType', attachment.documentType);
       formData.append('documentName', attachment.documentName);
-      if (attachment.uploadedFile) {
-        formData.append('file', attachment.uploadedFile);
-      }
-      
-      // Add position details
+      if (attachment.uploadedFile) formData.append('file', attachment.uploadedFile);
       formData.append('currentSalary', positionDetails.currentSalary);
       formData.append('expectedSalary', positionDetails.expectedSalary);
       formData.append('earliestStartingDate', positionDetails.earliestStartingDate);
@@ -245,6 +289,20 @@ const Apply: React.FC = () => {
       );
 
       if (response.data.success) {
+        const application_id = response.data.data.application_id;
+
+        // 4. Save full details to tbl_application_full_details
+        await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/save-application-full-details`,
+          {
+            application_id,
+            user_id: personalParticularsRes.data.data?.user_id,
+            job_id: jobInfo.job_id,
+            ...fullDetails,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
         alert("Application submitted successfully!");
         navigate("/jobs-applied");
       } else {
@@ -252,7 +310,6 @@ const Apply: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Application submission error:", error);
-      
       if (error.response) {
         alert(`Failed to submit application: ${error.response.data.message || error.response.statusText}`);
       } else if (error.request) {

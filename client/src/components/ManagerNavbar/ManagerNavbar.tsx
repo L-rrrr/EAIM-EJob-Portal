@@ -48,19 +48,6 @@ const ManagerNavbar: React.FC = () => {
     document.documentElement.classList.toggle('dark', newDarkMode);
   };
 
-
-  const handleChangePassword = () => {
-    if (newPassword !== confirmPassword) {
-      alert("New passwords do not match.");
-      return;
-    }
-    alert("Password changed successfully!");
-    setPassword(newPassword);
-    setNewPassword("");
-    setConfirmPassword("");
-    setShowProfile(false);
-  };
-
   return (
     <nav className={styles.navbar}>
       <div className={styles.navbarLeft}>
@@ -94,23 +81,6 @@ const ManagerNavbar: React.FC = () => {
             <div className={styles.profilePopup}>
               <div className={styles.username}>
                 <p><strong>Email:</strong> {email}</p>
-              </div>
-              <div className={styles.passwordRow}>
-                <label>Current Password:</label>
-                <div className={styles.passwordField}>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    readOnly
-                  />
-                  <button
-                    className={styles.eyeButton}
-                    onClick={() => setShowPassword(prev => !prev)}
-                    type="button"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
               </div>
             </div>
           )}

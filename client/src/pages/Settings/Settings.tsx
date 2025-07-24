@@ -43,6 +43,14 @@ const Settings: React.FC = () => {
     marketingEmails: false
   });
 
+  const [pendingEmail, setPendingEmail] = useState<string>("");
+  const [showEmailVerify, setShowEmailVerify] = useState(false);
+  const [emailVerifyCode, setEmailVerifyCode] = useState("");
+  const [emailToVerify, setEmailToVerify] = useState("");
+  const [emailVerifyMsg, setEmailVerifyMsg] = useState("");
+  const [emailVerifyLoading, setEmailVerifyLoading] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+
   const { register: registerPassword, handleSubmit: handlePasswordSubmit, formState: { errors: passwordErrors }, watch, reset: resetPasswordForm } = useForm<PasswordChangeInputs>();
   const { register: registerProfile, handleSubmit: handleProfileSubmit, formState: { errors: profileErrors }, setValue } = useForm<ProfileInputs>();
 
@@ -66,9 +74,62 @@ const Settings: React.FC = () => {
         setValue('last_name', userData.last_name);
         setValue('email', userData.email);
         setValue('nationality', userData.nationality);
+        setPendingEmail(userData.email);
       }
     } catch (error) {
       console.error('Failed to fetch user info:', error);
+    }
+  };
+
+  // Email change handler
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPendingEmail(e.target.value);
+    setValue('email', e.target.value);
+    setEmailVerified(false);
+  };
+
+  const sendEmailVerification = async () => {
+    setEmailVerifyLoading(true);
+    setEmailVerifyMsg("");
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/request-register-code`,
+        { email: pendingEmail }
+      );
+      if (res.data.success) {
+        setShowEmailVerify(true);
+        setEmailToVerify(pendingEmail);
+        setEmailVerifyMsg("Verification code sent to your new email.");
+      } else {
+        setEmailVerifyMsg(res.data.message || "Failed to send verification code.");
+      }
+    } catch (e: any) {
+      setEmailVerifyMsg(e.response?.data?.message || "Failed to send verification code.");
+    } finally {
+      setEmailVerifyLoading(false);
+    }
+  };
+
+  const verifyEmailCode = async () => {
+    setEmailVerifyLoading(true);
+    setEmailVerifyMsg("");
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/verify-register-code`, {
+        email: emailToVerify,
+        code: emailVerifyCode
+      });
+      if (res.data.success) {
+        setShowEmailVerify(false);
+        setEmailVerified(true);
+        setMessage("Email verified! You can now update your profile.");
+        setMessageType("success");
+      } else {
+        setEmailVerifyMsg(res.data.message || "Verification failed.");
+      }
+    } catch (e: any) {
+      setEmailVerifyMsg(e.response?.data?.message || "Verification failed.");
+    } finally {
+      setEmailVerifyLoading(false);
     }
   };
 
@@ -183,13 +244,13 @@ const Settings: React.FC = () => {
             <Shield size={18} />
             Password
           </button>
-          <button 
+          {/* <button 
             className={`${styles.tabButton} ${activeTab === 'notifications' ? styles.active : ''}`}
             onClick={() => setActiveTab('notifications')}
           >
             <Bell size={18} />
             Notifications
-          </button>
+          </button> */}
         </div>
 
         {/* Tab Content */}
@@ -234,20 +295,51 @@ const Settings: React.FC = () => {
                     <Mail size={18} />
                     Email Address
                   </label>
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    {...registerProfile("email", { 
-                      required: "Email is required",
-                      pattern: {
-                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                        message: "Please enter a valid email address"
-                      }
-                    })}
-                    className={`${styles.input} ${profileErrors.email ? styles.inputError : ''}`}
-                  />
+                      <input
+                        type="email"
+                        placeholder="Enter your email"
+                        value={pendingEmail || ""}
+                        onChange={handleEmailChange}
+                        className={`${styles.input} ${profileErrors.email ? styles.inputError : ''}`}
+                      />
+                      {emailVerifyMsg && <p className={styles.errorMessage}>{emailVerifyMsg}</p>}
+                      
+                      <button
+                        type="button"
+                        className={styles.submitButton}
+                        style={{ minWidth: 120 }}
+                        disabled={emailVerifyLoading || !pendingEmail || pendingEmail === emailToVerify}
+                        onClick={sendEmailVerification}
+                      >
+                        {emailVerifyLoading ? "Sending..." : "Verify Email"}
+                      </button> 
+                    
+
                   {profileErrors.email && <p className={styles.errorMessage}>{profileErrors.email.message}</p>}
+                  
                 </div>
+
+                {/* Show code input if verifying */}
+                {showEmailVerify && (
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Enter Verification Code</label>
+                    <input
+                      type="text"
+                      value={emailVerifyCode}
+                      onChange={e => setEmailVerifyCode(e.target.value)}
+                      className={styles.input}
+                      placeholder="Verification code"
+                    />
+                    <button
+                      type="button"
+                      className={styles.submitButton}
+                      disabled={emailVerifyLoading || !emailVerifyCode}
+                      onClick={verifyEmailCode}
+                    >
+                      {emailVerifyLoading ? "Verifying..." : "Submit Code"}
+                    </button>
+                  </div>
+                )}
 
                 <div className={styles.formGroup}>
                   <label className={styles.label}>
@@ -274,7 +366,7 @@ const Settings: React.FC = () => {
                 <button 
                   type="submit" 
                   className={`${styles.submitButton} ${isLoading ? styles.loading : ''}`}
-                  disabled={isLoading}
+                  disabled={isLoading || (!!pendingEmail && !emailVerified)}
                 >
                   <Save size={18} />
                   Update Profile
@@ -398,7 +490,7 @@ const Settings: React.FC = () => {
           )}
 
           {/* Notifications Tab */}
-          {activeTab === 'notifications' && (
+          {/* {activeTab === 'notifications' && (
             <div className={styles.tabPanel}>
               <h2 className={styles.sectionTitle}>Notification Preferences</h2>
               <div className={styles.notificationSettings}>
@@ -459,7 +551,7 @@ const Settings: React.FC = () => {
                 </button>
               </div>
             </div>
-          )}
+          )} */}
           
         </div>
       </div>

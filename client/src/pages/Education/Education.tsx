@@ -793,9 +793,17 @@ const updateOtherQualifications = (id: number, field: string, value: string) => 
                       <option value="PSLE">PSLE</option>
                       <option value="N Level">N Level</option>
                       <option value="O Level">O Level</option>
-                      <option value="A Level">A Level</option>
+                      <option value="A Level/Junior College/Higher Secondary">A Level/Junior College/Higher Secondary</option>
+                      <option value="NITEC/Higher NITEC">NITEC/Higher NITEC</option>
                       <option value="Diploma">Diploma</option>
+                      <option value="Advanced Diploma">Advanced Diploma</option>
                       <option value="Degree">Degree</option>
+                      <option value="Professional Qualification">Professional Qualification</option>
+                      <option value="Masters">Masters</option>
+                      <option value="Doctorate Degree">Doctorate Degree</option>
+                      <option value="Certificate">Certificate</option>
+                      <option value="Postgraduate Diploma">Postgraduate Diploma</option>
+                      <option value="Others">Others</option>
                     </select>
                     {educationValidationErrors[record.id]?.levelOfQualification && (
                       <div className={styles.errorMessage}>

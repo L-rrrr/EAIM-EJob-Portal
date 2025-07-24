@@ -6,8 +6,6 @@ import {
   LogOut,
   Sun,
   Moon,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import logo from "../../assets/EAIM-logo.png";
 import styles from "./HRNavbar.module.css";
@@ -16,8 +14,6 @@ const HRNavbar: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [password, setPassword] = useState("current-password");
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -95,20 +91,6 @@ const HRNavbar: React.FC = () => {
             <div className={styles.profilePopup}>
               <div className={styles.username}>
                 <p><strong>Email:</strong> {email}</p>
-              </div>
-
-              <div className={styles.passwordRow}>
-                <label>Current Password:</label>
-                <div className={styles.passwordField}>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    readOnly
-                  />
-                  <button className={styles.eyeButton} onClick={() => setShowPassword(prev => !prev)} type="button">
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
               </div>
             </div>
           )}

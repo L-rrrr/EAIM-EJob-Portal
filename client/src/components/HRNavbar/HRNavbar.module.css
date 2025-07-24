@@ -166,18 +166,12 @@
   border: 1px solid rgba(226, 232, 240, 0.8);
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  padding: 1.5rem;
+  padding: 1rem;
   z-index: 1000;
   color: black;
   transform: translateY(-10px);
   opacity: 0;
   animation: slideIn 0.3s ease forwards;
-}
-
-.username {
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .username p {
@@ -189,62 +183,6 @@
 .username strong {
   color: #B3238B;
   font-weight: 600;
-}
-
-.passwordRow {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.passwordRow label {
-  color: #B3238B;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.passwordField {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.passwordField input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  padding-right: 3rem;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  border-radius: 8px;
-  background: rgba(248, 250, 252, 0.5);
-  color: #1e293b;
-  font-size: 0.9rem;
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-.passwordField input:focus {
-  border-color: rgba(179, 35, 139, 0.3);
-  box-shadow: 0 0 0 3px rgba(179, 35, 139, 0.1);
-}
-
-.eyeButton {
-  position: absolute;
-  right: 0.75rem;
-  background: none;
-  border: none;
-  color: #64748b;
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.eyeButton:hover {
-  color: #B3238B;
-  background-color: rgba(179, 35, 139, 0.1);
 }
 
 /* Dark mode overrides for HRNavbar */
@@ -308,29 +246,6 @@
   color: #f472b6;
 }
 
-:global(.dark) .passwordRow label {
-  color: #f472b6;
-}
-
-:global(.dark) .passwordField input {
-  background: #334155;
-  border-color: #475569;
-  color: #f8fafc;
-}
-
-:global(.dark) .passwordField input:focus {
-  border-color: rgba(244, 114, 182, 0.3);
-  box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.1);
-}
-
-:global(.dark) .eyeButton {
-  color: #94a3b8;
-}
-
-:global(.dark) .eyeButton:hover {
-  color: #f472b6;
-  background-color: rgba(244, 114, 182, 0.1);
-}
 
 :global(.dark) .iconButton:focus {
   outline: none;

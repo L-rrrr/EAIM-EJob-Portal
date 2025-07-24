@@ -21,7 +21,8 @@ const JobSection: React.FC<{
   onToggleJob: (id: string) => void;
   searchTerm: string;
   onBookMark: (job: Job) => void;
-}> = ({ title, jobs, expandedJobIds, onToggleJob, searchTerm, onBookMark }) => {
+  appliedJobIds: Set<number>;
+}> = ({ title, jobs, expandedJobIds, onToggleJob, searchTerm, onBookMark, appliedJobIds }) => {
   const navigate = useNavigate();
 
   const filteredJobs = jobs.filter(job =>
@@ -54,16 +55,20 @@ const JobSection: React.FC<{
                 className={styles.applyButton}
                 onClick={e => {
                   e.stopPropagation();
-                  navigate("/apply", { 
-                    state: { 
-                      jobData: {
-                        job_id: job.job_id,
-                        title: job.title,
-                        job_type: job.job_type,
-                        job_category: job.job_category
+                  if (appliedJobIds.has(job.job_id)) {
+                    alert("You have already applied for this job.");
+                  } else {
+                    navigate("/apply", { 
+                      state: { 
+                        jobData: {
+                          job_id: job.job_id,
+                          title: job.title,
+                          job_type: job.job_type,
+                          job_category: job.job_category
+                        }
                       }
-                    }
-                  });
+                    });
+                  }
                 }}
               >
                 Apply
@@ -90,8 +95,9 @@ const AvailableJobs: React.FC = () => {
   const [expandedJobIds, setExpandedJobIds] = useState<Set<string>>(new Set());
   const [inputTerm, setInputTerm] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [appliedJobIds, setAppliedJobIds] = useState<Set<number>>(new Set());
 
-  useEffect(() => {
+    useEffect(() => {
     const fetchJobs = async () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/jobs`);
@@ -102,7 +108,24 @@ const AvailableJobs: React.FC = () => {
         console.error("Failed to fetch jobs", error);
       }
     };
+
+    const fetchAppliedJobs = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/applied-jobs`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) {
+          setAppliedJobIds(new Set(res.data.data.map((job: { job_id: number }) => job.job_id)));
+        }
+      } catch (error) {
+        console.error("Failed to fetch applied jobs", error);
+      }
+    };
+
     fetchJobs();
+    fetchAppliedJobs();
   }, []);
 
   
@@ -172,6 +195,7 @@ const AvailableJobs: React.FC = () => {
           onToggleJob={handleToggleJob}
           searchTerm={searchTerm}
           onBookMark={handleBookmark}
+          appliedJobIds={appliedJobIds}
         />
         <JobSection
           title="Operation/ Management Roles"
@@ -180,6 +204,7 @@ const AvailableJobs: React.FC = () => {
           onToggleJob={handleToggleJob}
           searchTerm={searchTerm}
           onBookMark={handleBookmark}
+          appliedJobIds={appliedJobIds}
         />
       </div>
     </div>

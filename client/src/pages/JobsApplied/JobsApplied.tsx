@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronDown, ChevronUp, Calendar, Clock, MapPin, Briefcase, Users, CheckCircle, AlertCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Calendar, Clock, MapPin, Briefcase, Users, CheckCircle, AlertCircle, BellRing } from "lucide-react";
 import styles from "./JobsApplied.module.css";
 import axios from "axios";
 
@@ -71,14 +71,21 @@ const JobsApplied: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "Shortlisted":
+      case "Pending":
+        return <Clock size={14} />;
+      case "Interview Scheduled":
+        return <Calendar size={14} />;
+      case "Reviewing":
+      case "Assessed":
+        return <Clock size={14} />;
+      case "Offer Made":
         return <CheckCircle size={14} />;
-      case "Reviewed":
-        return <AlertCircle size={14} />;
-      case "Accepted":
+      case "Offer Accepted":
         return <CheckCircle size={14} />;
-      case "Rejected":
+      case "Offer Declined":
         return <AlertCircle size={14} />;
+      case "Not Selected":
+        return <CheckCircle size={14} />;
       default:
         return <Clock size={14} />;
     }
@@ -86,14 +93,21 @@ const JobsApplied: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Shortlisted":
+      case "Pending":
+        return styles.statusPending;
+      case "Interview Scheduled":
         return styles.statusScheduled;
-      case "Reviewed":
+      case "Reviewing":
+      case "Assessed":
         return styles.statusReview;
-      case "Accepted":
+      case "Offer Made":
+        return styles.statusOffer;
+      case "Offer Accepted":
         return styles.statusAccepted;
-      case "Rejected":
-        return styles.statusRejected;
+      case "Offer Declined":
+        return styles.statusDeclined;
+      case "Not Selected":
+        return styles.statusOffer;
       default:
         return styles.statusDefault;
     }
@@ -179,7 +193,14 @@ const JobsApplied: React.FC = () => {
                 >
                   <div className={styles.jobMainInfo}>
                     <div className={styles.jobTitleSection}>
-                      <h3 className={styles.jobTitle}>{job.title}</h3>
+                      <h3 className={styles.jobTitle}>
+                        {job.title}
+                        {(job.application_status === "Offer Made" || job.application_status === "Not Selected") && (
+                          <span className={styles.actionRequiredIcon} title="Action Required">
+                            <BellRing size={18} />
+                          </span>
+                        )}
+                      </h3>
                       <div className={styles.jobMeta}>
                         <span className={styles.jobTypeBadge}>
                           <Clock size={12} />
@@ -191,8 +212,13 @@ const JobsApplied: React.FC = () => {
                         </span>
                         <span className={`${styles.jobStatusBadge} ${getStatusColor(job.application_status)}`}>
                           {getStatusIcon(job.application_status)}
-                          {job.application_status}
+                          {(job.application_status === "Assessed" || job.application_status === "Reviewing")
+                            ? "Reviewing"
+                            : (job.application_status === "Offer Made" || job.application_status === "Not Selected")
+                              ? "Outcome Ready"
+                              : job.application_status}
                         </span>
+                        
                       </div>
                     </div>
                     
@@ -239,6 +265,70 @@ const JobsApplied: React.FC = () => {
                         dangerouslySetInnerHTML={{ __html: job.job_requirements || "No requirements listed" }} 
                       />
                     </div>
+
+                    {job.application_status === "Offer Made" && (
+                      <div className={styles.offerActionSection}>
+                        <div className={styles.offerMessage}>
+                          <CheckCircle size={20} className={styles.offerIcon} />
+                          <span>
+                            Congratulations! You have received an offer for this position.
+                          </span>
+                        </div>
+                        <div className={styles.offerActions}>
+                          <button
+                            className={styles.acceptOfferBtn}
+                            onClick={async () => {
+                              if (
+                                window.confirm(
+                                  "Are you sure you want to accept this offer? This action cannot be undone."
+                                )
+                              ) {
+                                const token = localStorage.getItem("token");
+                                await axios.put(
+                                  `${import.meta.env.VITE_BACKEND_URL}/application-status/${job.application_id}`,
+                                  { status: "Offer Accepted" },
+                                  { headers: { Authorization: `Bearer ${token}` } }
+                                );
+                                alert("You have successfully accepted the offer.");
+                                fetchAppliedJobs();
+                              }
+                            }}
+                          >
+                            Accept Offer
+                          </button>
+                          <button
+                            className={styles.declineOfferBtn}
+                            onClick={async () => {
+                              if (
+                                window.confirm(
+                                  "Are you sure you want to decline this offer? This action cannot be undone."
+                                )
+                              ) {
+                                const token = localStorage.getItem("token");
+                                await axios.put(
+                                  `${import.meta.env.VITE_BACKEND_URL}/application-status/${job.application_id}`,
+                                  { status: "Offer Declined" },
+                                  { headers: { Authorization: `Bearer ${token}` } }
+                                );
+                                alert("You have declined the offer.");
+                                fetchAppliedJobs();
+                              }
+                            }}
+                          >
+                            Decline Offer
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {job.application_status === "Not Selected" && (
+                      <div className={styles.notSelectedMessage}>
+                        <AlertCircle size={20} className={styles.notSelectedIcon} />
+                        <span>
+                          We regret to inform you that your application was not successful. Thank you for your interest.
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

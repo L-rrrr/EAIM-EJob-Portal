@@ -1,46 +1,99 @@
+const db = require("../dbConn");
+const axios = require("axios");
 const OpenAI = require('openai');
 const client = new OpenAI();
 
+// Google Custom Search API setup (add your keys to .env)
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+const GOOGLE_CSE_ID = process.env.GOOGLE_CSE_ID;
+
+async function searchPublicInfo(candidateName) {
+  if (!GOOGLE_API_KEY || !GOOGLE_CSE_ID) return [];
+  const query = encodeURIComponent(candidateName);
+  const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${GOOGLE_CSE_ID}&q=${query}`;
+  try {
+    const res = await axios.get(url);
+    return (res.data.items || []).slice(0, 5).map(item => ({
+      title: item.title,
+      link: item.link,
+      snippet: item.snippet,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 const analyzeCandidateProfile = async (req, res) => {
   try {
-    const { candidateName, jobTitle, applicationData, analysisLevel = "Basic" } = req.body;
+    const { candidateName, jobTitle, userId, analysisLevel = "Basic" } = req.body;
 
-    if (!candidateName || !jobTitle) {
+    if (!candidateName || !jobTitle || !userId) {
       return res.status(400).json({
         success: false,
-        message: "Candidate name and job title are required"
+        message: "candidateName, jobTitle, and userId are required"
       });
     }
 
-    // Generate different prompts based on analysis level
-    let input;
-    
+    // Fetch education, work, and teaching experience from DB
+    const [education, work, teaching] = await Promise.all([
+      db.executeQuery("SELECT * FROM tbl_education_background WHERE user_id = ?", [userId]),
+      db.executeQuery("SELECT * FROM tbl_work_experience WHERE user_id = ?", [userId]),
+      db.executeQuery("SELECT * FROM tbl_teaching_experience WHERE user_id = ?", [userId])
+    ]);
+
+    // Format education
+    const educationText = education.length
+      ? education.map(e =>
+          `${e.degree || ""} in ${e.major || ""} from ${e.institution || ""} (${e.year_from || ""}-${e.year_to || ""})`
+        ).join("; ")
+      : "No education records found.";
+
+    // Format work experience
+    const workText = work.length
+      ? work.map(w =>
+          `${w.position || ""} at ${w.company || ""} (${w.year_from || ""}-${w.year_to || ""})`
+        ).join("; ")
+      : "No work experience records found.";
+
+    // Format teaching experience
+    const teachingText = teaching.length
+      ? teaching.map(t =>
+          `${t.position || ""} at ${t.institution || ""} (${t.year_from || ""}-${t.year_to || ""})`
+        ).join("; ")
+      : "No teaching experience records found.";
+
+    // Search Google for public info
+    const publicLinks = await searchPublicInfo(candidateName);
+
+    // Compose prompt for OpenAI
+    let prompt = `You are an HR assistant. Here is the candidate's background for the position "${jobTitle}":
+
+    Education: ${educationText}
+    Work Experience: ${workText}
+    Teaching Experience: ${teachingText}
+
+    Below are real public web search results for this candidate:
+    ${publicLinks.length ? publicLinks.map(l => `- ${l.title}: ${l.link}`).join('\n') : "No public links found."}
+
+    `;
+
     switch (analysisLevel) {
       case "Basic":
-        input = `Please provide a brief background profile for ${candidateName} who applied for the ${jobTitle} position. ${applicationData ? `Additional context: ${applicationData}` : ''}
-
-Focus on: educational background, current role, and basic qualifications. Keep it concise (2-3 paragraphs).`;
+        prompt += `Write a concise background summary (2-3 paragraphs) for this candidate, focusing on their actual education, work, and teaching experience above. If any public links are relevant, mention them and include the URLs.`;
         break;
-        
       case "Standard":
-        input = `Please provide a comprehensive background profile for ${candidateName} who applied for the ${jobTitle} position. ${applicationData ? `Additional context: ${applicationData}` : ''}
-
-Include: educational background, work experience, key skills, relevant achievements, and cultural fit assessment. Provide moderate detail (4-5 paragraphs).`;
+        prompt += `Write a comprehensive background profile (4-5 paragraphs) for this candidate, using the actual education, work, and teaching experience above. If any public links are relevant, summarize key findings and include the URLs. Highlight any notable achievements or concerns.`;
         break;
-        
       case "Comprehensive":
-        input = `Please provide a detailed background analysis for ${candidateName} who applied for the ${jobTitle} position. ${applicationData ? `Additional context: ${applicationData}` : ''}
-
-Conduct a thorough analysis including: educational background, complete work history, technical and soft skills assessment, leadership experience, cultural fit, potential red flags, growth potential, salary expectations, and specific recommendations for the hiring decision. Provide extensive detail (6-8 paragraphs with structured sections).`;
+        prompt += `Write a detailed background analysis (6-8 paragraphs) for this candidate, using the actual education, work, and teaching experience above. Use the public web links to supplement your analysis—summarize any important information from those pages and include the URLs. Assess technical and soft skills, leadership, cultural fit, and give recommendations for hiring.`;
         break;
-        
       default:
-        input = `Please provide a background profile for ${candidateName} who applied for the ${jobTitle} position. ${applicationData ? `Additional context: ${applicationData}` : ''}`;
+        prompt += `Write a background summary for this candidate using the information above.`;
     }
 
     const response = await client.responses.create({
-        model: "gpt-4.1",
-        input: input
+      model: "gpt-4.1",
+      input: prompt
     });
 
     return res.status(200).json({
@@ -49,13 +102,18 @@ Conduct a thorough analysis including: educational background, complete work his
         analysis: response.output_text,
         candidate: candidateName,
         position: jobTitle,
-        analysisLevel: analysisLevel,
+        analysisLevel,
+        publicLinks,
         timestamp: new Date().toISOString()
       }
     });
 
   } catch (error) {
-    // Error handling remains the same
+    return res.status(500).json({
+      success: false,
+      message: "Failed to analyze candidate profile",
+      error: error.message
+    });
   }
 };
 

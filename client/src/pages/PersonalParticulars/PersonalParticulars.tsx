@@ -14,6 +14,7 @@ const PersonalParticulars: React.FC = () => {
   const [showMilitaryService, setShowMilitaryService] = useState(true);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const currentYear = new Date().getFullYear();
+  const [countryOptions, setCountryOptions] = useState<string[]>([]);
 
   
   // Generate year options from current year down to 1960
@@ -26,6 +27,23 @@ const PersonalParticulars: React.FC = () => {
   };
 
   useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/countries`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.success) {
+          setCountryOptions(res.data.data);
+        }
+      } catch (e) {
+        setCountryOptions([]);
+      }
+    };
+
+    fetchCountries();
+
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -99,6 +117,8 @@ const PersonalParticulars: React.FC = () => {
 
     fetchData();
   }, []);
+
+
 
   const handleUpdate = async () => {
     const isValid = validateAllFields();
@@ -425,21 +445,33 @@ type SelectField = {
     { label: "NRIC", required: true, name: "nric", type: "text" },
     { label: "Alias", required: false, name: "alias", type: "text" },
     { label: "Email Address", required: true, name: "email", type: "email" },
-    { label: "Date of Birth", required: true, name: "date_of_birth", type: "date" },
+    { label: "Date of Birth (dd-mm-yyyy)", required: true, name: "date_of_birth", type: "date" },
     { label: "Marital Status", required: true, name: "marital_status", type: "select", options: ["Single", "Married", "Divorced", "Widowed", "Separated"] },
     { label: "Gender", required: true, name: "gender", type: "select", options: ["Male", "Female"] },
-    { label: "Nationality", required: true, name: "nationality", type: "select", options: [
-      "Singapore", "Malaysia", "Indonesia", "China", "India", "United States", "United Kingdom", "Australia", "Canada",
-    ]},
-    { label: "Status in Singapore", required: true, name: "status_in_sg", type: "select", options: ["Citizen", "PR", "Foreigner"] },
+    { label: "Nationality", required: true, name: "nationality", type: "select", options: countryOptions },
+    {
+    label: "Status in Singapore",
+    required: true,
+    name: "status_in_sg",
+    type: "select",
+    options: [
+      "Foreigner",
+      "Permanent Resident",
+      "Employment Pass",
+      "S Pass",
+      "Work Permit",
+      "Dependent Pass",
+      "Short-Term Visit Pass",
+      "Letter of Consent",
+      "Student Pass"
+    ]
+  },
     { label: "Race", required: true, name: "race", type: "select", options: ["Chinese", "Malay", "Indian", "Others"] },
     { label: "Dialect", required: false, name: "dialect", type: "text" },
     { label: "Religion", required: true, name: "religion", type: "select", options: ["Buddhism", "Christianity", "Hinduism", "Islam", "Others"] },
-    { label: "Country of Birth", required: true, name: "country_of_birth", type: "select", options: [
-      "Singapore", "Malaysia", "Indonesia", "China", "India", "United States", "United Kingdom", "Australia", "Canada",
-    ]},
+    { label: "Country of Birth", required: true, name: "country_of_birth", type: "select", options: countryOptions },
     { label: "Passport No.", required: true, name: "passport_no", type: "text" },
-    { label: "Passport Expiry Date", required: true, name: "passport_expiry", type: "date" },
+    { label: "Passport Expiry Date (dd-mm-yyyy)", required: true, name: "passport_expiry", type: "date" },
   ];
   
 
@@ -458,9 +490,9 @@ type SelectField = {
     { label: "Blk/House No.", required: true, name: "blk_no", type: "text" },
     { label: "Street Name", required: true, name: "street_name", type: "text" },
     { label: "Unit No. (e.g. 01-23)", required: true, name: "unit_no", type: "text" },
-    { label: "Postal Code", required: true, name: "postal_code", type: "text" },
-    { label: "Mobile No.", required: true, name: "mobile_no", type: "tel" },
-    { label: "Home Telephone No.", required: false, name: "home_no", type: "tel" },
+    { label: "Postal Code", required: true, name: "postal_code", type: "number" },
+    { label: "Mobile No.", required: true, name: "mobile_no", type: "number" },
+    { label: "Home Telephone No.", required: false, name: "home_no", type: "number" },
   ];
 
 
@@ -508,9 +540,9 @@ const overseasAddressFields: {
   { label: "City", required: true, name: "city", type: "text" },
   { label: "State/Province", required: true, name: "state_or_province", type: "text" },
   { label: "Country", required: true, name: "country", type: "text" },
-  { label: "Postal Code", required: true, name: "postal_code", type: "text" },
-  { label: "Mobile No.", required: true, name: "mobile_number", type: "tel" },
-  { label: "Home Telephone No.", required: false, name: "home_number", type: "tel" },
+  { label: "Postal Code", required: true, name: "postal_code", type: "number" },
+  { label: "Mobile No.", required: true, name: "mobile_number", type: "number" },
+  { label: "Home Telephone No.", required: false, name: "home_number", type: "number" },
 ];
 
 type MilitaryServiceKeys =
@@ -650,6 +682,9 @@ type MilitaryServiceKeys =
                           : personalParticulars[name].toString().split('T')[0]
                         : ""
                       }
+
+                      max={name === "date_of_birth" ? new Date().toISOString().split('T')[0] : undefined} // <-- Only allow previous dates
+                      
                       onChange={(e) => {
                         const value = e.target.value;
                         setPersonalParticulars((prev) => ({
@@ -1140,7 +1175,7 @@ type MilitaryServiceKeys =
 
                   <div className={styles.inputGroup}>
                     <span className={styles.labelText}>
-                      Date of Next Camp
+                      Date of Next Camp (dd-mm-yyyy)
                     </span>
                     <input
                       type="date"

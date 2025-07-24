@@ -374,7 +374,7 @@
 /* AI ANALYZE BUTTON - LESS BRIGHT */
 .aiAnalyzeBtn {
   padding: 0.4rem 0.8rem;
-  background: #0891b2;
+  background: #2563eb;
   color: white;
   border: none;
   border-radius: 6px;
@@ -385,7 +385,7 @@
 }
 
 .aiAnalyzeBtn:hover {
-  background: #0e7490;
+  background: #1e40af;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(108, 92, 231, 0.3);
 }
@@ -641,7 +641,7 @@
 }
 
 .aiResponse {
-  color: #495057;
+  color: #495057 !important;
   font-size: 0.95rem;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -1208,7 +1208,7 @@
   color: #222;
   padding: 2rem;
   border-radius: 10px;
-  min-width: 600px;
+  min-width: 650px;
   max-width: 95vw;
   box-shadow: 0 2px 24px rgba(0,0,0,0.18);
   display: flex;
@@ -1328,4 +1328,584 @@
 }
 :global(.dark) .emailStatus {
   color: #f472b6;
+}
+
+.managerAssignRow {
+  display: flex;
+  align-items: center;
+}
+
+.managerSelect {
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.95rem;
+  background: #f8fafc;
+  color: #1e293b;
+  margin-right: 0.5rem;
+  width: auto;
+}
+
+.assignBtn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.assignBtn:disabled {
+  background: #e5e7eb;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+/* Dark mode */
+:global(.dark) .managerSelect {
+  background: #334155;
+  color: #f3f4f6;
+  border: 1px solid #475569;
+}
+
+:global(.dark) .assignBtn {
+  background: linear-gradient(90deg, #6366f1 0%, #1e40af 100%);
+  color: #fff;
+}
+
+:global(.dark) .assignBtn:disabled {
+  background: #475569;
+  color: #aaa;
+}
+
+
+.assessmentDoneBtn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.18s;
+}
+.assessmentDoneBtn:hover {
+  background: #1741a0;
+}
+
+/* Add or update these for overlay modal styling to match PostJob */
+
+.modalOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  padding: 2rem;
+}
+
+.jobModal {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  background: linear-gradient(135deg, #B3238B 0%, #97006c 100%);
+  color: white;
+  padding: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.modalTitleSection {
+  flex: 1;
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.3;
+}
+
+.modalCloseBtn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modalCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.modalContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.modalSection {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalSection:last-child {
+  border-bottom: none;
+}
+
+.sectionHeader {
+  background: #f8fafc;
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sectionHeader h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.sectionContent {
+  padding: 2rem;
+}
+
+.overviewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.overviewItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 4px solid #B3238B;
+}
+
+.overviewLabel {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.overviewValue {
+  font-weight: 700;
+  color: #111827;
+  font-size: 1rem;
+}
+
+.questionList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.questionCard {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 6px rgba(37,99,235,0.06);
+  border: 1px solid #e0e7ef;
+  margin-bottom: 1.2em;
+  padding: 1.1em 1.2em 0.8em 1.2em;
+  transition: box-shadow 0.18s;
+}
+
+.questionCard:hover {
+  box-shadow: 0 4px 16px rgba(37,99,235,0.13);
+}
+
+.questionLabel {
+  font-weight: 600;
+  color: #b3238b;
+  font-size: 1.04em;
+}
+
+.questionDesc {
+  color: #64748b;
+  font-style: italic;
+  font-size: 0.97em;
+  margin-left: 0.5em;
+}
+
+.questionScore {
+  font-weight: 600;
+  color: #111827;
+  margin-top: 0.3em;
+  display: inline-block;
+}
+
+.questionRemark {
+  color: #64748b;
+  margin-top: 0.2em;
+  font-style: italic;
+  font-size: 0.97em;
+}
+
+.overallSection {
+  margin-top: 0em;
+  margin-bottom: 1em;
+  padding: 1em 1.2em;
+  background: #f1f5f9;
+  border-radius: 8px;
+  border: 1px solid #e0e7ef;
+  color: #111827;
+}
+
+.commentsSection {
+  margin-top: 1.5em;
+  padding: 1em 1.2em;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e0e7ef;
+  color: #b3238b;
+  font-size: 1.05em;
+}
+
+.modalFooter {
+  background: #f8fafc;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.closeModalBtn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeModalBtn:hover {
+  background: #4b5563;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modalOverlay {
+    padding: 1rem;
+  }
+  .jobModal {
+    border-radius: 12px;
+    max-height: 95vh;
+  }
+  .modalHeader {
+    padding: 1.5rem;
+  }
+  .modalTitle {
+    font-size: 1.25rem;
+  }
+  .sectionContent {
+    padding: 1.5rem;
+  }
+  .overviewGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .overviewItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .modalActions {
+    flex-direction: column;
+  }
+  .closeModalBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* --- DARK MODE --- */
+:global(.dark) .modalOverlay {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(2px);
+}
+
+:global(.dark) .jobModal {
+  background: #1e293b;
+  color: #f3f4f6;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+
+:global(.dark) .modalHeader {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  color: #f3f4f6;
+}
+
+:global(.dark) .modalTitle {
+  color: #ffffff;
+}
+
+:global(.dark) .modalCloseBtn {
+  background: rgba(255,255,255,0.08);
+  color: #f3f4f6;
+}
+
+:global(.dark) .modalCloseBtn:hover {
+  background: rgba(255,255,255,0.18);
+}
+
+:global(.dark) .modalContent {
+  background: #1e293b;
+  color: #f3f4f6;
+}
+
+:global(.dark) .modalSection,
+:global(.dark) .sectionHeader,
+:global(.dark) .sectionContent {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(.dark) .sectionHeader h3{
+  color: #60a5fa;
+}
+
+:global(.dark) .modalFooter {
+  background: #334155;
+  border-top: 1px solid #475569;
+}
+
+:global(.dark) .overviewItem {
+  background: #1e293b;
+  border-left: 4px solid #76808f;
+}
+
+:global(.dark) .overviewLabel {
+  color: #cbd5e1;
+}
+
+:global(.dark) .overviewValue {
+  color: #f3f4f6;
+}
+
+:global(.dark) .questionCard {
+  background: #23233b;
+  border-color: #334155;
+  box-shadow: 0 1px 8px rgba(124, 58, 237, 0.08);
+}
+
+:global(.dark) .questionLabel {
+  color: #f472b6;
+}
+
+:global(.dark) .questionDesc {
+  color: #94a3b8;
+}
+
+:global(.dark) .questionScore {
+  color: #f3f4f6;
+}
+
+:global(.dark) .questionRemark {
+  color: #94a3b8;
+}
+
+:global(.dark) .overallSection {
+  background: #23233b;
+  border-color: #334155;
+  color: #f3f4f6;
+}
+
+:global(.dark) .commentsSection {
+  background: #2a1932;
+  border-color: #334155;
+  color: #f472b6;
+}
+
+
+.aiResponse :global(.ai-paragraph) {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:global(.dark) .aiResponse :global(.ai-paragraph) {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* AI Response Section Headings */
+.aiResponse :global(.ai-section-heading) {
+  color: #222e3a;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 1.5rem 0 1rem 0;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #f3f4f6 60%, #e0e7ef 100%);
+  border-left: 4px solid #b3238b;
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+:global(.dark) .aiResponse :global(.ai-section-heading) {
+  color: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08));
+  border-left: 4px solid rgba(255,255,255,0.6);
+}
+
+/* AI Section Divider */
+.aiResponse :global(.ai-section-divider) {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #b3238b 60%, transparent);
+  margin: 1.5rem 0;
+  border-radius: 1px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+:global(.dark) .aiResponse :global(.ai-section-divider) {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+}
+
+/* AI Bullet List */
+.aiResponse :global(.ai-bullet-list) {
+  margin: 1rem 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+/* AI Bullet Point */
+.aiResponse :global(.ai-bullet-point) {
+  color: #222e3a;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  padding-left: 2rem;
+  position: relative;
+  background: #f3f4f6;
+  border-radius: 6px;
+  border-left: 3px solid #b3238b;
+}
+
+.aiResponse :global(.ai-bullet-point):before {
+  content: "•";
+  color: #b3238b;
+  font-weight: bold;
+  position: absolute;
+  left: 0.75rem;
+  top: 0.5rem;
+}
+
+:global(.dark) .aiResponse :global(.ai-bullet-point) {
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.05);
+  border-left: 3px solid rgba(255,255,255,0.3);
+}
+
+:global(.dark) .aiResponse :global(.ai-bullet-point):before {
+  color: rgba(255,255,255,0.7);
+}
+
+/* AI Numbered List */
+.aiResponse :global(.ai-numbered-list) {
+  margin: 1rem 0;
+  padding-left: 0;
+  counter-reset: ai-counter;
+}
+
+/* AI Numbered Point */
+.aiResponse :global(.ai-numbered-point) {
+  color: #222e3a;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  padding-left: 2.5rem;
+  position: relative;
+  background: #f3f4f6;
+  border-radius: 6px;
+  border-left: 3px solid #b3238b;
+  counter-increment: ai-counter;
+  list-style: none;
+}
+
+.aiResponse :global(.ai-numbered-point):before {
+  content: counter(ai-counter) ".";
+  color: #b3238b;
+  font-weight: bold;
+  position: absolute;
+  left: 0.75rem;
+  top: 0.5rem;
+}
+
+:global(.dark) .aiResponse :global(.ai-numbered-point) {
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.05);
+  border-left: 3px solid rgba(255,255,255,0.3);
+}
+
+:global(.dark) .aiResponse :global(.ai-numbered-point):before {
+  color: rgba(255,255,255,0.7);
+}
+
+/* AI Response Links */
+.aiResponse a {
+  color: #2563eb;
+  text-decoration: underline;
+  word-break: break-all;
+  transition: color 0.15s;
+}
+
+.aiResponse a:hover {
+  color: #b3238b;
+}
+
+:global(.dark) .aiResponse a {
+  color: #60a5fa;
+}
+
+:global(.dark) .aiResponse a:hover {
+  color: #f472b6;
+}
+
+/* AI Response Strong/Emphasis */
+.aiResponse strong {
+  color: #b3238b;
+  font-weight: 700;
+}
+
+:global(.dark) .aiResponse strong {
+  color: #f472b6;
+}
+
+.aiResponse em {
+  color: #1e40af;
+  font-style: italic;
+  font-weight: 500;
+}
+
+:global(.dark) .aiResponse em {
+  color: #60a5fa;
 }

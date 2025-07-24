@@ -14,6 +14,16 @@ const Applicants = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [analysisLevel, setAnalysisLevel] = useState("Basic");
+  const [assessmentOverlay, setAssessmentOverlay] = useState<{ open: boolean, assessment: any | null }>({ open: false, assessment: null });
+
+  type Manager = {
+    user_id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    // add other fields if needed
+  };
+  const [managers, setManagers] = useState<Manager[]>([]);
 
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailSubject, setEmailSubject] = useState("");
@@ -32,9 +42,41 @@ const Applicants = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // AI Analysis state
-  const [selectedCandidate, setSelectedCandidate] = useState<{name: string, job: string} | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<any | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const questionList = [
+    { key: "q1", label: "Education & Training", desc: "(Sufficient education, grades of relevant subjects, appropriate qualifications for the job)" },
+    { key: "q2", label: "Work/ Relevant Experience", desc: "(Technical/Supervisor/ Administrative experience)" },
+    { key: "q3", label: "Proven Producer Role", desc: "(Past key successes -projects & $ amount or total annual revenue achieved)" },
+    { key: "q4", label: "Appearance", desc: "(Neat, pleasant, smart, sloppy, sickly, robust)" },
+    { key: "q5", label: "Personality", desc: "(Cheerful, sociable, likeable, assertive, sense of humour, confident, outgoing, polite, shy, unresponsive)" },
+    { key: "q6", label: "Attitude/ Team Player", desc: "" },
+    { key: "q7", label: "Character/ Temperament", desc: "(Sincere, trustworthy, disciplined, responsible, emotionally mature, independent, passive, weak, indecisive)" },
+    { key: "q8", label: "Ability To Communicate", desc: "(Coherent, persuasive, able to listen, fluent, long-winded)" },
+    { key: "q9", label: "Motivation", desc: "(Reason for application enthusiastic, conscientious, indifferent)" },
+    { key: "q10", label: "Mental Alertness", desc: "(Intelligent, sharp, logical reasoning, sound judgment, well-informed, naive, slow)" },
+    { key: "q11", label: "Leadership Qualities", desc: "(Sufficient education, grades of relevant subjects, appropriate qualifications for the job)" },
+    { key: "q12", label: "Job Stability", desc: "(Steady employment record, job-hopper)" }
+  ];
+
+  // Fetch managers on mount
+  useEffect(() => {
+    const fetchManagers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/managers`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.success) setManagers(res.data.data);
+      } catch (e) {
+        setManagers([]);
+      }
+    };
+    fetchManagers();
+  }, []);
+
 
   // Fetch applicants data from database
   useEffect(() => {
@@ -71,18 +113,18 @@ const Applicants = () => {
     fetchApplicants();
   }, []);
 
-  const openAnalysisPanel = (candidateName: string, jobTitle: string) => {
-    setSelectedCandidate({ name: candidateName, job: jobTitle });
+  const openAnalysisPanel = (applicant: any) => {
+    setSelectedCandidate(applicant);
     setAiAnalysis(""); // Clear previous analysis
   };
 
   // Separate function for actual analysis
   const startAnalysis = async () => {
     if (!selectedCandidate) return;
-    
+  
     setIsAnalyzing(true);
     setAiAnalysis("");
-
+  
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
@@ -90,14 +132,15 @@ const Applicants = () => {
         {
           candidateName: selectedCandidate.name,
           jobTitle: selectedCandidate.job,
-          applicationData: `Applied for ${selectedCandidate.job} position. Current status: ${applicantsData.find(m => m.name === selectedCandidate.name)?.status || 'Unknown'}.`,
+          userId: selectedCandidate.user_id,
+          applicationData: `Applied for ${selectedCandidate.job} position. Current status: ${selectedCandidate.status || 'Unknown'}.`,
           analysisLevel: analysisLevel
         },
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-
+  
       if (response.data.success) {
         setAiAnalysis(response.data.data.analysis);
       } else {
@@ -231,45 +274,39 @@ const Applicants = () => {
   };
 
   const formatAiResponse = (text: string) => {
-    return text
-      // Convert ### headings to styled headings
+    // Improved URL regex: do not include trailing ')'
+    const urlRegex = /(https?:\/\/[^\s<\)]+[^\s<\)\.,"'])/g;
+    let formatted = text.replace(urlRegex, url => {
+      // Remove trailing punctuation or bracket if present
+      let cleanUrl = url.replace(/[)\].,;:'"]+$/, '');
+      return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>`;
+    });
+  
+    // Existing formatting logic...
+    formatted = formatted
       .replace(/###\s*(.*?)(?=\n|$)/g, '<h3 class="ai-section-heading">$1</h3>')
-      
-      // Convert --- separators to styled dividers
       .replace(/^---+$/gm, '<div class="ai-section-divider"></div>')
-      
-      // Convert **text** to bold
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      
-      // Convert *text* to italic
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      
-      // Convert bullet points (- item)
       .replace(/^-\s+(.*?)$/gm, '<li class="ai-bullet-point">$1</li>')
-      
-      // Wrap consecutive bullet points in ul tags
       .replace(/(<li class="ai-bullet-point">.*?<\/li>)(\s*<li class="ai-bullet-point">.*?<\/li>)*/gs, '<ul class="ai-bullet-list">$&</ul>')
-      
-      // Convert numbered lists (1. item)
       .replace(/^\d+\.\s+(.*?)$/gm, '<li class="ai-numbered-point">$1</li>')
-      
-      // Wrap consecutive numbered points in ol tags
       .replace(/(<li class="ai-numbered-point">.*?<\/li>)(\s*<li class="ai-numbered-point">.*?<\/li>)*/gs, '<ol class="ai-numbered-list">$&</ol>')
-      
-      // Convert line breaks to paragraphs for better spacing
       .replace(/\n\n/g, '</p><p class="ai-paragraph">')
       .replace(/^(.*)$/gm, '<p class="ai-paragraph">$1</p>')
-      
-      // Clean up empty paragraphs
       .replace(/<p class="ai-paragraph"><\/p>/g, '')
       .replace(/<p class="ai-paragraph">(<h3|<div|<ul|<ol)/g, '$1')
       .replace(/(<\/h3>|<\/div>|<\/ul>|<\/ol>)<\/p>/g, '$1');
+  
+    return formatted;
   };
 
   return (
     <div className={styles.applicantsContainer}>
       {/* TOP SECTION: TABLE AND FILTER SIDE BY SIDE */}
       <div className={styles.topSection}> 
+        
+
         {/* APPLICANTS TABLE PANEL */}
         <div className={styles.tablePanel}>
           <div className={styles.tableHeader}>
@@ -297,6 +334,7 @@ const Applicants = () => {
                     <th>Interview Date</th>
                     <th>Status</th>
                     <th>Actions</th>
+                    <th>Manager Assessment</th>
                     <th>AI Analysis</th>
                   </tr>
                 </thead>
@@ -357,10 +395,14 @@ const Applicants = () => {
                             }}
                           >
                             <option value="Pending">Pending</option>
-                            <option value="Reviewing">Reviewing</option>
-                            <option value="Accepted">Accepted</option>
-                            <option value="Rejected">Rejected</option>
                             <option value="Interview Scheduled" disabled>Interview Scheduled</option>
+                            <option value="Reviewing">Reviewing</option>
+                            <option value="Assessed" disabled>Assessed</option>
+                            <option value="Offer Made">Offer Made</option>
+                            <option value="Not Selected">Not Selected</option>
+                            <option value="Offer Accepted" disabled>Offer Accepted</option>
+                            <option value="Offer Declined" disabled>Offer Declined</option>
+
                           </select>
                         </td>
 
@@ -390,9 +432,80 @@ const Applicants = () => {
                           </div>
                         </td>
                         <td>
+                          {(applicant.status === "Assessed" || applicant.assessment_done) ? (
+                            <button
+                              className={styles.assessmentDoneBtn}
+                              onClick={async () => {
+                                const token = localStorage.getItem("token");
+                                const res = await fetch(
+                                  `${import.meta.env.VITE_BACKEND_URL}/get-assessment-details/${applicant.application_id}`,
+                                  { headers: { Authorization: `Bearer ${token}` } }
+                                );
+                                const data = await res.json();
+                                if (data.success && data.assessment) {
+                                  setAssessmentOverlay({ open: true, assessment: data.assessment });
+                                } else {
+                                  alert("Assessment details not found.");
+                                }
+                              }}
+                            >
+                              View Assessment
+                            </button>
+                          ) : applicant.status === "Reviewing" ? (
+                            <div className={styles.managerAssignRow}>
+                              <select
+                                className={styles.managerSelect}
+                                value={applicant.assigned_manager_id || ""}
+                                onChange={e => {
+                                  const newManagerId = e.target.value;
+                                  setFilteredApplicants(prev =>
+                                    prev.map(a =>
+                                      a.application_id === applicant.application_id
+                                        ? { ...a, assigned_manager_id: newManagerId }
+                                        : a
+                                    )
+                                  );
+                                }}
+                              >
+                                <option value="">Select Manager</option>
+                                {managers.map(m => (
+                                  <option key={m.user_id} value={m.user_id}>
+                                    {m.first_name} {m.last_name}
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                className={styles.assignBtn}
+                                disabled={!applicant.assigned_manager_id}
+                                style={{ marginLeft: 0 }}
+                                onClick={async () => {
+                                  try {
+                                    const token = localStorage.getItem("token");
+                                    await axios.post(
+                                      `${import.meta.env.VITE_BACKEND_URL}/assign-manager-to-application`,
+                                      {
+                                        application_id: applicant.application_id,
+                                        manager_id: applicant.assigned_manager_id,
+                                      },
+                                      { headers: { Authorization: `Bearer ${token}` } }
+                                    );
+                                    alert("Manager assigned for assessment!");
+                                  } catch {
+                                    alert("Failed to assign manager.");
+                                  }
+                                }}
+                              >
+                                Send
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ color: "#888" }}>Available when status is “Reviewing" or "Assessed"</span>
+                          )}
+                        </td>
+                        <td>
                           <button
                             className={styles.aiAnalyzeBtn}
-                            onClick={() => openAnalysisPanel(applicant.name, applicant.job)}
+                            onClick={() => openAnalysisPanel(applicant)}
                           >
                             🤖 Analyze
                           </button>
@@ -406,12 +519,154 @@ const Applicants = () => {
           </div>
         </div>
 
+        {assessmentOverlay.open && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.jobModal}>
+              {/* Modal Header */}
+              <div className={styles.modalHeader}>
+                <div className={styles.modalTitleSection}>
+                  <h2 className={styles.modalTitle}>Manager Assessment Details</h2>
+                </div>
+                <button
+                  className={styles.modalCloseBtn}
+                  onClick={() => setAssessmentOverlay({ open: false, assessment: null })}
+                >
+                  ×
+                </button>
+              </div>
+              {/* Modal Content */}
+              <div className={styles.modalContent}>
+                {assessmentOverlay.assessment ? (
+                  <>
+                    <div className={styles.modalSection}>
+                      <div className={styles.sectionHeader}>
+                        <h3>Candidate & Interview Information</h3>
+                      </div>
+                      <div className={styles.overviewGrid}>
+                        <div className={styles.overviewItem}>
+                          <span className={styles.overviewLabel}>Candidate Name:</span>
+                          <span className={styles.overviewValue}>{assessmentOverlay.assessment.candidate_name}</span>
+                        </div>
+                        <div className={styles.overviewItem}>
+                          <span className={styles.overviewLabel}>Age:</span>
+                          <span className={styles.overviewValue}>{assessmentOverlay.assessment.age}</span>
+                        </div>
+                        <div className={styles.overviewItem}>
+                          <span className={styles.overviewLabel}>Department:</span>
+                          <span className={styles.overviewValue}>{assessmentOverlay.assessment.department}</span>
+                        </div>
+                        <div className={styles.overviewItem}>
+                          <span className={styles.overviewLabel}>Position Applied:</span>
+                          <span className={styles.overviewValue}>{assessmentOverlay.assessment.position}</span>
+                        </div>
+                        <div className={styles.overviewItem}>
+                          <span className={styles.overviewLabel}>Current Salary ($):</span>
+                          <span className={styles.overviewValue}>{assessmentOverlay.assessment.current_salary}</span>
+                        </div>
+                        <div className={styles.overviewItem}>
+                          <span className={styles.overviewLabel}>Expected Salary ($):</span>
+                          <span className={styles.overviewValue}>{assessmentOverlay.assessment.expected_salary}</span>
+                        </div>
+                        <div className={styles.overviewItem}>
+                          <span className={styles.overviewLabel}>Interviewer Name:</span>
+                          <span className={styles.overviewValue}>{assessmentOverlay.assessment.interviewer}</span>
+                        </div>
+                        <div className={styles.overviewItem}>
+                          <span className={styles.overviewLabel}>Notice Period:</span>
+                          <span className={styles.overviewValue}>{assessmentOverlay.assessment.notice_period}</span>
+                        </div>
+                        <div className={styles.overviewItem}>
+                          <span className={styles.overviewLabel}>Interview Date:</span>
+                          <span className={styles.overviewValue}>
+                            {assessmentOverlay.assessment.interview_date
+                              ? assessmentOverlay.assessment.interview_date.slice(0, 10)
+                              : "—"}
+                          </span>
+                        </div>
+                        <div className={styles.overviewItem}>
+                          <span className={styles.overviewLabel}>Interview Time:</span>
+                          <span className={styles.overviewValue}>{assessmentOverlay.assessment.interview_time}</span>
+                        </div>
+                        <div className={styles.overviewItem}>
+                          <span className={styles.overviewLabel}>Assessed On:</span>
+                          <span className={styles.overviewValue}>
+                            {assessmentOverlay.assessment.assessment_date
+                              ? assessmentOverlay.assessment.assessment_date.slice(0, 10)
+                              : "—"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.modalSection}>
+                      <div className={styles.sectionHeader}>
+                        <h3>Assessment Questions (1 means Very Poor and 5 means Excellent)</h3>
+                      </div>
+                      <div className={styles.sectionContent}>
+                        <ul className={styles.questionList}>
+                          {questionList.map((q, i) => (
+                            <li key={q.key} className={styles.questionCard}>
+                              <div>
+                                <span className={styles.questionLabel}>Q{i + 1}: {q.label}</span>
+                                {q.desc && <span className={styles.questionDesc}>{q.desc}</span>}
+                              </div>
+                              <div className={styles.questionScore}>Score: {assessmentOverlay.assessment[q.key]}</div>
+                              {assessmentOverlay.assessment[`${q.key}_remark`] && (
+                                <div className={styles.questionRemark}>
+                                  Remark: {assessmentOverlay.assessment[`${q.key}_remark`]}
+                                </div>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                    <div className={styles.modalSection}>
+                      <div className={styles.sectionHeader}>
+                        <h3>Overall Impression & Comments</h3>
+                      </div>
+                      <div className={styles.sectionContent}>
+                        <div className={styles.overallSection}>
+                          <strong>Overall Impression:</strong> {assessmentOverlay.assessment.q13}
+                          <div>
+                            <em>{assessmentOverlay.assessment.q13_remark}</em>
+                          </div>
+                          <strong>Interviewer's Recommendation:</strong> {assessmentOverlay.assessment.q14}
+                        </div>
+                        <div className={styles.commentsSection}>
+                          <strong>Comments:</strong>
+                          <div>{assessmentOverlay.assessment.comments}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className={styles.loadingContainer}>
+                    <div className={styles.loadingSpinner}></div>
+                    <div>Loading assessment...</div>
+                  </div>
+                )}
+              </div>
+              {/* Modal Footer */}
+              <div className={styles.modalFooter}>
+                <div className={styles.modalActions}>
+                  <button
+                    className={styles.closeModalBtn}
+                    onClick={() => setAssessmentOverlay({ open: false, assessment: null })}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* COLLAPSIBLE FILTER PANEL */}
         <div className={`${styles.filterPanel} ${isFilterExpanded ? styles.expanded : styles.collapsed}`}>
           <div className={styles.filterHeader} onClick={() => setIsFilterExpanded(!isFilterExpanded)}>
             <h3>🔍 Filters</h3>
             <button className={styles.collapseToggle}>
-              {isFilterExpanded ? '◀' : '▶'}
+              {isFilterExpanded ? '▶' : '◀'}
             </button>
           </div>
           
@@ -459,45 +714,51 @@ const Applicants = () => {
                 <div className={styles.buttonGrid}>
                   <button
                     className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Pending") ? styles.selected : ""}`}
-                    onClick={() =>
-                      toggleSelection("Pending", selectedStatus, setSelectedStatus)
-                    }
+                    onClick={() => toggleSelection("Pending", selectedStatus, setSelectedStatus)}
                   >
                     Pending
                   </button>
                   <button
                     className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Interview Scheduled") ? styles.selected : ""}`}
-                    onClick={() =>
-                      toggleSelection("Interview Scheduled", selectedStatus, setSelectedStatus)
-                    }
+                    onClick={() => toggleSelection("Interview Scheduled", selectedStatus, setSelectedStatus)}
                   >
                     Interview Scheduled
                   </button>
-
                   <button
                     className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Reviewing") ? styles.selected : ""}`}
-                    onClick={() =>
-                      toggleSelection("Reviewing", selectedStatus, setSelectedStatus)
-                    }
+                    onClick={() => toggleSelection("Reviewing", selectedStatus, setSelectedStatus)}
                   >
                     Reviewing
                   </button>
-
                   <button
-                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Rejected") ? styles.selected : ""}`}
-                    onClick={() =>
-                      toggleSelection("Rejected", selectedStatus, setSelectedStatus)
-                    }
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Assessed") ? styles.selected : ""}`}
+                    onClick={() => toggleSelection("Assessed", selectedStatus, setSelectedStatus)}
                   >
-                    Rejected
+                    Assessed
                   </button>
                   <button
-                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Accepted") ? styles.selected : ""}`}
-                    onClick={() =>
-                      toggleSelection("Accepted", selectedStatus, setSelectedStatus)
-                    }
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Offer Made") ? styles.selected : ""}`}
+                    onClick={() => toggleSelection("Offer Made", selectedStatus, setSelectedStatus)}
                   >
-                    Accepted
+                    Offer Made
+                  </button>
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Not Selected") ? styles.selected : ""}`}
+                    onClick={() => toggleSelection("Not Selected", selectedStatus, setSelectedStatus)}
+                  >
+                    Not Selected
+                  </button>
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Offer Accepted") ? styles.selected : ""}`}
+                    onClick={() => toggleSelection("Offer Accepted", selectedStatus, setSelectedStatus)}
+                  >
+                    Offer Accepted
+                  </button>
+                  <button
+                    className={`${styles.filterBtn} ${styles.compact} ${selectedStatus.includes("Offer Declined") ? styles.selected : ""}`}
+                    onClick={() => toggleSelection("Offer Declined", selectedStatus, setSelectedStatus)}
+                  >
+                    Offer Declined
                   </button>
                 </div>
               </div>

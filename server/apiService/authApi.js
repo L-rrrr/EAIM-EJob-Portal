@@ -45,8 +45,6 @@ const verifyRegisterCode = (req, res) => {
   if (!entry || entry.code !== code || Date.now() > entry.expires) {
     return res.status(400).json({ success: false, message: "Invalid or expired code." });
   }
-  // Mark as verified (for demo, just delete the code; in production, use a better system)
-  delete pendingCodes[email];
   return res.json({ success: true });
 };
 

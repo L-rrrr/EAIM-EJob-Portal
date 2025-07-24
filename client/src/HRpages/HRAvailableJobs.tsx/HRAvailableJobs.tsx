@@ -464,7 +464,7 @@ You can view their full profiles in the Applicants section for detailed evaluati
           <div className={styles.filterHeader} onClick={() => setIsFilterExpanded(!isFilterExpanded)}>
             <h3>🔍 Filters</h3>
             <button className={styles.collapseToggle}>
-              {isFilterExpanded ? '◀' : '▶'}
+              {isFilterExpanded ? '▶' : '◀'}
             </button>
           </div>
           

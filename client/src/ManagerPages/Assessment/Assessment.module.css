@@ -473,3 +473,151 @@
 :global(.dark) .formGroup label {
   color: #cbd5e1;
 } 
+
+
+.reviewListPanel {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.07);
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid #e5e7eb;
+  color: black;
+}
+
+.reviewListTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #1e293b;
+}
+
+.reviewListTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+
+.reviewListTable th,
+.reviewListTable td {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.reviewListTable th {
+  background: #f1f5f9;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.reviewListTable tr:last-child td {
+  border-bottom: none;
+}
+
+.reviewListLoading,
+.reviewListEmpty {
+  color: #64748b;
+  font-size: 1rem;
+  padding: 1rem 0;
+}
+
+/* Dark mode support */
+:global(.dark) .reviewListPanel {
+  background: #1e293b;
+  border: 1px solid #334155;
+  box-shadow: 0 2px 12px rgba(30, 58, 138, 0.15);
+}
+
+:global(.dark) .reviewListTitle {
+  color: #f3f4f6;
+}
+
+:global(.dark) .reviewListTable th {
+  background: #334155;
+  color: #f3f4f6;
+  border-bottom: 1px solid #475569;
+}
+
+:global(.dark) .reviewListTable td {
+  color: #f3f4f6;
+}
+
+:global(.dark) .reviewListLoading,
+:global(.dark) .reviewListEmpty {
+  color: #cbd5e1;
+}
+
+
+.selectBtn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08);
+}
+
+.selectBtn:hover,
+.selectBtn:focus {
+  background: #1e40af;
+  outline: none;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
+}
+
+.mcqInstruction {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-radius: 6px;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.05rem;
+  font-weight: 500;
+  border-left: 4px solid #2563eb;
+}
+:global(.dark) .mcqInstruction {
+  background: #1e293b;
+  color: #f3f4f6;
+  border-left: 4px solid #2563eb;
+}
+
+.collapseBtn {
+  margin-left: 16px;
+  background: #B3238B ;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 22px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.10);
+  transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s;
+  outline: none;
+  display: inline-block;
+}
+
+.collapseBtn:hover,
+.collapseBtn:focus {
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.18);
+  transform: translateY(-2px) scale(1.03);
+  color: #fff;
+}
+
+/* Dark mode */
+:global(.dark) .collapseBtn {
+  background: #7c3aed;
+  color: #f3f4f6;
+  border: none;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.13);
+}
+
+:global(.dark) .collapseBtn:hover,
+:global(.dark) .collapseBtn:focus {
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.18);
+}

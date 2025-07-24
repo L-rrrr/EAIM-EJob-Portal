@@ -96,7 +96,7 @@
 
 /* FORM PANEL */
 .formPanel {
-  flex: 3; /* Takes 2/3 of the width */
+  flex: 2; /* Takes 2/3 of the width */
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -396,11 +396,28 @@
   font-size: 0.75rem;
   font-weight: 500;
   text-transform: uppercase;
+  white-space: nowrap; /* Prevents splitting into two rows */
+  display: inline-block;
 }
 
 .pending {
   background-color: #fef3c7;
   color: #d97706;
+}
+
+.amended {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.verified {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.rejected {
+  background-color: #fee2e2;
+  color: #dc2626;
 }
 
 /* ACTION BUTTONS */
@@ -645,4 +662,716 @@
 :global(.dark) .actionBtn:hover {
   background: #475569;
   color: #cbd5e1;
+}
+
+/* Overlay for modals */
+.modalOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  padding: 2rem;
+}
+
+/* Modal panel for view */
+.jobModal {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Modal Header */
+.modalHeader {
+  background: linear-gradient(135deg, #B3238B 0%, #97006c 100%);
+  color: white;
+  padding: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.modalTitleSection {
+  flex: 1;
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.3;
+}
+
+.modalSubInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  opacity: 0.9;
+}
+
+.modalCategory,
+.modalType {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.modalStatus {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.modalDivider {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: bold;
+}
+
+.modalCloseBtn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modalCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Modal Content */
+.modalContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.modalSection {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalSection:last-child {
+  border-bottom: none;
+}
+
+.sectionHeader {
+  background: #f8fafc;
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sectionHeader h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.sectionContent {
+  padding: 2rem;
+}
+
+/* Overview Grid */
+.overviewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.overviewItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 4px solid #B3238B;
+}
+
+.overviewLabel {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.overviewValue {
+  font-weight: 700;
+  color: #111827;
+  font-size: 1rem;
+}
+
+/* Content Formatting */
+.contentBox {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border-left: 4px solid #B3238B;
+}
+
+.formattedText {
+  line-height: 1.7;
+}
+
+.formattedText p {
+  margin: 0 0 1rem 0;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.formattedText ul,
+.formattedText ol {
+  margin: 0 0 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.formattedText li {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.formattedText br {
+  line-height: 1.6;
+}
+
+.formattedText strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.formattedText em {
+  font-style: italic;
+}
+
+.noContent {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  margin: 0;
+}
+
+.remarksBox {
+  background: #f9fafb;
+  border-left: 4px solid #B3238B;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  color: #6b7280;
+}
+
+
+
+/* Modal Footer */
+.modalFooter {
+  background: #f8fafc;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.closeModalBtn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeModalBtn:hover {
+  background: #4b5563;
+}
+
+.closeModalBtn:focus {
+  outline: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modalOverlay {
+    padding: 1rem;
+  }
+  .jobModal {
+    border-radius: 12px;
+    max-height: 95vh;
+  }
+  .modalHeader {
+    padding: 1.5rem;
+  }
+  .modalTitle {
+    font-size: 1.25rem;
+  }
+  .sectionContent {
+    padding: 1.5rem;
+  }
+  .overviewGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .overviewItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .modalActions {
+    flex-direction: column;
+  }
+  .closeModalBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* --- DARK MODE --- */
+:global(.dark) .modalOverlay {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(2px);
+}
+
+:global(.dark) .jobModal {
+  background: #1e293b;
+  color: #f3f4f6;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+
+:global(.dark) .modalHeader {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  color: #f3f4f6;
+}
+
+:global(.dark) .modalTitle {
+  color: #ffffff;
+}
+
+:global(.dark) .modalSubInfo,
+:global(.dark) .modalCategory,
+:global(.dark) .modalType,
+:global(.dark) .modalDivider {
+  color: #cbd5e1;
+}
+
+:global(.dark) .modalCloseBtn {
+  background: rgba(255,255,255,0.08);
+  color: #f3f4f6;
+}
+
+:global(.dark) .modalCloseBtn:hover {
+  background: rgba(255,255,255,0.18);
+}
+
+:global(.dark) .modalContent {
+  background: #1e293b;
+  color: #f3f4f6;
+}
+
+:global(.dark) .modalSection,
+:global(.dark) .sectionHeader,
+:global(.dark) .sectionContent {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(.dark) .contentBox {
+  background: #334155;
+  border-left: 4px solid #76808f;
+}
+
+:global(.dark) .sectionHeader h3{
+  color: #cbd5e1;
+}
+
+:global(.dark) .contentBox p {
+  color: #f3f4f6;
+}
+
+:global(.dark) .overviewItem {
+  background: #1e293b;
+  border-left: 4px solid #76808f;
+}
+
+:global(.dark) .overviewLabel {
+  color: #cbd5e1;
+}
+
+:global(.dark) .overviewValue {
+  color: #f3f4f6;
+}
+
+:global(.dark) .formattedText {
+  color: #f3f4f6;
+}
+
+:global(.dark) .noContent {
+  color: #64748b;
+}
+
+:global(.dark) .modalFooter {
+  background: #334155;
+  border-top-color: #475569;
+}
+
+:global(.dark) .closeModalBtn {
+  background: #475569;
+  color: #f3f4f6;
+}
+:global(.dark) .closeModalBtn:hover {
+  background: #64748b;
+}
+
+:global(.dark) .remarksBox {
+  background: #334155;
+  border-left: 4px solid #76808f;
+  color: #cbd5e1;
+}
+
+
+/* Edit Modal Panel */
+.editModal {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Edit Modal Header */
+.editModalHeader {
+  background: linear-gradient(135deg, #B3238B 0%, #97006c 100%);
+  color: white;
+  padding: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.editModalTitleSection {
+  flex: 1;
+}
+
+.editModalTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+
+.editModalSubtitle {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.modalCloseBtn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modalCloseBtn:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.1);
+}
+
+/* Edit Modal Content */
+.editModalContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+/* Form Groups and Rows */
+.editFormGroup {
+  margin-bottom: 1.5rem;
+}
+
+.editFormRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.editFormLabel {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.editFormInput,
+.editFormSelect,
+.editFormTextarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  background: white;
+  color: black;
+}
+
+.editFormInput:focus,
+.editFormSelect:focus,
+.editFormTextarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.editFormSelect {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+.editFormTextarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+/* Modal Footer */
+.editModalFooter {
+  background: #f8fafc;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.editModalActions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.saveEditBtn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.saveEditBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.saveEditBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.returnEditBtn {
+  background: #B3238B  ;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 120px;
+  transition: background-color 0.18s, box-shadow 0.18s;
+}
+
+.returnEditBtn:hover {
+  background: #be185d;
+}
+
+.cancelEditBtn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelEditBtn:hover:not(:disabled) {
+  background: #4b5563;
+}
+
+.cancelEditBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive Design for Edit Modal */
+@media (max-width: 768px) {
+  .editModal {
+    margin: 1rem;
+    max-height: 95vh;
+    border-radius: 12px;
+  }
+  .editModalHeader {
+    padding: 1.5rem;
+  }
+  .editModalTitle {
+    font-size: 1.25rem;
+  }
+  .editModalContent {
+    padding: 1.5rem;
+  }
+  .editFormRow {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .editModalActions {
+    flex-direction: column;
+  }
+  .saveEditBtn,
+  .returnEditBtn,
+  .cancelEditBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* --- DARK MODE --- */
+:global(.dark) .modalOverlay {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(2px);
+}
+
+:global(.dark) .editModal {
+  background: #1e293b;
+  color: #f3f4f6;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+
+:global(.dark) .editModalHeader {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  color: #f3f4f6;
+}
+
+:global(.dark) .editModalTitle {
+  color: #ffffff;
+}
+
+:global(.dark) .editModalSubtitle {
+  color: #cbd5e1;
+}
+
+:global(.dark) .modalCloseBtn {
+  background: rgba(255,255,255,0.08);
+  color: #f3f4f6;
+}
+
+:global(.dark) .modalCloseBtn:hover {
+  background: rgba(255,255,255,0.18);
+}
+
+:global(.dark) .editModalContent {
+  background: #1e293b;
+  color: #f3f4f6;
+}
+
+:global(.dark) .editFormLabel {
+  color: #cbd5e1;
+}
+
+:global(.dark) .editFormInput,
+:global(.dark) .editFormSelect,
+:global(.dark) .editFormTextarea {
+  background: #334155;
+  color: #f3f4f6;
+  border-color: #475569;
+}
+
+:global(.dark) .editFormInput:focus,
+:global(.dark) .editFormSelect:focus,
+:global(.dark) .editFormTextarea:focus {
+  border-color: #f472b6;
+  background: #1e293b;
+}
+
+:global(.dark) .editModalFooter {
+  background: #334155;
+  border-top-color: #475569;
+}
+
+:global(.dark) .saveEditBtn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+}
+
+:global(.dark) .saveEditBtn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+:global(.dark) .returnEditBtn {
+  background: #f472b6;
+  color: #fff;
+}
+
+:global(.dark) .returnEditBtn:hover {
+  background: #be185d;
+}
+
+:global(.dark) .cancelEditBtn {
+  background: #475569;
+  color: #f3f4f6;
+}
+
+:global(.dark) .cancelEditBtn:hover {
+  background: #64748b;
 }

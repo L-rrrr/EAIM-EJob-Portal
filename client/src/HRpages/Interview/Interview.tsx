@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import styles from './Interview.module.css';
-import { Calendar as CalendarIcon, Clock, Trash2, Edit, Plus, CalendarArrowUp, Calendar } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Trash2, Edit, Plus, CalendarArrowUp} from 'lucide-react';
 import axios from 'axios';
 
 type InterviewEvent = {
   id: number;
+  application_id?: number | string;
   user_id?: number | string;
   job_id?: number | string;
   title: string;
@@ -17,8 +18,6 @@ type InterviewEvent = {
   venue?: string;
   description?: string;
 };
-
-let eventIdCounter = 2; // Start from 2 since we have 2 sample events
 
 const Interview: React.FC = () => {
   const [events, setEvents] = useState<InterviewEvent[]>([]);
@@ -47,7 +46,6 @@ const Interview: React.FC = () => {
   const [clickedDate, setClickedDate] = useState<string | null>(null);
   const [addToCalendar, setAddToCalendar] = useState<string>(""); 
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
-  const [selectedPending, setSelectedPending] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [applicantList, setApplicantList] = useState<{user_id: number, full_name: string}[]>([]);
   const [jobList, setJobList] = useState<{job_id: number, title: string}[]>([]);
@@ -260,6 +258,7 @@ const Interview: React.FC = () => {
     }
 
     const payload = {
+      application_id: formData.application_id,
       user_id: formData.user_id,
       job_id: formData.job_id,
       applicant: formData.applicant,
@@ -326,6 +325,7 @@ const Interview: React.FC = () => {
   const handleAddInterview = (applicant: any) => {
     setFormMode('add');
     setFormData({
+      application_id: applicant.id,
       user_id: applicant.user_id,
       applicant: applicant.name,
       job_id: applicant.job_id,
