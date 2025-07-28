@@ -2,8 +2,26 @@ import { useState, useEffect } from "react";
 import styles from "./Applicants.module.css";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { Eye, Mail } from "lucide-react"; 
+import { Eye, Mail, Printer } from "lucide-react"; 
 import TiptapEditor from "../../components/TiptapEditor/TiptapEditor";
+import jsPDF from "jspdf";
+import {
+  personalParticularsFields,
+  sgAddressFields,
+  overseasAddressFields,
+  militaryServiceFields,
+  educationBackgroundFields,
+  scholarshipAwardsFields,
+  otherQualificationsFields,
+  workExperienceFields,
+  teachingExperienceFields,
+  skillsFields,
+  languagesFields,
+  familyBackgroundFields,
+  emergencyContactFields,
+  referencesFields,
+  applicationInformationFields
+} from "../../utils/FormFields";
 
 const Applicants = () => {
   const [search, setSearch] = useState("");
@@ -59,6 +77,1306 @@ const Applicants = () => {
     { key: "q11", label: "Leadership Qualities", desc: "(Sufficient education, grades of relevant subjects, appropriate qualifications for the job)" },
     { key: "q12", label: "Job Stability", desc: "(Steady employment record, job-hopper)" }
   ];
+
+  // Helper to fetch full details for an applicant
+  async function fetchFullDetails(userId: number) {
+    const token = localStorage.getItem("token");
+    const res = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/application-full-details?userId=${userId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const data = await res.json();
+    if (!data.success) throw new Error("Failed to fetch application details");
+    return data.data;
+  }
+
+  function checkPageBreak(doc: jsPDF, y: number, minSpace: number = 60) {
+    const topMargin = 40;
+    const bottomMargin = 40; // Set your desired bottom margin here
+    const pageHeight = doc.internal.pageSize.getHeight();
+    if (y + minSpace > pageHeight - bottomMargin) {
+      doc.addPage();
+      return topMargin; // Reset y to top margin for new page
+    }
+    return y;
+  }
+
+  
+  async function handlePrintApplicationForm(userId: number) {
+    try {
+      const details = await fetchFullDetails(userId);
+
+      // Fetch job title using job_id
+        let jobTitle = "Unknown Position";
+      if (details.job_id) {
+        try {
+          const token = localStorage.getItem("token");
+          const jobRes = await fetch(
+            `${import.meta.env.VITE_BACKEND_URL}/jobs/${details.job_id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const jobData = await jobRes.json();
+          if (jobData.success && jobData.data && jobData.data.title) {
+            jobTitle = jobData.data.title;
+          }
+        } catch {
+          jobTitle = "Unknown Position";
+        }
+      }
+  
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      let y = 40;
+  
+      // Header
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      // Draw header border
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24); // Border for header
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F"); // Fill header background
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("PERSONAL PARTICULARS", 45, y + 17);
+      y += 24;
+  
+      // Multi-column layout settings
+      const startX = 40;
+      const rowHeight = 40;
+      // Custom column widths for each row
+      const rows = [
+        // Row 1: Full Name (wider), Alias, Gender, Age
+        [
+          { width: 220, name: "full_name" },
+          { width: 90, name: "alias" },
+          { width: 100, name: "gender" },
+          { width: 110, name: "status_in_sg" }
+
+        ],
+        // Row 2: Email Address (wider), Nationality, Race, Marital Status
+        [
+          { width: 220, name: "email" },
+          { width: 90, name: "nationality" },
+          { width: 100, name: "race" },
+          { width: 110, name: "marital_status" }
+        ],
+        // Row 3: NRIC, Country of Birth, Religion, Dialect
+        [
+          { width: 130, name: "nric" },
+          { width: 130, name: "country_of_birth" },
+          { width: 130, name: "religion" },
+          { width: 130, name: "dialect" }
+        ],
+        // Row 4: Date of Birth, Passport No., Passport Expiry
+        [
+          { width: 180, name: "date_of_birth" },
+          { width: 160, name: "passport_no" },
+          { width: 180, name: "passport_expiry" },
+        ]
+      ];
+  
+      // Map field names to labels for easy lookup
+      const labelMap = Object.fromEntries(
+        personalParticularsFields.map(f => [f.name, f.label])
+      );
+
+      // Parse personal particulars from details
+      let personalParticulars: Record<string, any> = {};
+      if (details.personal_particulars) {
+        try {
+          personalParticulars = JSON.parse(details.personal_particulars);
+        } catch {
+          personalParticulars = {};
+        }
+      }
+  
+      rows.forEach(row => {
+        let x = startX;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+      
+        // First, measure each cell's content height and format answer
+        row.forEach(cell => {
+          let answer = personalParticulars[cell.name] || "";
+          if (
+            cell.name === "date_of_birth" ||
+            cell.name === "passport_expiry"
+          ) {
+            // Format yyyy-mm-dd to dd-mm-yyyy
+            const match = answer.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (match) {
+              answer = `${match[3]}-${match[2]}-${match[1]}`;
+            }
+          }
+          formattedAnswers.push(answer);
+      
+          // Measure label height
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(labelMap[cell.name] || cell.name, cell.width - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          // Measure answer height
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, cell.width - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          // Total cell height needed
+          cellHeights.push(labelHeight + answerHeight + 8); // +8 for padding
+        });
+      
+        // Use the tallest cell for the row height
+        const dynamicRowHeight = Math.max(...cellHeights, rowHeight);
+      
+        // Draw cells
+        x = startX;
+        row.forEach((cell, idx) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, cell.width, dynamicRowHeight);
+      
+          // Draw label
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(labelMap[cell.name] || cell.name, cell.width - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          // Draw answer (use formattedAnswers)
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[idx], cell.width - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += cell.width;
+        });
+      y += dynamicRowHeight;
+      });
+
+      // --- Application Information ---
+      let applicationInfo: Record<string, any> = {};
+      if (details.apply_info) {
+        try {
+          applicationInfo = JSON.parse(details.apply_info);
+        } catch {
+          applicationInfo = {};
+        }
+      }
+      
+      // Get job title from details.job_title (joined from tbl_jobs), fallback to job_id if needed
+
+      // Print APPLICATION INFORMATION section
+      y = checkPageBreak(doc, y, 24);
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24);
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("APPLICATION INFORMATION", 45, y + 17);
+      y += 24;
+      
+      // Split into two rows
+      const appFieldsRow1 = [
+        { label: "Job Title", name: "job_title" },
+        { label: "Current Salary ($)", name: "currentSalary" },
+        { label: "Expected Salary ($)", name: "expectedSalary" },
+        { label: "Earliest Starting Date", name: "earliestStartingDate" }
+      ];
+      const colWidthsRow1 = [160, 120, 120, 120]; // total 520
+      
+      const appFieldsRow2 = [
+        { label: "Source Obtained From", name: "sourceObtainedFrom" },
+        { label: "Total Work Experience (years)", name: "totalWorkExperience" },
+        { label: "Relevant Work Experience (years)", name: "relevantWorkExperience" }
+      ];
+      const colWidthsRow2 = [160, 180, 180]; // total 480
+
+      // Row 1
+      let formattedAnswersRow1: string[] = appFieldsRow1.map(field => {
+        if (field.name === "job_title") return jobTitle;
+        return applicationInfo[field.name] || "";
+      });
+      let cellHeightsRow1: number[] = [];
+      appFieldsRow1.forEach((field, i) => {
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        const labelLines = doc.splitTextToSize(field.label, colWidthsRow1[i] - 10);
+        const labelHeight = labelLines.length * 12;
+      
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        const answerLines = doc.splitTextToSize(formattedAnswersRow1[i], colWidthsRow1[i] - 10);
+        const answerHeight = answerLines.length * 14;
+      
+        cellHeightsRow1.push(labelHeight + answerHeight + 8);
+      });
+      const dynamicRowHeight1 = Math.max(...cellHeightsRow1, 40);
+      y = checkPageBreak(doc, y, dynamicRowHeight1);
+      
+      let x = 40;
+      appFieldsRow1.forEach((field, i) => {
+        doc.setDrawColor(100);
+        doc.rect(x, y, colWidthsRow1[i], dynamicRowHeight1);
+      
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        const labelLines = doc.splitTextToSize(field.label, colWidthsRow1[i] - 10);
+        doc.text(labelLines, x + 5, y + 13);
+      
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        const answerLines = doc.splitTextToSize(formattedAnswersRow1[i], colWidthsRow1[i] - 10);
+        doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+        x += colWidthsRow1[i];
+      });
+      y += dynamicRowHeight1;
+      
+      // Row 2
+      let formattedAnswersRow2: string[] = appFieldsRow2.map(field => applicationInfo[field.name] || "");
+      let cellHeightsRow2: number[] = [];
+      appFieldsRow2.forEach((field, i) => {
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        const labelLines = doc.splitTextToSize(field.label, colWidthsRow2[i] - 10);
+        const labelHeight = labelLines.length * 12;
+      
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        const answerLines = doc.splitTextToSize(formattedAnswersRow2[i], colWidthsRow2[i] - 10);
+        const answerHeight = answerLines.length * 14;
+      
+        cellHeightsRow2.push(labelHeight + answerHeight + 8);
+      });
+      const dynamicRowHeight2 = Math.max(...cellHeightsRow2, 40);
+      y = checkPageBreak(doc, y, dynamicRowHeight2);
+      
+      x = 40;
+      appFieldsRow2.forEach((field, i) => {
+        doc.setDrawColor(100);
+        doc.rect(x, y, colWidthsRow2[i], dynamicRowHeight2);
+      
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        const labelLines = doc.splitTextToSize(field.label, colWidthsRow2[i] - 10);
+        doc.text(labelLines, x + 5, y + 13);
+      
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        const answerLines = doc.splitTextToSize(formattedAnswersRow2[i], colWidthsRow2[i] - 10);
+        doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+        x += colWidthsRow2[i];
+      });
+      y += dynamicRowHeight2;
+      
+      // Parse Singapore address
+      let sgAddress: Record<string, any> = {};
+      if (details.singapore_address) {
+        try {
+          sgAddress = JSON.parse(details.singapore_address);
+        } catch {
+          sgAddress = {};
+        }
+      }
+      
+      // Print SINGAPORE ADDRESS section
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      // Draw header border
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24); // Border for header
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F"); // Fill header background
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("SINGAPORE ADDRESS", 45, y + 17);
+      y += 24;
+      
+      // Define suitable column widths for sgAddress (total 520)
+      const sgRows = [
+        [
+          { width: 100, name: "blk_no" },
+          { width: 180, name: "street_name" },
+          { width: 120, name: "unit_no" },
+          { width: 120, name: "postal_code" }
+        ],
+        [
+          { width: 260, name: "mobile_no" },
+          { width: 260, name: "home_no" }
+        ]
+      ];
+      
+      const sgLabelMap = Object.fromEntries(
+        sgAddressFields.map(f => [f.name, f.label])
+      );
+      
+      sgRows.forEach(row => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+      
+        // Measure each cell's content height and format answer
+        row.forEach(cell => {
+          let answer = sgAddress[cell.name] || "";
+          formattedAnswers.push(answer);
+      
+          // Measure label height
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(sgLabelMap[cell.name] || cell.name, cell.width - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          // Measure answer height
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, cell.width - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8); // +8 for padding
+        });
+      
+        // Use the tallest cell for the row height
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+      
+        // Draw cells
+        x = 40;
+        row.forEach((cell, idx) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, cell.width, dynamicRowHeight);
+      
+          // Draw label
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(sgLabelMap[cell.name] || cell.name, cell.width - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          // Draw answer
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[idx], cell.width - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += cell.width;
+        });
+        y += dynamicRowHeight;
+      });
+      
+      // Parse Overseas address
+      let overseasAddress: Record<string, any> = {};
+      if (details.overseas_address) {
+        try {
+          overseasAddress = JSON.parse(details.overseas_address);
+        } catch {
+          overseasAddress = {};
+        }
+      }
+      
+      // Print OVERSEAS ADDRESS section
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      // Draw header border
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24); // Border for header
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F"); // Fill header background
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("OVERSEAS ADDRESS", 45, y + 17);
+      y += 24;
+
+      
+      // Define suitable column widths for overseasAddress (total 520)
+      const overseasRows = [
+        [
+          { width: 100, name: "blk_or_house_no" },
+          { width: 180, name: "street_name" },
+          { width: 120, name: "building_name" },
+          { width: 120, name: "city" }
+        ],
+        [
+          { width: 130, name: "state_or_province" },
+          { width: 130, name: "country" },
+          { width: 130, name: "postal_code" },
+          { width: 130, name: "mobile_number" }
+        ],
+        [
+          { width: 260, name: "home_number" }
+        ]
+      ];
+      
+      const overseasLabelMap = Object.fromEntries(
+        overseasAddressFields.map(f => [f.name, f.label])
+      );
+      
+      overseasRows.forEach(row => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+      
+        // Measure each cell's content height and format answer
+        row.forEach(cell => {
+          let answer = overseasAddress[cell.name] || "";
+          formattedAnswers.push(answer);
+      
+          // Measure label height
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(overseasLabelMap[cell.name] || cell.name, cell.width - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          // Measure answer height
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, cell.width - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8); // +8 for padding
+        });
+      
+        // Use the tallest cell for the row height
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+      
+        // Draw cells
+        x = 40;
+        row.forEach((cell, idx) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, cell.width, dynamicRowHeight);
+      
+          // Draw label
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(overseasLabelMap[cell.name] || cell.name, cell.width - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          // Draw answer
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[idx], cell.width - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += cell.width;
+        });
+        y += dynamicRowHeight;
+      });
+      
+      // Parse Military Service
+      let militaryService: Record<string, any> = {};
+      if (details.military_service) {
+        try {
+          militaryService = JSON.parse(details.military_service);
+        } catch {
+          militaryService = {};
+        }
+      }
+      
+      // Print MILITARY SERVICE section
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      // Draw header border
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24); // Border for header
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F"); // Fill header background
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("MILITARY SERVICE", 45, y + 17);
+      y += 24;
+      
+      // Define suitable column widths for militaryService (total 520)
+      const militaryRows = [
+        [
+          { width: 130, name: "ns_status" },
+          { width: 130, name: "service_from_year" },
+          { width: 130, name: "service_from_month" },
+          { width: 130, name: "service_to_year" }
+        ],
+        [
+          { width: 130, name: "service_to_month" },
+          { width: 130, name: "rank" },
+          { width: 130, name: "unit" },
+          { width: 130, name: "vocation" }
+        ],
+        [
+          { width: 130, name: "next_camp_date" },
+          { width: 130, name: "is_operationally_ready" },
+          { width: 130, name: "nsman_unit" },
+          { width: 130, name: "nsman_vocation" }
+        ],
+        [
+          { width: 520, name: "ns_exemption_reason" }
+        ]
+      ];
+      
+      const militaryLabelMap = Object.fromEntries(
+        militaryServiceFields.map(f => [f.name, f.label])
+      );
+      
+      militaryRows.forEach(row => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+      
+        // Measure each cell's content height and format answer
+        row.forEach(cell => {
+          let answer = militaryService[cell.name] || "";
+          // Format date if needed
+          if (cell.name.toLowerCase().includes("date")) {
+            const match = answer.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (match) {
+              answer = `${match[3]}-${match[2]}-${match[1]}`;
+            }
+          }
+          formattedAnswers.push(answer);
+      
+          // Measure label height
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(militaryLabelMap[cell.name] || cell.name, cell.width - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          // Measure answer height
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, cell.width - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8); // +8 for padding
+        });
+      
+        // Use the tallest cell for the row height
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+      
+        // Draw cells
+        x = 40;
+        row.forEach((cell, idx) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, cell.width, dynamicRowHeight);
+      
+          // Draw label
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(militaryLabelMap[cell.name] || cell.name, cell.width - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          // Draw answer
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[idx], cell.width - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += cell.width;
+        });
+        y += dynamicRowHeight;
+      });
+      
+      // Parse Education Background
+      let educationBackground: Record<string, any>[] = [];
+      if (details.education_background) {
+        try {
+          educationBackground = JSON.parse(details.education_background);
+        } catch {
+          educationBackground = [];
+        }
+      }
+      
+      // Print EDUCATION BACKGROUND section
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24); // Border for header
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("EDUCATION BACKGROUND", 45, y + 17);
+      y += 24;
+      
+      // Print each education record in a table-like format
+      educationBackground.forEach((edu) => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+        const eduFields = educationBackgroundFields;
+        const colWidths = [60, 100, 120, 120, 60, 60]; // Adjust as needed, total 520
+      
+        eduFields.forEach((field, i) => {
+          let answer = edu[field.name] || "";
+          formattedAnswers.push(answer);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, colWidths[i] - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8);
+        });
+      
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+        y = checkPageBreak(doc, y, dynamicRowHeight);
+      
+        x = 40;
+        eduFields.forEach((field, i) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, colWidths[i], dynamicRowHeight);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[i], colWidths[i] - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += colWidths[i];
+        });
+        y += dynamicRowHeight;
+      });
+      
+      // --- Scholarship & Awards ---
+      let scholarshipAwards: Record<string, any>[] = [];
+      if (details.scholarship_awards) {
+        try {
+          scholarshipAwards = JSON.parse(details.scholarship_awards);
+        } catch {
+          scholarshipAwards = [];
+        }
+      }
+      
+      y = checkPageBreak(doc, y, 24);
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24);
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("SCHOLARSHIP & AWARDS", 45, y + 17);
+      y += 24;
+      
+      scholarshipAwards.forEach((award) => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+        const awardFields = scholarshipAwardsFields;
+        const colWidths = [100, 120, 80, 55, 55, 55, 55]; // Adjust as needed
+      
+        awardFields.forEach((field, i) => {
+          let answer = award[field.name] || "";
+          formattedAnswers.push(answer);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, colWidths[i] - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8);
+        });
+      
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+        y = checkPageBreak(doc, y, dynamicRowHeight);
+
+        x = 40;
+        awardFields.forEach((field, i) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, colWidths[i], dynamicRowHeight);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[i], colWidths[i] - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += colWidths[i];
+        });
+        y += dynamicRowHeight;
+      });
+      
+      // --- Other Qualifications ---
+      let otherQualifications: Record<string, any>[] = [];
+      if (details.other_qualifications) {
+        try {
+          otherQualifications = JSON.parse(details.other_qualifications);
+        } catch {
+          otherQualifications = [];
+        }
+      }
+      
+      y = checkPageBreak(doc, y, 24);
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24);
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("OTHER QUALIFICATIONS", 45, y + 17);
+      y += 24;
+      
+      otherQualifications.forEach((qual) => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+        const qualFields = otherQualificationsFields;
+        const colWidths = [100, 120, 80, 55, 55, 55, 55]; // Adjust as needed
+      
+        qualFields.forEach((field, i) => {
+          let answer = qual[field.name] || "";
+          formattedAnswers.push(answer);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, colWidths[i] - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8);
+        });
+      
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+        y = checkPageBreak(doc, y, dynamicRowHeight);
+      
+        x = 40;
+        qualFields.forEach((field, i) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, colWidths[i], dynamicRowHeight);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[i], colWidths[i] - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += colWidths[i];
+        });
+        y += dynamicRowHeight;
+      }); 
+      
+      
+      // Parse Work Experience
+      let workExperience: Record<string, any>[] = [];
+      if (details.work_experience) {
+        try {
+          workExperience = JSON.parse(details.work_experience);
+        } catch {
+          workExperience = [];
+        }
+      }
+      
+      // Print WORK EXPERIENCE section
+      y = checkPageBreak(doc, y, 24);
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24); // Border for header
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("WORK EXPERIENCE", 45, y + 17);
+      y += 24;
+      
+      workExperience.forEach((exp) => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+        const expFields = workExperienceFields;
+        const colWidths = [100, 80, 80, 55, 55, 55, 55, 90]; // Adjust as needed, total 520
+      
+        expFields.forEach((field, i) => {
+          let answer = exp[field.name] || "";
+          formattedAnswers.push(answer);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, colWidths[i] - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8);
+        });
+      
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+        y = checkPageBreak(doc, y, dynamicRowHeight);
+      
+        x = 40;
+        expFields.forEach((field, i) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, colWidths[i], dynamicRowHeight);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[i], colWidths[i] - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += colWidths[i];
+        });
+        y += dynamicRowHeight;
+      });
+      
+      // Parse Teaching Experience
+      let teachingExperience: Record<string, any>[] = [];
+      if (details.teaching_experience) {
+        try {
+          teachingExperience = JSON.parse(details.teaching_experience);
+        } catch {
+          teachingExperience = [];
+        }
+      }
+      
+      // Print TEACHING EXPERIENCE section
+      y = checkPageBreak(doc, y, 24);
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24); // Border for header
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("TEACHING EXPERIENCE", 45, y + 17);
+      y += 24;
+      
+      teachingExperience.forEach((teach) => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+        const teachFields = teachingExperienceFields;
+        const colWidths = [120, 80, 80, 55, 55, 55, 55]; // Adjust as needed, total 520
+      
+        teachFields.forEach((field, i) => {
+          let answer = teach[field.name] || "";
+          formattedAnswers.push(answer);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, colWidths[i] - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8);
+        });
+      
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+        y = checkPageBreak(doc, y, dynamicRowHeight);
+      
+        x = 40;
+        teachFields.forEach((field, i) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, colWidths[i], dynamicRowHeight);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[i], colWidths[i] - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += colWidths[i];
+        });
+        y += dynamicRowHeight;
+      });
+      
+      // --- Skills ---
+      let skills: Record<string, any>[] = [];
+      if (details.skills) {
+        try {
+          skills = JSON.parse(details.skills);
+        } catch {
+          skills = [];
+        }
+      }
+      
+      y = checkPageBreak(doc, y, 24);
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24);
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("SKILLS", 45, y + 17);
+      y += 24;
+      
+      skills.forEach((skill) => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+        const skillFields = skillsFields;
+        const colWidths = [260, 260]; // Two columns, total 520
+      
+        skillFields.forEach((field, i) => {
+          let answer = skill[field.name] || "";
+          formattedAnswers.push(answer);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, colWidths[i] - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8);
+        });
+      
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+        y = checkPageBreak(doc, y, dynamicRowHeight);
+      
+        x = 40;
+        skillFields.forEach((field, i) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, colWidths[i], dynamicRowHeight);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[i], colWidths[i] - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += colWidths[i];
+        });
+        y += dynamicRowHeight;
+      });
+      
+      // --- Languages ---
+      let languages: Record<string, any>[] = [];
+      if (details.languages) {
+        try {
+          languages = JSON.parse(details.languages);
+        } catch {
+          languages = [];
+        }
+      }
+      
+      y = checkPageBreak(doc, y, 24);
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24);
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("LANGUAGES", 45, y + 17);
+      y += 24;
+      
+      languages.forEach((lang) => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+        const langFields = languagesFields;
+        const colWidths = [130, 130, 130, 130]; // Four columns, total 520
+
+        langFields.forEach((field, i) => {
+          let answer = lang[field.name] || "";
+          formattedAnswers.push(answer);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, colWidths[i] - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8);
+        });
+      
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+        y = checkPageBreak(doc, y, dynamicRowHeight);
+      
+        x = 40;
+        langFields.forEach((field, i) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, colWidths[i], dynamicRowHeight);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[i], colWidths[i] - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += colWidths[i];
+        });
+        y += dynamicRowHeight;
+      });
+
+      // --- Family Background ---
+      let familyBackground: Record<string, any>[] = [];
+      if (details.family_background) {
+        try {
+          familyBackground = JSON.parse(details.family_background);
+        } catch {
+          familyBackground = [];
+        }
+      }
+      
+      y = checkPageBreak(doc, y, 24);
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24);
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("FAMILY BACKGROUND", 45, y + 17);
+      y += 24;
+      
+      familyBackground.forEach((fam) => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+        const famFields = familyBackgroundFields;
+        const colWidths = [120, 100, 60, 120, 120]; // Five columns, total 520
+      
+        famFields.forEach((field, i) => {
+          let answer = fam[field.name] || "";
+          formattedAnswers.push(answer);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, colWidths[i] - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8);
+        });
+      
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+        y = checkPageBreak(doc, y, dynamicRowHeight);
+      
+        x = 40;
+        famFields.forEach((field, i) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, colWidths[i], dynamicRowHeight);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[i], colWidths[i] - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += colWidths[i];
+        });
+        y += dynamicRowHeight;
+      });
+      
+      // --- Emergency Contact ---
+      let emergencyContact: Record<string, any>[] = [];
+      if (details.emergency_contact) {
+        try {
+          emergencyContact = JSON.parse(details.emergency_contact);
+        } catch {
+          emergencyContact = [];
+        }
+      }
+      
+      y = checkPageBreak(doc, y, 24);
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24);
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("EMERGENCY CONTACT", 45, y + 17);
+      y += 24;
+      
+      emergencyContact.forEach((contact) => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+        const contactFields = emergencyContactFields;
+        const colWidths = [173, 173, 174]; // Three columns, total 520
+      
+        contactFields.forEach((field, i) => {
+          let answer = contact[field.name] || "";
+          formattedAnswers.push(answer);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, colWidths[i] - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8);
+        });
+      
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+        y = checkPageBreak(doc, y, dynamicRowHeight);
+      
+        x = 40;
+        contactFields.forEach((field, i) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, colWidths[i], dynamicRowHeight);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[i], colWidths[i] - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += colWidths[i];
+        });
+        y += dynamicRowHeight;
+      });
+  
+      // --- References ---
+      let references: Record<string, any>[] = [];
+      if (details.references) {
+        try {
+          references = JSON.parse(details.references);
+        } catch {
+          references = [];
+        }
+      }
+      
+      y = checkPageBreak(doc, y, 24);
+      doc.setFontSize(18);
+      doc.setFillColor(180, 180, 180);
+      doc.setDrawColor(100);
+      doc.rect(40, y, 520, 24);
+      doc.setFillColor(180, 180, 180);
+      doc.rect(40, y, 520, 24, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text("REFERENCES", 45, y + 17);
+      y += 24;
+      
+      references.forEach((ref) => {
+        let x = 40;
+        let cellHeights: number[] = [];
+        let formattedAnswers: string[] = [];
+        const refFields = referencesFields;
+        const colWidths = [130, 130, 130, 130]; // Four columns, total 520
+      
+        refFields.forEach((field, i) => {
+          let answer = ref[field.name] || "";
+          formattedAnswers.push(answer);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          const labelHeight = labelLines.length * 12;
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(answer, colWidths[i] - 10);
+          const answerHeight = answerLines.length * 14;
+      
+          cellHeights.push(labelHeight + answerHeight + 8);
+        });
+      
+        const dynamicRowHeight = Math.max(...cellHeights, 40);
+        y = checkPageBreak(doc, y, dynamicRowHeight);
+      
+        x = 40;
+        refFields.forEach((field, i) => {
+          doc.setDrawColor(100);
+          doc.rect(x, y, colWidths[i], dynamicRowHeight);
+      
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const labelLines = doc.splitTextToSize(field.label, colWidths[i] - 10);
+          doc.text(labelLines, x + 5, y + 13);
+      
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "normal");
+          const answerLines = doc.splitTextToSize(formattedAnswers[i], colWidths[i] - 10);
+          doc.text(answerLines, x + 5, y + 13 + labelLines.length * 12 + 5);
+      
+          x += colWidths[i];
+        });
+        y += dynamicRowHeight;
+      });
+
+      
+
+      // Show preview
+      const pdfBlob = doc.output("blob");
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      window.open(pdfUrl, "_blank");
+    } catch (e) {
+      const errorMessage = (e instanceof Error) ? e.message : String(e);
+      alert("Failed to generate form: " + errorMessage);
+    }
+  }
 
   // Fetch managers on mount
   useEffect(() => {
@@ -429,6 +1747,14 @@ const Applicants = () => {
                             >
                               <Mail size={14} />
                             </button>
+
+                            <button
+                              className={styles.actionBtn}
+                              onClick={() => handlePrintApplicationForm(applicant.user_id)}
+                              title="Print Application Form"
+                            >
+                              <Printer size={14} />
+                            </button>
                           </div>
                         </td>
                         <td>
@@ -499,7 +1825,7 @@ const Applicants = () => {
                               </button>
                             </div>
                           ) : (
-                            <span style={{ color: "#888" }}>Available when status is “Reviewing" or "Assessed"</span>
+                            <span style={{ color: "#888" }}>N/A</span>
                           )}
                         </td>
                         <td>

@@ -61,7 +61,6 @@ const HRNavbar: React.FC = () => {
         <Link to="/hr/applicants" className={styles.navbarLink}>Applications</Link>
         <Link to="/hr/post-job" className={styles.navbarLink}>Post Jobs</Link>
         <Link to="/hr/interview" className={styles.navbarLink}>Interviews</Link>
-        <Link to="/hr/application-form" className={styles.navbarLink}>Print Application Form</Link>
       </div>
 
       <div className={styles.navbarRight}>

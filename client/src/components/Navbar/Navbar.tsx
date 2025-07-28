@@ -102,7 +102,6 @@ const Navbar: React.FC = () => {
         <Link to="/home" className={styles.navbarLink}>Home</Link>
         <Link to="/available-jobs" className={styles.navbarLink}>Available Jobs</Link>
         <Link to="/jobs-applied" className={styles.navbarLink}>Jobs Applied</Link>
-        <Link to="/print-application" className={styles.navbarLink}>Print Application Form</Link>
       </div>
 
       <div className={styles.navbarRight}>

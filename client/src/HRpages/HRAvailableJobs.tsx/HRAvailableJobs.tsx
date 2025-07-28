@@ -73,8 +73,12 @@ const HRAvailableJobs: React.FC = () => {
     setIsDeleting(true);
 
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/jobs/${editingJob.job_id}`
+        `${import.meta.env.VITE_BACKEND_URL}/jobs/${editingJob.job_id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
       );
 
       if (response.data.success) {
@@ -178,6 +182,7 @@ const HRAvailableJobs: React.FC = () => {
     setIsUpdating(true);
 
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/jobs/${editingJob.job_id}`,
         {
@@ -189,6 +194,9 @@ const HRAvailableJobs: React.FC = () => {
           jobRequirements: editFormData.jobRequirements,
           jobResponsibilities: editFormData.jobResponsibilities,
           seekersRequired: parseInt(editFormData.seekersRequired)
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
 
@@ -229,7 +237,10 @@ const HRAvailableJobs: React.FC = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/jobs`);
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/jobs`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         if (response.data.success) {
           setJobs(response.data.data);
           setFilteredJobs(response.data.data);

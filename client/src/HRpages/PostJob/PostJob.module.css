@@ -1124,6 +1124,7 @@
 /* Form Groups and Rows */
 .editFormGroup {
   margin-bottom: 1.5rem;
+
 }
 
 .editFormRow {
@@ -1156,6 +1157,7 @@
   transition: all 0.2s ease;
   background: white;
   color: black;
+  max-width: 795px;
 }
 
 .editFormInput:focus,
@@ -1374,4 +1376,14 @@
 
 :global(.dark) .cancelEditBtn:hover {
   background: #64748b;
+}
+
+.formError {
+  color: #ef4444;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
 }

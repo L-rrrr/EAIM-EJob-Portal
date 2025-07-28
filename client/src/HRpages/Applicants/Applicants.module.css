@@ -1371,11 +1371,6 @@
   border: 1px solid #475569;
 }
 
-:global(.dark) .assignBtn {
-  background: linear-gradient(90deg, #6366f1 0%, #1e40af 100%);
-  color: #fff;
-}
-
 :global(.dark) .assignBtn:disabled {
   background: #475569;
   color: #aaa;

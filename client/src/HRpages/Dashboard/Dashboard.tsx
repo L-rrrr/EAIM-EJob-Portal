@@ -88,7 +88,10 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/jobs`);
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/jobs`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         if (res.data.success) {
           setJobs(res.data.data);
         }

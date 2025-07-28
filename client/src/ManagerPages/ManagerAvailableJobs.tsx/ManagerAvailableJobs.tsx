@@ -66,7 +66,10 @@ const HRAvailableJobs: React.FC = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/jobs`);
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/jobs`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         if (response.data.success) {
           setJobs(response.data.data);
           setFilteredJobs(response.data.data);

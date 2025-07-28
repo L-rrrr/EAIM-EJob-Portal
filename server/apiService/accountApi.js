@@ -142,6 +142,20 @@ const getJobs = async (req, res) => {
   }
 };
 
+const getJobById = async (req, res) => {
+  try {
+    const job_id = req.params.id;
+    const sql = `SELECT * FROM tbl_jobs WHERE job_id = ? LIMIT 1`;
+    const jobs = await db.executeQuery(sql, [job_id]);
+    if (!jobs.length) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+    return res.status(200).json({ success: true, data: jobs[0] });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
 // Add this function to accountApi.js
 const deleteJob = async (req, res) => {
   try {
@@ -2680,6 +2694,29 @@ const submitApplication = async (req, res) => {
     ];
 
     const result = await db.executeQuery(insertSql, params);
+    
+      // After successful application insert
+    const userSql = `SELECT email, first_name, last_name FROM tbl_users WHERE user_id = ?`;
+    const userRows = await db.executeQuery(userSql, [user_id]);
+    const userEmail = userRows.length ? userRows[0].email : null;
+    const userName = userRows.length ? `${userRows[0].first_name} ${userRows[0].last_name}` : "Applicant";
+    
+    // Get job title for the email
+    const jobSql = `SELECT title FROM tbl_jobs WHERE job_id = ?`;
+    const jobRows = await db.executeQuery(jobSql, [job_id]);
+    const jobTitle = jobRows.length ? jobRows[0].title : "Unknown Position";
+    
+    // Send email notification
+    if (userEmail) {
+      await transporter.sendMail({
+        from: `"EAIM" <${process.env.SMTP_USER}>`,
+        to: userEmail,
+        subject: "Job Application Submitted",
+        html: `<p>Dear ${userName},</p>
+               <p>Your application for <strong>${jobTitle}</strong> has been submitted successfully.</p>
+               <p>Thank you for applying!</p>`
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -3101,6 +3138,40 @@ const scheduleInterview = async (req, res) => {
       interview_date || null,
       application_id
     ]);
+    
+    // Get applicant's email and name
+    const userSql = `SELECT email, first_name, last_name FROM tbl_users WHERE user_id = ?`;
+    const userRows = await db.executeQuery(userSql, [user_id]);
+    const userEmail = userRows.length ? userRows[0].email : null;
+    const userName = userRows.length ? `${userRows[0].first_name} ${userRows[0].last_name}` : "Applicant";
+    
+    // Get job title
+    const jobSql = `SELECT title FROM tbl_jobs WHERE job_id = ?`;
+    const jobRows = await db.executeQuery(jobSql, [job_id]);
+    const jobTitle = jobRows.length ? jobRows[0].title : "Unknown Position";
+    
+    // Compose interview details
+    const interviewDetails = `
+      <p>Dear ${userName},</p>
+      <p>Your interview for <strong>${jobTitle}</strong> has been scheduled.</p>
+      <ul>
+        <li><strong>Date:</strong> ${interview_date}</li>
+        <li><strong>Time:</strong> ${start_time} - ${end_time}</li>
+        <li><strong>Format:</strong> ${meeting_format}</li>
+        ${venue ? `<li><strong>Venue:</strong> ${venue}</li>` : ""}
+        ${additional_notes ? `<li><strong>Notes:</strong> ${additional_notes}</li>` : ""}
+      </ul>
+      <p>Please be prepared and contact us if you have any questions.</p>
+    `;
+    
+    if (userEmail) {
+      await transporter.sendMail({
+        from: `"EAIM" <${process.env.SMTP_USER}>`,
+        to: userEmail,
+        subject: "Interview Scheduled",
+        html: interviewDetails
+      });
+    }
 
     return res.status(201).json({ success: true, message: "Interview scheduled successfully" });
   } catch (e) {
@@ -3215,6 +3286,40 @@ const updateInterview = async (req, res) => {
       additional_notes || null,
       id
     ]);
+    
+    // Get applicant's email and name
+    const userSql = `SELECT email, first_name, last_name FROM tbl_users WHERE user_id = ?`;
+    const userRows = await db.executeQuery(userSql, [user_id]);
+    const userEmail = userRows.length ? userRows[0].email : null;
+    const userName = userRows.length ? `${userRows[0].first_name} ${userRows[0].last_name}` : "Applicant";
+    
+    // Get job title
+    const jobSql = `SELECT title FROM tbl_jobs WHERE job_id = ?`;
+    const jobRows = await db.executeQuery(jobSql, [job_id]);
+    const jobTitle = jobRows.length ? jobRows[0].title : "Unknown Position";
+    
+    // Compose interview details
+    const interviewDetails = `
+      <p>Dear ${userName},</p>
+      <p>Your interview for <strong>${jobTitle}</strong> has been updated. Please find the updated details below:</p>
+      <ul>
+        <li><strong>Date:</strong> ${interview_date}</li>
+        <li><strong>Time:</strong> ${start_time} - ${end_time}</li>
+        <li><strong>Format:</strong> ${meeting_format}</li>
+        ${venue ? `<li><strong>Venue:</strong> ${venue}</li>` : ""}
+        ${additional_notes ? `<li><strong>Notes:</strong> ${additional_notes}</li>` : ""}
+      </ul>
+      <p>Please be prepared and contact us if you have any questions.</p>
+    `;
+    
+    if (userEmail) {
+      await transporter.sendMail({
+        from: `"EAIM" <${process.env.SMTP_USER}>`,
+        to: userEmail,
+        subject: "Interview Scheduled",
+        html: interviewDetails
+      });
+    }
 
     return res.status(200).json({ success: true, message: "Interview updated successfully" });
   } catch (e) {
@@ -3596,10 +3701,23 @@ const saveApplicationFullDetails = async (req, res) => {
       work_experience, teaching_experience, skills, languages,
       family_background, emergency_contact, references, attachments, apply_info
     ]);
-    console.log("Saving application full details:", req.body);
     return res.status(200).json({ success: true, message: "Full application details saved." });
   } catch (e) {
-    console.error("Failed to save application full details:", e);
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
+const getApplicationFullDetails = async (req, res) => {
+  try {
+    // Allow admin/HR to fetch by userId param, otherwise use logged-in user
+    const user_id = req.query.userId || req.user.user_id;
+    const sql = `SELECT * FROM tbl_application_full_details WHERE user_id = ? ORDER BY created_at DESC LIMIT 1`;
+    const rows = await db.executeQuery(sql, [user_id]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: "No application details found." });
+    }
+    return res.status(200).json({ success: true, data: rows[0] });
+  } catch (e) {
     return res.status(500).json({ success: false, message: "Server error", error: e.message });
   }
 };
@@ -3766,6 +3884,40 @@ const assignManagerToApplication = async (req, res) => {
       WHERE application_id = ?
     `;
     await db.executeQuery(updateSql, [manager_id, application_id]);
+    
+    // Get manager's email and name
+    const managerSql = `SELECT email, first_name, last_name FROM tbl_users WHERE user_id = ?`;
+    const managerRows = await db.executeQuery(managerSql, [manager_id]);
+    const managerEmail = managerRows.length ? managerRows[0].email : null;
+    const managerName = managerRows.length ? `${managerRows[0].first_name} ${managerRows[0].last_name}` : "Manager";
+    
+    // Get applicant and job info for the email
+    const appSql = `
+      SELECT a.application_id, pp.full_name AS applicant_name, j.title AS job_title
+      FROM tbl_application a
+      LEFT JOIN tbl_personal_particulars pp ON a.user_id = pp.user_id
+      LEFT JOIN tbl_jobs j ON a.job_id = j.job_id
+      WHERE a.application_id = ?
+    `;
+    const appRows = await db.executeQuery(appSql, [application_id]);
+    const applicantName = appRows.length ? appRows[0].applicant_name : "Applicant";
+    const jobTitle = appRows.length ? appRows[0].job_title : "Unknown Position";
+    
+    // Compose email
+    const emailHtml = `
+      <p>Dear ${managerName},</p>
+      <p>You have been assigned to assess the application for <strong>${applicantName}</strong> (Position: <strong>${jobTitle}</strong>).</p>
+      <p>Please log in to the Manager portal and complete the assessment.</p>
+    `;
+    
+    if (managerEmail) {
+      await transporter.sendMail({
+        from: `"EAIM" <${process.env.SMTP_USER}>`,
+        to: managerEmail,
+        subject: "New Candidate Assessment Assigned",
+        html: emailHtml
+      });
+    }
     return res.status(200).json({ success: true, message: "Manager assigned to application." });
   } catch (e) {
     return res.status(500).json({ success: false, message: "Server error", error: e.message });
@@ -3997,7 +4149,8 @@ const reviewJobRequisition = async (req, res) => {
       jobResponsibilities,
       seekersRequired,
       requisition_status,
-      remarks
+      remarks,
+      hiringStatus
     } = req.body;
 
     if (!id || !requisition_status) {
@@ -4019,6 +4172,7 @@ const reviewJobRequisition = async (req, res) => {
         job_title = ?,
         job_category = ?,
         job_type = ?,
+        hiring_status = ?,
         job_requirements = ?,
         job_responsibilities = ?,
         seekers_required = ?,
@@ -4031,6 +4185,7 @@ const reviewJobRequisition = async (req, res) => {
       jobTitle !== undefined ? jobTitle : current.job_title,
       jobCategory !== undefined ? jobCategory : current.job_category,
       jobType !== undefined ? jobType : current.job_type,
+      hiringStatus !== undefined ? hiringStatus : current.hiring_status,
       jobRequirements !== undefined ? jobRequirements : current.job_requirements,
       jobResponsibilities !== undefined ? jobResponsibilities : current.job_responsibilities,
       seekersRequired !== undefined ? seekersRequired : current.seekers_required,
@@ -4129,6 +4284,7 @@ module.exports = {
   postJobs,
   updateJob,
   getJobs,
+  getJobById,
   deleteJob,
   bookmarkJob,
   getBookmarks,
@@ -4205,6 +4361,7 @@ module.exports = {
   getApplicationStatusStats,
   sendEmailToUser,
   saveApplicationFullDetails,
+  getApplicationFullDetails,
   getCountryList,
   saveJobRequisition,
   updateJobRequisition,

@@ -32,10 +32,11 @@ app.post("/api/request-register-code", authApi.requestRegisterCode);
 app.post("/api/verify-register-code", authApi.verifyRegisterCode);
 
 //Jobs endpoints
-app.post("/api/post-jobs", accountApi.postJobs);
-app.put("/api/jobs/:id", accountApi.updateJob);
-app.get("/api/jobs", accountApi.getJobs);
-app.delete("/api/jobs/:id", accountApi.deleteJob);
+app.post("/api/post-jobs", authenticateToken, accountApi.postJobs);
+app.put("/api/jobs/:id", authenticateToken, accountApi.updateJob);
+app.get("/api/jobs", authenticateToken, accountApi.getJobs);
+app.get("/api/jobs/:id", authenticateToken, accountApi.getJobById);
+app.delete("/api/jobs/:id", authenticateToken, accountApi.deleteJob);
 
 //Bookmarks endpoints
 app.post("/api/post-bookmarks", authenticateToken, accountApi.bookmarkJob);
@@ -170,6 +171,7 @@ app.post("/api/send-email", authenticateToken, accountApi.sendEmailToUser);
 
 // Save application full details endpoint
 app.post("/api/save-application-full-details", authenticateToken, accountApi.saveApplicationFullDetails);
+app.get("/api/application-full-details", authenticateToken, accountApi.getApplicationFullDetails);
 
 // Get country list endpoint
 app.get("/api/countries", authenticateToken, accountApi.getCountryList);
@@ -198,6 +200,7 @@ app.post("/api/save-assessment", authenticateToken, accountApi.saveAssessment);
 
 // Delete job requisition and post job endpoint
 app.post("/api/job-requisition/:id/post-job", authenticateToken, accountApi.postVerifiedRequisitionAsJob);
+
 
 
 app.listen(PORT, () => {

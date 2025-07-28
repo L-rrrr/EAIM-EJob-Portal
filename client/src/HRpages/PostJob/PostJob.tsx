@@ -118,6 +118,7 @@ const PostJob: React.FC = () => {
   const [reviewReq, setReviewReq] = useState<any>(null);
   const [reviewForm, setReviewForm] = useState<any>(null);
   const [reviewRemarks, setReviewRemarks] = useState("");
+  const [reviewError, setReviewError] = useState("");
 
   type Requisition = {
     job_requisition_id: string | number;
@@ -156,6 +157,10 @@ const PostJob: React.FC = () => {
     return `${day}-${month}-${year}`;
   }
 
+  function isEditorContentEmpty(html: string) {
+    return !html || html.replace(/<[^>]+>/g, '').trim() === '';
+  }
+
   const handleViewRequisition = async (req: Requisition) => {
     try {
       const token = localStorage.getItem("token");
@@ -182,8 +187,15 @@ const PostJob: React.FC = () => {
       );
       if (res.data.success) {
         setReviewReq(res.data.data);
-        setReviewForm({ ...res.data.data });
+        setReviewForm({
+          ...res.data.data,
+          hiring_status: res.data.data.hiring_status ?? "",
+          job_category: res.data.data.job_category ?? "",
+          job_type: res.data.data.job_type ?? "",
+          // Add other fields as needed
+        });
         setReviewRemarks(res.data.data.remarks || "");
+        setReviewError("");
       }
     } catch (err) {
       alert("Failed to load requisition details.");
@@ -193,15 +205,20 @@ const PostJob: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/post-jobs`, {
-        jobTitle,
-        jobCategory,
-        jobType,
-        hiringStatus,
-        jobRequirements: requirements,
-        jobResponsibilities: responsibilities,
-        seekersRequired,
-      });
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/post-jobs`,
+        {
+          jobTitle,
+          jobCategory,
+          jobType,
+          hiringStatus,
+          jobRequirements: requirements,
+          jobResponsibilities: responsibilities,
+          seekersRequired,
+        },
+        { headers: { Authorization: `Bearer ${token}` } } // <-- Add this line
+      );
       
       alert("Job posted successfully!");
       // Reset form
@@ -314,6 +331,7 @@ const PostJob: React.FC = () => {
                     onChange={(e) => setHiringStatus(e.target.value)} 
                     required
                   >
+                    <option value="" disabled>Select status</option>
                     <option value="Hiring">Hiring</option>
                     <option value="Not Hiring">Not Hiring</option>
                   </select>
@@ -344,6 +362,7 @@ const PostJob: React.FC = () => {
                     onChange={(e) => setJobType(e.target.value)} 
                     required
                   >
+                    <option value="" disabled>Select Type</option>
                     <option value="Full-Time">Full-Time</option>
                     <option value="Part-Time">Part-Time</option>
                     <option value="Freelance">Freelance</option>
@@ -666,41 +685,7 @@ const PostJob: React.FC = () => {
                   placeholder="Enter job title"
                 />
               </div>
-      
-              {/* Job Category and Type Row */}
-              <div className={styles.editFormRow}>
-                <div className={styles.editFormGroup}>
-                  <label className={styles.editFormLabel}>
-                    Job Category <span className={styles.required}>*</span>
-                  </label>
-                  <select
-                    className={styles.editFormSelect}
-                    value={reviewForm.job_category}
-                    onChange={e => setReviewForm({ ...reviewForm, job_category: e.target.value })}
-                  >
-                    <option value="">Select Category</option>
-                    <option value="operative">Operative</option>
-                    <option value="academic">Academic</option>
-                  </select>
-                </div>
-                <div className={styles.editFormGroup}>
-                  <label className={styles.editFormLabel}>
-                    Job Type <span className={styles.required}>*</span>
-                  </label>
-                  <select
-                    className={styles.editFormSelect}
-                    value={reviewForm.job_type}
-                    onChange={e => setReviewForm({ ...reviewForm, job_type: e.target.value })}
-                  >
-                    <option value="">Select Type</option>
-                    <option value="Full-Time">Full-Time</option>
-                    <option value="Part-Time">Part-Time</option>
-                    <option value="Contract">Contract</option>
-                    <option value="Freelance">Freelance</option>
-                  </select>
-                </div>
-              </div>
-      
+
               {/* Seekers Required */}
               <div className={styles.editFormGroup}>
                 <label className={styles.editFormLabel}>
@@ -716,9 +701,63 @@ const PostJob: React.FC = () => {
                 />
               </div>
       
+              {/* Job Category and Type Row */}
+              <div className={styles.editFormRow}>
+                <div className={styles.editFormGroup}>
+                  <label className={styles.editFormLabel}>
+                    Job Category <span className={styles.required}>*</span>
+                  </label>
+                  <select
+                    className={styles.editFormSelect}
+                    value={reviewForm.job_category}
+                    onChange={e => setReviewForm({ ...reviewForm, job_category: e.target.value })}
+                  >
+                    <option value="" disabled>Select Category</option>
+                    <option value="operative">Operative</option>
+                    <option value="academic">Academic</option>
+                  </select>
+                </div>
+                <div className={styles.editFormGroup}>
+                  <label className={styles.editFormLabel}>
+                    Job Type <span className={styles.required}>*</span>
+                  </label>
+                  <select
+                    className={styles.editFormSelect}
+                    value={reviewForm.job_type}
+                    onChange={e => setReviewForm({ ...reviewForm, job_type: e.target.value })}
+                  >
+                    <option value="" disabled>Select Type</option>
+                    <option value="Full-Time">Full-Time</option>
+                    <option value="Part-Time">Part-Time</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Freelance">Freelance</option>
+                  </select>
+                </div>
+
+                {/* Hiring Status */}
+                <div className={styles.editFormGroup}>
+                  <label className={styles.editFormLabel}>
+                    Hiring Status <span className={styles.required}>*</span>
+                  </label>
+                  <select
+                    className={styles.editFormSelect}
+                    value={reviewForm.hiring_status ?? ""}
+                    onChange={e => setReviewForm({ ...reviewForm, hiring_status: e.target.value })}
+                  >
+                    <option value="" disabled>Select status</option>
+                    <option value="Hiring">Hiring</option>
+                    <option value="Not Hiring">Not Hiring</option>
+                  </select>
+                </div>
+              </div>
+      
+              
+      
               {/* Job Responsibilities */}
               <div className={styles.editFormGroup}>
-                <label className={styles.editFormLabel}>Job Responsibilities</label>
+                <label className={styles.editFormLabel}>
+                  Job Responsibilities <span className={styles.required}>*</span>
+                </label>
                 <TiptapEditor
                   content={reviewForm.job_responsibilities}
                   onChange={content => setReviewForm({ ...reviewForm, job_responsibilities: content })}
@@ -728,7 +767,9 @@ const PostJob: React.FC = () => {
       
               {/* Job Requirements */}
               <div className={styles.editFormGroup}>
-                <label className={styles.editFormLabel}>Job Requirements</label>
+                <label className={styles.editFormLabel}>
+                  Job Requirements <span className={styles.required}>*</span>
+                </label>
                 <TiptapEditor
                   content={reviewForm.job_requirements}
                   onChange={content => setReviewForm({ ...reviewForm, job_requirements: content })}
@@ -747,18 +788,53 @@ const PostJob: React.FC = () => {
                 />
               </div>
             </div>
+
+            {reviewError && (
+              <div className={styles.formError}>
+                {reviewError}
+              </div>
+            )}
       
             {/* Edit Modal Footer */}
             <div className={styles.editModalFooter}>
               <div className={styles.editModalActions}>
+              
                 <button
                   className={styles.saveEditBtn}
                   onClick={async () => {
+                    // Validate required fields
+                    console.log({
+                      job_title: reviewForm.job_title,
+                      seekers_required: reviewForm.seekers_required,
+                      job_category: reviewForm.job_category,
+                      job_type: reviewForm.job_type,
+                      hiring_status: reviewForm.hiring_status,
+                      job_responsibilities: reviewForm.job_responsibilities,
+                      job_requirements: reviewForm.job_requirements,
+                    });
+
+                    if (
+                      !reviewForm.job_title?.trim() ||
+                      !reviewForm.seekers_required ||
+                      !reviewForm.job_category?.trim() ||
+                      !reviewForm.job_type?.trim() ||
+                      !reviewForm.hiring_status?.trim()
+                    ) {
+                      setReviewError("Please fill in all required fields marked with * before verifying.");
+                      return;
+                    }
+                    setReviewError(""); // Clear error if all fields are filled
                     const token = localStorage.getItem("token");
                     await axios.put(
                       `${import.meta.env.VITE_BACKEND_URL}/job-requisition/${reviewReq.job_requisition_id}/review`,
                       {
-                        ...reviewForm,
+                        jobTitle: reviewForm.job_title,
+                        jobCategory: reviewForm.job_category,
+                        jobType: reviewForm.job_type,
+                        hiringStatus: reviewForm.hiring_status,
+                        jobRequirements: reviewForm.job_requirements,
+                        jobResponsibilities: reviewForm.job_responsibilities,
+                        seekersRequired: reviewForm.seekers_required,
                         requisition_status: "Verified",
                         remarks: ""
                       },
@@ -783,6 +859,7 @@ const PostJob: React.FC = () => {
                       `${import.meta.env.VITE_BACKEND_URL}/job-requisition/${reviewReq.job_requisition_id}/review`,
                       {
                         ...reviewForm,
+                        hiringStatus: reviewForm.hiring_status,
                         requisition_status: "Return for Amendment",
                         remarks: reviewRemarks
                       },

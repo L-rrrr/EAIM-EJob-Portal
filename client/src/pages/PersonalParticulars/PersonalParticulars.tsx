@@ -466,7 +466,7 @@ type SelectField = {
       "Student Pass"
     ]
   },
-    { label: "Race", required: true, name: "race", type: "select", options: ["Chinese", "Malay", "Indian", "Others"] },
+    { label: "Race", required: true, name: "race", type: "select", options: ["Chinese", "Malay", "Indian", "Freethinker", "Others"] },
     { label: "Dialect", required: false, name: "dialect", type: "text" },
     { label: "Religion", required: true, name: "religion", type: "select", options: ["Buddhism", "Christianity", "Hinduism", "Islam", "Others"] },
     { label: "Country of Birth", required: true, name: "country_of_birth", type: "select", options: countryOptions },
