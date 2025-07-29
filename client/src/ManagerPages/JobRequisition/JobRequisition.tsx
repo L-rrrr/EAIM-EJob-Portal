@@ -130,6 +130,13 @@ const JobRequisition: React.FC = () => {
   const [selectedReq, setSelectedReq] = useState<any>(null);
   const [editReq, setEditReq] = useState<any>(null);
 
+  const getSingaporeDateString = () => {
+    const now = new Date();
+    // Singapore is UTC+8, so add 8 hours to UTC time
+    const sgTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    return sgTime.toISOString().slice(0, 10);
+  };
+
   useEffect(() => {
     const fetchRequisitions = async () => {
       try {
@@ -235,7 +242,7 @@ const JobRequisition: React.FC = () => {
               job_requirements: requirements,
               job_responsibilities: responsibilities,
               seekers_required: seekersRequired,
-              posting_date: new Date().toISOString().slice(0, 10),
+              posting_date: getSingaporeDateString(),
               requisition_status: "Pending",
             },
           ]);

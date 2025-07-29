@@ -1531,17 +1531,23 @@ const Applicants = () => {
     // Applied date filters
     if (appliedFrom) {
       const fromDate = new Date(appliedFrom);
+      fromDate.setHours(0, 0, 0, 0); // Ensure midnight
       filtered = filtered.filter(applicant => {
         const appliedDate = parseDate(applicant.applied);
-        return appliedDate && appliedDate >= fromDate;
+        if (!appliedDate) return false;
+        appliedDate.setHours(0, 0, 0, 0); // Ensure midnight
+        return appliedDate >= fromDate;
       });
     }
 
     if (appliedTo) {
       const toDate = new Date(appliedTo);
+      // Add one day to make 'to' inclusive
+      toDate.setDate(toDate.getDate() + 1);
       filtered = filtered.filter(applicant => {
         const appliedDate = parseDate(applicant.applied);
-        return appliedDate && appliedDate <= toDate;
+        // Inclusive: < toDate (which is one day after selected date)
+        return appliedDate && appliedDate < toDate;
       });
     }
 
@@ -1556,9 +1562,12 @@ const Applicants = () => {
 
     if (interviewTo) {
       const toDate = new Date(interviewTo);
+      // Add one day to make 'to' inclusive
+      toDate.setDate(toDate.getDate() + 1);
       filtered = filtered.filter(applicant => {
         const interviewDate = parseDate(applicant.interview);
-        return interviewDate && interviewDate <= toDate;
+        // Inclusive: < toDate
+        return interviewDate && interviewDate < toDate;
       });
     }
 

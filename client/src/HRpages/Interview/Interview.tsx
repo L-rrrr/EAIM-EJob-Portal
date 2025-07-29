@@ -123,6 +123,13 @@ const Interview: React.FC = () => {
     setFormData({ ...formData, [field]: value });
   };
 
+  const getSingaporeDateString = () => {
+    const now = new Date();
+    // Singapore is UTC+8, so add 8 hours to UTC time
+    const sgTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    return sgTime.toISOString().slice(0, 10);
+  };
+
   const fetchInterviews = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -188,58 +195,6 @@ const Interview: React.FC = () => {
       setJobList([]);
     }
   };
-
-
-  // const handleSave = () => {
-  //   const errors: { [key: string]: string } = {};
-  //   if (!formData.job) errors.job = "Job Position is required.";
-  //   if (!formData.applicant) errors.applicant = "Applicant is required.";
-  //   if (!formData.date) errors.date = "Interview Date is required.";
-  //   if (!formData.format) errors.format = "Meeting Format is required.";
-  //   if (!formData.startTime) errors.startTime = "Start Time is required.";
-  //   if (!formData.endTime) errors.endTime = "End Time is required.";
-  //   if (!addToCalendar) errors.addToCalendar = "Please select if you want to add to your calendar.";
-
-  //   setFieldErrors(errors);
-
-  //   if (Object.keys(errors).length > 0) {
-  //     return;
-  //   }
-
-  //   if (formMode === 'add') {
-  //     const newEvent: InterviewEvent = {
-  //       id: ++eventIdCounter,
-  //       title: `Interview with ${formData.applicant}`,
-  //       date: formData.date!,
-  //       startTime: formData.startTime!,
-  //       endTime: formData.endTime!,
-  //       job: formData.job!,
-  //       applicant: formData.applicant!,
-  //       format: formData.format!,
-  //       venue: formData.venue,
-  //       description: formData.description,
-  //     };
-  //     setEvents([...events, newEvent]);
-  //   } else if (formMode === 'edit' && selectedEvent) {
-  //     const updatedEvents = events.map((e) =>
-  //       e.id === selectedEvent.id
-  //         ? {
-  //             ...formData,
-  //             id: selectedEvent.id,
-  //             title: `Interview with ${formData.applicant}`,
-  //           } as InterviewEvent
-  //         : e
-  //     );
-  //     setEvents(updatedEvents);
-  //   }
-
-  //   setShowForm(false);
-  //   setFormData({});
-  //   setSelectedDate(null);
-  //   setClickedDate(null);
-  //   setAddToCalendar("");
-  //   setFieldErrors({});
-  // };
 
   const handleSave = async () => {
     const errors: { [key: string]: string } = {};
@@ -710,13 +665,14 @@ const upcomingInterviews = events
                     id="date"
                     className={`${styles.formInput} ${fieldErrors.date ? styles.inputError : ""}`}
                     value={formData.date || ''}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={getSingaporeDateString()} // Only allow today onwards in Singapore time
                     onChange={(e) => {
                       handleInputChange('date', e.target.value);
                       setFieldErrors({ ...fieldErrors, date: "" });
                     }}
                     required
                   />
+
                   {fieldErrors.date && (
                     <div className={styles.fieldError}>{fieldErrors.date}</div>
                   )}

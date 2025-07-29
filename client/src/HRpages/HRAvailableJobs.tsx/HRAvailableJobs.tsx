@@ -308,7 +308,9 @@ const HRAvailableJobs: React.FC = () => {
       filtered = filtered.filter(job => {
         const jobDate = new Date(job.posting_date);
         const toDate = new Date(dateTo);
-        return jobDate <= toDate;
+        // Add one day to toDate to make it inclusive
+        toDate.setDate(toDate.getDate() + 1);
+        return jobDate < toDate;
       });
     }
 

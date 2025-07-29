@@ -314,7 +314,7 @@ const Dashboard: React.FC = () => {
                     <tr>
                       <th>Name</th>
                       <th>Position</th>
-                      <th>Date</th>
+                      <th>Applied Date</th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -323,7 +323,7 @@ const Dashboard: React.FC = () => {
                       <tr key={index}>
                         <td>{applicant.name}</td>
                         <td>{applicant.job}</td>
-                        <td>{formatDate(applicant.applied)}</td>
+                        <td>{applicant.applied || "-"}</td>
                         <td>
                           <span className={`${styles.statusBadge} ${styles[applicant.status?.toLowerCase().replace(/\s+/g, '')]}`}>
                             {applicant.status}

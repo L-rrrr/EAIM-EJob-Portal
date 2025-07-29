@@ -77,6 +77,14 @@ const Apply: React.FC = () => {
     return null;
   };
 
+  const getSingaporeDateString = () => {
+    const now = new Date();
+    // Singapore is UTC+8, so add 8 hours to UTC time
+    const sgTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    return sgTime.toISOString().slice(0, 10);
+  };
+
+
   useEffect(() => {
     const fetchCompleteness = async () => {
       try {
@@ -571,6 +579,7 @@ const Apply: React.FC = () => {
                 <input
                   type="date"
                   className={styles.input}
+                  min={getSingaporeDateString()} 
                   value={positionDetails.earliestStartingDate}
                   onChange={(e) => {
                     const value = e.target.value;

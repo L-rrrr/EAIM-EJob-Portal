@@ -26,6 +26,14 @@ const PersonalParticulars: React.FC = () => {
     return years;
   };
 
+  const getSingaporeDateString = () => {
+    const now = new Date();
+    // Singapore is UTC+8, so add 8 hours to UTC time
+    const sgTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    // console.log("Singapore time:", sgTime.toISOString());
+    return sgTime.toISOString().slice(0, 10);
+  };
+
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -683,7 +691,7 @@ type MilitaryServiceKeys =
                         : ""
                       }
 
-                      max={name === "date_of_birth" ? new Date().toISOString().split('T')[0] : undefined} // <-- Only allow previous dates
+                      max={name === "date_of_birth" ? getSingaporeDateString() : undefined} // <-- Only allow previous dates
                       
                       onChange={(e) => {
                         const value = e.target.value;

@@ -48,7 +48,7 @@ const postJobs = async (req, res) => {
   const {jobTitle, jobCategory, jobType, hiringStatus,jobRequirements, jobResponsibilities, seekersRequired } = req.body;
 
   try {
-    const postingDate = new Date(Date.now() + 8 * 60 * 60 * 1000) // UTC+8
+    const postingDate = new Date(Date.now() + 8 * 60 * 60 * 1000) // UTC+8 (Singapore time)
       .toISOString()
       .slice(0, 19)
       .replace("T", " "); // format: 'YYYY-MM-DD HH:MM:SS'
@@ -2638,7 +2638,7 @@ const submitApplication = async (req, res) => {
     } = req.body;
 
     // Get current date for applied_date
-    const appliedDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const appliedDate = new Date(Date.now() + 8 * 60 * 60 * 1000); // Convert to Singapore time (UTC+8)
 
     // Handle file upload data
     let fileData = {
@@ -2861,10 +2861,9 @@ const getApplicants = async (req, res) => {
 // Helper function to format dates
 const formatDate = (dateString) => {
   if (!dateString) return "";
-  
+
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return "";
-  
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
@@ -3667,6 +3666,11 @@ const saveApplicationFullDetails = async (req, res) => {
       apply_info
     } = req.body;
 
+    const sgTime = new Date(Date.now() + 8 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " "); // format: 'YYYY-MM-DD HH:MM:SS'
+
     const sql = `
       INSERT INTO tbl_application_full_details (
         application_id, user_id, job_id,
@@ -3674,7 +3678,7 @@ const saveApplicationFullDetails = async (req, res) => {
         education_background, scholarship_awards, other_qualifications,
         work_experience, teaching_experience, skills, languages,
         family_background, emergency_contact, \`references\`, attachments, apply_info, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         personal_particulars = VALUES(personal_particulars),
         singapore_address = VALUES(singapore_address),
@@ -3691,7 +3695,8 @@ const saveApplicationFullDetails = async (req, res) => {
         emergency_contact = VALUES(emergency_contact),
         \`references\` = VALUES(\`references\`),
         attachments = VALUES(attachments),
-        apply_info = VALUES(apply_info)
+        apply_info = VALUES(apply_info),
+        created_at = VALUES(created_at)
     `;
 
     await db.executeQuery(sql, [
@@ -3699,7 +3704,7 @@ const saveApplicationFullDetails = async (req, res) => {
       personal_particulars, singapore_address, overseas_address, military_service,
       education_background, scholarship_awards, other_qualifications,
       work_experience, teaching_experience, skills, languages,
-      family_background, emergency_contact, references, attachments, apply_info
+      family_background, emergency_contact, references, attachments, apply_info, sgTime
     ]);
     return res.status(200).json({ success: true, message: "Full application details saved." });
   } catch (e) {
