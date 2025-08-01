@@ -173,6 +173,9 @@ app.post("/api/send-email", authenticateToken, accountApi.sendEmailToUser);
 app.post("/api/save-application-full-details", authenticateToken, accountApi.saveApplicationFullDetails);
 app.get("/api/application-full-details", authenticateToken, accountApi.getApplicationFullDetails);
 
+// Get application by ID endpoint
+app.get("/api/application/:id", authenticateToken, accountApi.getApplicationById);
+
 // Get country list endpoint
 app.get("/api/countries", authenticateToken, accountApi.getCountryList);
 
@@ -201,6 +204,9 @@ app.post("/api/save-assessment", authenticateToken, accountApi.saveAssessment);
 // Delete job requisition and post job endpoint
 app.post("/api/job-requisition/:id/post-job", authenticateToken, accountApi.postVerifiedRequisitionAsJob);
 
+// Find suitable candidates endpoint
+app.post("/api/ai/assess-candidates", authenticateToken, openaiApi.assessCandidatesForJob);
+app.get("/api/all-full-applicant-profiles", authenticateToken, accountApi.getAllFullApplicantProfiles);
 
 
 app.listen(PORT, () => {

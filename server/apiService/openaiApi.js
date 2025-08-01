@@ -117,6 +117,40 @@ const analyzeCandidateProfile = async (req, res) => {
   }
 };
 
+const assessCandidatesForJob = async (req, res) => {
+  try {
+    const { jobTitle, jobRequirements, jobResponsibilities, candidates } = req.body;
+
+    // Compose prompt for OpenAI
+    let prompt = `You are an HR expert. Here is a job opening:\n\nTitle: ${jobTitle}\nRequirements: ${jobRequirements}\nResponsibilities: ${jobResponsibilities}\n\nBelow are candidate profiles:\n`;
+
+    candidates.forEach((c, i) => {
+      prompt += `\nCandidate ${i + 1}:\nName: ${c.name}\nEmail: ${c.email}\nEducation: ${c.education}\nWork Experience: ${c.work}\nTeaching Experience: ${c.teaching}\nSkills: ${c.skills}\nLanguages: ${c.languages}\nQualifications: ${c.qualifications}\n`;
+    });
+
+    prompt += `\nBased on the job description and candidate profiles above, rank the candidates from most to least suitable for this position. For each candidate, briefly explain your reasoning.`;
+
+    // Call OpenAI API
+    const response = await client.responses.create({
+      model: "gpt-4.1",
+      input: prompt
+    });
+
+    return res.status(200).json({
+      success: true,
+      analysis: response.output_text
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to assess candidates",
+      error: error.message
+    });
+  }
+};
+
+
 module.exports = {
-  analyzeCandidateProfile
+  analyzeCandidateProfile,
+  assessCandidatesForJob
 };

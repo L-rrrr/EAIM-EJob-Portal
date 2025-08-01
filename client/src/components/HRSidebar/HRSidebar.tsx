@@ -9,6 +9,7 @@ import {
   Contact,
   Briefcase,
   BookOpen,
+  FileText
 } from "lucide-react";
 
 type Section = {
@@ -25,14 +26,16 @@ const HRSidebar: React.FC<HRSidebarProps> = ({ applicantName }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [searchParams] = useSearchParams();
   const userId = searchParams.get('userId');
+  const applicationId = searchParams.get('applicationId');
 
   // Update hrSections to include userId in the path
   const hrSections: Section[] = [
-    { label: "Personal Particulars", icon: <User size={16} />, path: `/hr/applicant-details/personal-particulars?userId=${userId}` },
-    { label: "Education", icon: <GraduationCap size={16} />, path: `/hr/applicant-details/education?userId=${userId}` },
-    { label: "Work & Skills", icon: <Briefcase size={16} />, path: `/hr/applicant-details/work?userId=${userId}` },
-    { label: "Family Background", icon: <Contact size={16} />, path: `/hr/applicant-details/family?userId=${userId}` },
-    { label: "Supporting Materials", icon: <BookOpen size={16} />, path: `/hr/applicant-details/support?userId=${userId}` },
+    { label: "Overview", icon: <FileText size={16} />, path: `/hr/applicant-details/overview?applicationId=${applicationId}&userId=${userId}` },
+    { label: "Personal Particulars", icon: <User size={16} />, path: `/hr/applicant-details/personal-particulars?applicationId=${applicationId}&userId=${userId}` },
+    { label: "Education", icon: <GraduationCap size={16} />, path: `/hr/applicant-details/education?applicationId=${applicationId}&userId=${userId}` },
+    { label: "Work & Skills", icon: <Briefcase size={16} />, path: `/hr/applicant-details/work?applicationId=${applicationId}&userId=${userId}` },
+    { label: "Family Background", icon: <Contact size={16} />, path: `/hr/applicant-details/family?applicationId=${applicationId}&userId=${userId}` },
+    { label: "Supporting Materials", icon: <BookOpen size={16} />, path: `/hr/applicant-details/support?applicationId=${applicationId}&userId=${userId}` },
   ];
 
   const toggleSidebar = () => {

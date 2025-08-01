@@ -1,0 +1,276 @@
+/* --- Layout --- */
+.mainPanel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: calc(100vh - 85px);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #1e293b;
+  padding: 2rem;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.formWrapper {
+  position: relative;
+  padding-bottom: 6rem;
+  width: 100%;
+  max-width: 1000px;
+}
+
+/* --- Card Container --- */
+.formContainer {
+  width: 100%;
+  margin: 1.5rem 0;
+  background: white;
+  padding: 0;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  overflow: hidden;
+}
+
+.formContainer:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  border-color: rgba(179, 35, 139, 0.2);
+}
+
+.formContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #B3238B, #7c3aed);
+  transform: scaleX(0);
+}
+
+.formContainer:hover::before {
+  transform: scaleX(1);
+}
+
+/* --- Section Title --- */
+.sectionTitle {
+  margin: 0;
+  padding: 2rem 2rem 2rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #1e293b;
+  background: linear-gradient(135deg, rgba(179, 35, 139, 0.08), rgba(124, 58, 237, 0.08));
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  user-select: none;
+  text-align: left;
+}
+
+.sectionTitle:hover {
+  background: linear-gradient(135deg, rgba(179, 35, 139, 0.12), rgba(124, 58, 237, 0.12));
+  color: #B3238B;
+}
+
+.sectionTitleText {
+  flex: 1;
+  text-align: center;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.sectionArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(179, 35, 139, 0.1);
+  border: 1px solid rgba(179, 35, 139, 0.2);
+  color: #B3238B;
+  flex-shrink: 0;
+}
+
+.sectionTitle:hover .sectionArrow {
+  background: rgba(179, 35, 139, 0.15);
+  border-color: rgba(179, 35, 139, 0.3);
+  transform: scale(1.05);
+}
+
+/* --- Form Section --- */
+.formSection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+  background: white;
+}
+
+/* --- Input Group --- */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0rem;
+}
+
+.labelText {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.requiredAsterisk {
+  color: #ef4444;
+  margin-left: 0.25rem;
+  font-weight: 700;
+}
+
+/* --- Display Value --- */
+.jobInfoDisplay {
+  background: #f1f5f9;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  color: #2d3748;
+  border: 1px solid #e2e8f0;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  word-break: break-word;
+}
+
+/* --- Loading & Not Found --- */
+.loading, .notFound {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #718096;
+  margin-top: 60px;
+}
+
+/* --- Link --- */
+a {
+  color: #3182ce;
+  text-decoration: underline;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+  .mainPanel {
+    padding: 1rem;
+  }
+  .formWrapper {
+    padding-bottom: 8rem;
+  }
+  .formSection {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+    gap: 1.25rem;
+  }
+  .sectionTitle {
+    padding: 1.5rem 1.5rem 1rem;
+    font-size: 1.25rem;
+  }
+  .sectionArrow {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mainPanel {
+    padding: 0.75rem;
+  }
+  .formSection {
+    padding: 1rem;
+  }
+  .sectionTitle {
+    padding: 1rem;
+    font-size: 1.125rem;
+  }
+  .sectionArrow {
+    width: 28px;
+    height: 28px;
+  }
+  .jobInfoDisplay {
+    padding: 6px 8px;
+    font-size: 0.95rem;
+  }
+}
+
+/* --- Dark Mode --- */
+:global(.dark) .mainPanel {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #f8fafc;
+}
+
+:global(.dark) .formContainer {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .formContainer:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(244, 114, 182, 0.3);
+}
+
+:global(.dark) .sectionTitle {
+  color: #f8fafc;
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.08), rgba(168, 85, 247, 0.08));
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .sectionTitle:hover {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.12), rgba(168, 85, 247, 0.12));
+  color: #f472b6;
+}
+
+:global(.dark) .sectionArrow {
+  background: rgba(244, 114, 182, 0.1);
+  border-color: rgba(244, 114, 182, 0.2);
+  color: #f472b6;
+}
+
+:global(.dark) .sectionTitle:hover .sectionArrow {
+  background: rgba(244, 114, 182, 0.15);
+  border-color: rgba(244, 114, 182, 0.3);
+}
+
+:global(.dark) .formSection {
+  background: #1e293b;
+}
+
+:global(.dark) .labelText {
+  color: #cbd5e1;
+}
+
+:global(.dark) .requiredAsterisk {
+  color: #f87171;
+}
+
+:global(.dark) .jobInfoDisplay {
+  background: #334155;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+:global(.dark) a {
+  color: #f472b6;
+}
+
+:global(.dark) .loading, 
+:global(.dark) .notFound {
+  color: #f8fafc;
+}

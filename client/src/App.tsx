@@ -43,6 +43,7 @@ import Settings from "./pages/Settings/Settings";
 import Assessment from "./ManagerPages/Assessment/Assessment";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ResetPassword from "./pages/Authentication/ResetPassword/ResetPassword";
+import HRApply from "./HRpages/HRApply/HRApply";
 
 // ------------------------ App Routes ------------------------
 
@@ -83,6 +84,7 @@ const AppRoutes = () => {
           <Route path="available-jobs" element={<HRAvailableJobs />} />
           <Route path="applicants" element={<Applicants />} />
           <Route path="applicant-details" element={<HRProfileLayout />}>
+            <Route path="overview" element={<HRApply />} />
             <Route path="personal-particulars" element={<ApplicantPersonalParticulars />} />
             <Route path="education" element={<ApplicantEducation />} />
             <Route path="work" element={<ApplicantExperience />} />
@@ -102,7 +104,6 @@ const AppRoutes = () => {
           <Route path="assessment" element={<Assessment />} />
         </Route>
       </Route>
-
     </Routes>
   );
 };

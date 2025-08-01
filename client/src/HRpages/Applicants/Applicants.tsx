@@ -1735,8 +1735,8 @@ const Applicants = () => {
 
                         <td> {/* Add this new Actions column */}
                           <div className={styles.actionButtons}>
-                            <Link 
-                              to={`/hr/applicant-details/personal-particulars?userId=${applicant.user_id}`} 
+                            <Link
+                              to={`/hr/applicant-details/overview?applicationId=${applicant.application_id}&userId=${applicant.user_id}`}
                               className={styles.actionBtn}
                               title="View Details"
                             >

@@ -3727,6 +3727,29 @@ const getApplicationFullDetails = async (req, res) => {
   }
 };
 
+const getApplicationById = async (req, res) => {
+  try {
+    const application_id = req.params.id;
+    const sql = `
+      SELECT 
+        a.*,
+        j.title,
+        j.job_type
+      FROM tbl_application a
+      LEFT JOIN tbl_jobs j ON a.job_id = j.job_id
+      WHERE a.application_id = ?
+      LIMIT 1
+    `;
+    const rows = await db.executeQuery(sql, [application_id]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: "Application not found." });
+    }
+    return res.status(200).json({ success: true, data: rows[0] });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
 const getCountryList = async (req, res) => {
   try {
     const sql = `SELECT name FROM vw_country ORDER BY name ASC`;
@@ -4284,6 +4307,47 @@ const postVerifiedRequisitionAsJob = async (req, res) => {
   }
 };
 
+const getAllFullApplicantProfiles = async (req, res) => {
+  try {
+    // Fetch all full application profiles
+    const sql = `
+      SELECT 
+        afd.user_id,
+        pp.full_name,
+        pp.email,
+        afd.education_background,
+        afd.scholarship_awards,
+        afd.other_qualifications,
+        afd.work_experience,
+        afd.teaching_experience,
+        afd.skills,
+        afd.languages
+      FROM tbl_application_full_details afd
+      LEFT JOIN tbl_personal_particulars pp ON afd.user_id = pp.user_id
+      WHERE pp.full_name IS NOT NULL AND pp.full_name != ''
+      GROUP BY afd.user_id
+    `;
+    const rows = await db.executeQuery(sql);
+
+    // Format each field as a readable string (if stored as JSON, parse and join)
+    const formatted = rows.map(app => ({
+      name: app.full_name,
+      email: app.email,
+      education: app.education_background || "",
+      scholarships: app.scholarship_awards || "",
+      qualifications: app.other_qualifications || "",
+      work: app.work_experience || "",
+      teaching: app.teaching_experience || "",
+      skills: app.skills || "",
+      languages: app.languages || ""
+    }));
+
+    return res.status(200).json({ success: true, data: formatted });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
 
 module.exports = {
   postJobs,
@@ -4367,6 +4431,7 @@ module.exports = {
   sendEmailToUser,
   saveApplicationFullDetails,
   getApplicationFullDetails,
+  getApplicationById,
   getCountryList,
   saveJobRequisition,
   updateJobRequisition,
@@ -4380,6 +4445,7 @@ module.exports = {
   getJobRequisitionDetails,
   reviewJobRequisition,
   postVerifiedRequisitionAsJob,
+  getAllFullApplicantProfiles
 };
 
 

@@ -343,53 +343,81 @@ const HRAvailableJobs: React.FC = () => {
     setList(list.includes(item) ? list.filter(i => i !== item) : [...list, item]);
   };
 
-  // AI Analysis function
+  // Example usage in HRAvailableJobs.tsx
   const findSuitableCandidates = async () => {
-    if (!aiSearchQuery.trim()) return;
-    
+    const job = jobs.find(j => j.title.toLowerCase() === aiSearchQuery.toLowerCase());
+    if (!job) {
+      setAiResponse("Please enter a valid job title or select a job.");
+      return;
+    }
+  
     setIsAnalyzing(true);
     setAiResponse("");
-
+  
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/ai/find-candidates`,
-        {
-          jobTitle: aiSearchQuery,
-          jobsData: jobs
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+      // Fetch all full applicant profiles
+      const applicantsRes = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/all-full-applicant-profiles`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
+      const applicants = applicantsRes.data.data || [];
+  
+      // Format candidate profiles for OpenAI
+      const candidates = applicants.map((app: any) => ({
+        name: app.name,
+        email: app.email,
+        education: app.education,
+        scholarships: app.scholarships,
+        qualifications: app.qualifications,
+        work: app.work,
+        teaching: app.teaching,
+        skills: app.skills,
+        languages: app.languages
+      }));
+  
+      // Call OpenAI endpoint
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/ai/assess-candidates`,
+        {
+          jobTitle: job.title,
+          jobRequirements: job.job_requirements,
+          jobResponsibilities: job.job_responsibilities,
+          candidates
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+  
       if (response.data.success) {
-        setAiResponse(response.data.data.analysis);
+        setAiResponse(response.data.analysis);
       } else {
         setAiResponse("Failed to find suitable candidates. Please try again.");
       }
-    } catch (error: any) {
-      console.error("Failed to find candidates:", error);
-      
-      if (error.response?.status === 401) {
-        setAiResponse("Authentication failed. Please log in again.");
-      } else if (error.response?.status === 402) {
-        setAiResponse("OpenAI API quota exceeded. Please contact administrator.");
-      } else {
-        // Mock response for demonstration
-        setAiResponse(`Based on your query for "${aiSearchQuery}", here are the top 3 suitable candidates:
-
-1. **Tan Wei Ling** - 3 years experience in administration, strong organizational skills, fluent in English and Mandarin.
-
-2. **Lim Jia Hui** - Proven office management skills, excellent communication abilities, diploma in Business Administration.
-
-3. **Nur Aisyah** - Fresh graduate with relevant internship experience, eager to learn, strong academic background.
-
-You can view their full profiles in the Applicants section for detailed evaluation.`);
-      }
+    } catch (error) {
+      setAiResponse("Error occurred. Please try again.");
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  // Add this function above your return statement
+  const formatAiResponse = (response: string) => {
+    if (!response) return "";
+  
+    // Remove Markdown headings, bold, and table syntax
+    let formatted = response
+      .replace(/---+/g, "") // Remove horizontal rules
+      .replace(/#+\s?/g, "") // Remove headings
+      .replace(/\*\*/g, "") // Remove bold
+      .replace(/\|.*\|/g, "") // Remove table rows
+      .replace(/\|/g, "") // Remove table pipes
+      .replace(/^- /gm, "") // Remove bullet points
+      .replace(/\* /g, "") // Remove asterisks at line start
+      .replace(/^\s*$/gm, "") // Remove empty lines
+      .replace(/Summary Table/gi, "") // Remove summary table heading
+      .trim();
+  
+    return formatted;
   };
 
   return (
@@ -657,7 +685,7 @@ You can view their full profiles in the Applicants section for detailed evaluati
           ) : (
             <div className={styles.aiResponseArea}>
               {aiResponse ? (
-                <div className={styles.aiResponse}>{aiResponse}</div>
+                <div className={styles.aiResponse}>{formatAiResponse(aiResponse)}</div>
               ) : (
                 <div className={styles.aiPlaceholder}>
                   <p>💡 Enter a job title above and click "Find Candidates" to get AI-powered candidate recommendations from your application database</p>
