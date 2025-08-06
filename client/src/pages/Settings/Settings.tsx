@@ -75,6 +75,7 @@ const Settings: React.FC = () => {
         setValue('email', userData.email);
         setValue('nationality', userData.nationality);
         setPendingEmail(userData.email);
+        setEmailToVerify(userData.email);
       }
     } catch (error) {
       console.error('Failed to fetch user info:', error);
@@ -299,7 +300,14 @@ const Settings: React.FC = () => {
                         type="email"
                         placeholder="Enter your email"
                         value={pendingEmail || ""}
-                        onChange={handleEmailChange}
+                        onChange={e => {
+                          handleEmailChange(e);
+                          // Enable verify button only if email is different from original
+                          if (e.target.value !== emailToVerify) {
+                            setShowEmailVerify(false);
+                            setEmailVerifyMsg("");
+                          }
+                        }}
                         className={`${styles.input} ${profileErrors.email ? styles.inputError : ''}`}
                       />
                       {emailVerifyMsg && <p className={styles.errorMessage}>{emailVerifyMsg}</p>}
@@ -308,11 +316,15 @@ const Settings: React.FC = () => {
                         type="button"
                         className={styles.submitButton}
                         style={{ minWidth: 120 }}
-                        disabled={emailVerifyLoading || !pendingEmail || pendingEmail === emailToVerify}
+                        disabled={
+                          emailVerifyLoading ||
+                          !pendingEmail ||
+                          pendingEmail === emailToVerify // Disabled by default and when email matches original
+                        }
                         onClick={sendEmailVerification}
                       >
                         {emailVerifyLoading ? "Sending..." : "Verify Email"}
-                      </button> 
+                      </button>
                     
 
                   {profileErrors.email && <p className={styles.errorMessage}>{profileErrors.email.message}</p>}
@@ -366,11 +378,19 @@ const Settings: React.FC = () => {
                 <button 
                   type="submit" 
                   className={`${styles.submitButton} ${isLoading ? styles.loading : ''}`}
-                  disabled={isLoading || (!!pendingEmail && !emailVerified)}
+                  disabled={
+                    isLoading ||
+                    (
+                      // Only disable if email was changed and not verified
+                      pendingEmail !== emailToVerify &&
+                      !emailVerified
+                    )
+                  }
                 >
-                  <Save size={18} />
+                  <Save size={18} style={{ marginRight: "0.5rem" }}/>
                   Update Profile
                 </button>
+
                 {message && (
                   <div className={`${styles.message} ${styles[messageType]}`}>
                     {message}
@@ -477,7 +497,7 @@ const Settings: React.FC = () => {
                   className={`${styles.submitButton} ${isLoading ? styles.loading : ''}`}
                   disabled={isLoading}
                 >
-                  <Lock size={18} />
+                  <Lock size={18} style={{ marginRight: "0.5rem" }}/>
                   Change Password
                 </button>
                 {message && (

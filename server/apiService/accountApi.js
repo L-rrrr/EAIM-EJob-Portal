@@ -198,10 +198,8 @@ const deleteJob = async (req, res) => {
 
 const bookmarkJob = async (req, res) => {
   try {
-    const { job_id, title, jobCategory, jobType, hiringStatus, jobRequirements, jobResponsibilities } = req.body;
+    const { job_id } = req.body;
     const user_id = req.user.user_id;
-    const email = req.user.email;
-
 
     // Check if this job is already bookmarked by the user
     const checkSql = `
@@ -214,24 +212,14 @@ const bookmarkJob = async (req, res) => {
       return res.status(400).json({ success: false, message: "This job is already bookmarked." });
     }
 
-    // If not bookmarked yet, insert it
+    // Only save user_id and job_id
     const insertSql = `
       INSERT INTO tbl_bookmark
-      (user_id, email, job_id, title, job_category, job_type, hiring_status, job_requirements, job_responsibilities)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (user_id, job_id)
+      VALUES (?, ?)
     `;
 
-    await db.executeQuery(insertSql, [
-      user_id,
-      email,
-      job_id,
-      title,
-      jobCategory,
-      jobType,
-      hiringStatus,
-      jobRequirements,
-      jobResponsibilities
-    ]);
+    await db.executeQuery(insertSql, [user_id, job_id]);
 
     return res.status(200).json({ success: true, message: "Job bookmarked successfully." });
   } catch (e) {
@@ -240,11 +228,22 @@ const bookmarkJob = async (req, res) => {
   }
 };
 
-
 const getBookmarks = async (req, res) => {
   try {
     const user_id = req.user.user_id;
-    const sql = `SELECT * FROM tbl_bookmark WHERE user_id = ?`;
+    // Join with jobs table to get job details
+    const sql = `
+      SELECT 
+        b.job_id,
+        j.title,
+        j.job_category,
+        j.job_type,
+        j.job_requirements,
+        j.job_responsibilities
+      FROM tbl_bookmark b
+      LEFT JOIN tbl_jobs j ON b.job_id = j.job_id
+      WHERE b.user_id = ?
+    `;
     const bookmarks = await db.executeQuery(sql, [user_id]);
     return res.status(200).json({ success: true, data: bookmarks });
   } catch (e) {
@@ -3360,7 +3359,7 @@ const deleteInterview = async (req, res) => {
       UPDATE tbl_application
       SET application_status = 'Pending',
           interview_date = NULL
-      WHERE user_id = ? AND job_id = ?g
+      WHERE user_id = ? AND job_id = ?
     `;
     await db.executeQuery(updateAppSql, [user_id, job_id]);
 
@@ -3885,9 +3884,23 @@ const getMyJobRequisitions = async (req, res) => {
 // Get all users with role 'Manager'
 const getAllManagers = async (req, res) => {
   try {
-    const sql = `SELECT user_id, first_name, last_name, email FROM tbl_users WHERE role = 'Manager'`;
-    const managers = await db.executeQuery(sql);
-    return res.status(200).json({ success: true, data: managers });
+    // 1. staff_status must be Active
+    // 2. dept_code is DEP-09 OR
+    // 3. emp_no exists in any supervisor column (i.e., is a supervisor)
+    // 4. show display_name
+
+    const sql = `
+      SELECT DISTINCT s.emp_no, s.display_name
+      FROM vw_staff s
+      WHERE s.staff_status = 'Active'
+        AND (
+          s.dept_code = 'DEP-09'
+          OR s.emp_no IN (SELECT supervisor FROM vw_staff WHERE supervisor IS NOT NULL)
+        )
+      ORDER BY s.display_name
+    `;
+    const rows = await db.executeQuery(sql);
+    return res.status(200).json({ success: true, data: rows });
   } catch (e) {
     return res.status(500).json({ success: false, message: "Server error", error: e.message });
   }
@@ -3899,8 +3912,16 @@ const assignManagerToApplication = async (req, res) => {
     if (!application_id || !manager_id) {
       return res.status(400).json({ success: false, message: "Missing application_id or manager_id" });
     }
-    // Optionally check if manager exists and is a manager
-    const checkSql = `SELECT * FROM tbl_users WHERE user_id = ? AND role = 'Manager'`;
+    // Check if manager exists in vw_staff and meets criteria
+    const checkSql = `
+      SELECT * FROM vw_staff 
+      WHERE emp_no = ? 
+        AND staff_status = 'Active'
+        AND (
+          dept_code = 'DEP-09'
+          OR emp_no IN (SELECT supervisor FROM vw_staff WHERE supervisor IS NOT NULL)
+        )
+    `;
     const managers = await db.executeQuery(checkSql, [manager_id]);
     if (managers.length === 0) {
       return res.status(400).json({ success: false, message: "Invalid manager ID" });
@@ -3913,11 +3934,9 @@ const assignManagerToApplication = async (req, res) => {
     `;
     await db.executeQuery(updateSql, [manager_id, application_id]);
     
-    // Get manager's email and name
-    const managerSql = `SELECT email, first_name, last_name FROM tbl_users WHERE user_id = ?`;
-    const managerRows = await db.executeQuery(managerSql, [manager_id]);
-    const managerEmail = managerRows.length ? managerRows[0].email : null;
-    const managerName = managerRows.length ? `${managerRows[0].first_name} ${managerRows[0].last_name}` : "Manager";
+    // Get manager's email and name (if you want to send email, you may need to join with tbl_users or use vw_staff.email)
+    const managerEmail = managers[0].email || null;
+    const managerName = managers[0].display_name || "Manager";
     
     // Get applicant and job info for the email
     const appSql = `
@@ -3931,11 +3950,15 @@ const assignManagerToApplication = async (req, res) => {
     const applicantName = appRows.length ? appRows[0].applicant_name : "Applicant";
     const jobTitle = appRows.length ? appRows[0].job_title : "Unknown Position";
     
+    const frontendUrl = process.env.FRONTEND_URL || "https://ejob.eaim.edu.sg";
+    const assessmentLink = `${frontendUrl}/manager/assessment?applicationId=${application_id}`;
+
     // Compose email
     const emailHtml = `
       <p>Dear ${managerName},</p>
       <p>You have been assigned to assess the application for <strong>${applicantName}</strong> (Position: <strong>${jobTitle}</strong>).</p>
-      <p>Please log in to the Manager portal and complete the assessment.</p>
+      <p>Please <a href="${assessmentLink}">click here</a> to log in and complete the assessment.</p>
+      <p>Or copy and paste this link into your browser: <br>${assessmentLink}</p>
     `;
     
     if (managerEmail) {
@@ -4347,6 +4370,7 @@ const getAllFullApplicantProfiles = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error", error: e.message });
   }
 };
+
 
 
 module.exports = {

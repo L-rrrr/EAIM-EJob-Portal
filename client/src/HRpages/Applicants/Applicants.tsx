@@ -39,6 +39,8 @@ const Applicants = () => {
     first_name: string;
     last_name: string;
     email: string;
+    display_name: string; // Added to match usage in code
+    emp_no?: number; // Optional, since it's used as key in the select
     // add other fields if needed
   };
   const [managers, setManagers] = useState<Manager[]>([]);
@@ -1804,8 +1806,8 @@ const Applicants = () => {
                               >
                                 <option value="">Select Manager</option>
                                 {managers.map(m => (
-                                  <option key={m.user_id} value={m.user_id}>
-                                    {m.first_name} {m.last_name}
+                                  <option key={m.emp_no} value={m.emp_no}>
+                                    {m.display_name}
                                   </option>
                                 ))}
                               </select>
@@ -2103,7 +2105,7 @@ const Applicants = () => {
                 <label>Applied Date From</label>
                 <input
                   type="date"
-                  className={styles.dateInput}
+                  className={`${styles.dateInput} ${styles.input}`}
                   value={appliedFrom}
                   onChange={(e) => setAppliedFrom(e.target.value)}
                 />
@@ -2113,7 +2115,7 @@ const Applicants = () => {
                 <label>Applied Date To</label>
                 <input
                   type="date"
-                  className={styles.dateInput}
+                  className={`${styles.dateInput} ${styles.input}`}
                   value={appliedTo}
                   onChange={(e) => setAppliedTo(e.target.value)}
                 />
@@ -2123,7 +2125,7 @@ const Applicants = () => {
                 <label>Interview Date From</label>
                 <input
                   type="date"
-                  className={styles.dateInput}
+                  className={`${styles.dateInput} ${styles.input}`}
                   value={interviewFrom}
                   onChange={(e) => setInterviewFrom(e.target.value)}
                 />
@@ -2133,7 +2135,7 @@ const Applicants = () => {
                 <label>Interview Date To</label>
                 <input
                   type="date"
-                  className={styles.dateInput}
+                  className={`${styles.dateInput} ${styles.input}`}
                   value={interviewTo}
                   onChange={(e) => setInterviewTo(e.target.value)}
                 />

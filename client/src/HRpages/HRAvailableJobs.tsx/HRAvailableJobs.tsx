@@ -614,7 +614,7 @@ const HRAvailableJobs: React.FC = () => {
                 <label>Posted Date From</label>
                 <input
                   type="date"
-                  className={styles.dateInput}
+                  className={`${styles.dateInput} ${styles.input}`}
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
                 />
@@ -624,7 +624,7 @@ const HRAvailableJobs: React.FC = () => {
                 <label>Posted Date To</label>
                 <input
                   type="date"
-                  className={styles.dateInput}
+                  className={`${styles.dateInput} ${styles.input}`}
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
                 />

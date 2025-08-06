@@ -91,7 +91,7 @@
 }
 
 .formPanel {
-  flex: 3;
+  flex: 1;
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -206,7 +206,7 @@
 }
 
 .requisitionPanel {
-  flex: 2;
+  flex: 1;
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -233,7 +233,7 @@
 
 .tableTitle {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
 }
 

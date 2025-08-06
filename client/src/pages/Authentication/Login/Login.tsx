@@ -126,26 +126,15 @@ const Login = () => {
           <div className={authStyles.formGroup}>
             <label htmlFor="email" className={authStyles.label}>
               <Mail size={18} />
-              Email Address
+              Email / Username
             </label>
             <div className={authStyles.inputWrapper}>
               <input
                 id="email"
-                type="email"
-                placeholder="Enter your email"
+                type="text"
+                placeholder="Enter your username"
                 {...register("email", { 
-                  required: "Email is required",
-                  pattern: {
-                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                    message: "Please enter a valid email address (e.g., user@example.com)"
-                  },
-                  validate: {
-                    noSpaces: value => !/\s/.test(value) || "Email cannot contain spaces",
-                    validDomain: value => {
-                      const domain = value.split('@')[1];
-                      return !domain || domain.includes('.') || "Please enter a valid email domain";
-                    }
-                  }
+                  required: "Username is required"
                 })}
                 className={`${authStyles.input} ${errors.email ? authStyles.inputError : ''}`}
               />

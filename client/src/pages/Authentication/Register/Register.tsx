@@ -6,7 +6,7 @@ import EAIM from "../../../assets/EAIM.png";
 import background from "../../../assets/background4.jpg";
 import axios from "axios";
 import { User, Mail, Lock, Globe, Eye, EyeOff, Sun, Moon } from "lucide-react";
-import { useState} from "react";
+import { useState } from "react";
 import countries from "../../../utils/Countries"; 
 
 type RegisterFormInputs = {
@@ -27,41 +27,55 @@ const Register: React.FC = () => {
   const [step, setStep] = useState<"email" | "verify" | "register">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
 
   const [darkMode, setDarkMode] = useState(() => {
     return document.documentElement.classList.contains('dark');
   });
+
+  // Combined email and code step
+  const handleEmailAndCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setServerMessage("");
+    try {
+      if (!codeSent) {
+        // Send code
+        const res = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/request-register-code`,
+          { email }
+        );
+        setServerMessage(res.data.message);
+        setMessageType("success");
+        setCodeSent(true);
+      } else {
+        // Verify code
+        const res = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/verify-register-code`,
+          { email, code }
+        );
+        if (res.data.success) {
+          setStep("register");
+          setServerMessage("Email verified! Please complete your registration.");
+          setMessageType("success");
+        } else {
+          setServerMessage(res.data.message);
+          setMessageType("error");
+        }
+      }
+    } catch (error: any) {
+      setServerMessage(error.response?.data?.message || "Failed to send or verify code.");
+      setMessageType("error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
     localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
     document.documentElement.classList.toggle('dark', newDarkMode);
-  };
-
-  const onSubmit = async (data: RegisterFormInputs) => {
-    setIsLoading(true);
-    try {
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/register`, data);
-      
-      if (response.data.success) {
-        setServerMessage("Registration successful! You can now login.");
-        setMessageType('success');
-        setTimeout(() => navigate("/login"), 2000);
-      } else {
-        setServerMessage(response.data.message);
-        setMessageType('error');
-      }
-    } catch (error: any) {
-      if (error.response && error.response.data) {
-        setServerMessage("Registration failed: " + error.response.data.message);
-      } else {
-        setServerMessage("Server error. Please try again.");
-      }
-      setMessageType('error');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -84,30 +98,9 @@ const Register: React.FC = () => {
           {darkMode ? <Moon size={20} /> : <Sun size={20} />}
         </button>
 
-        {/* Step 1: Enter Email */}
+        {/* Step 1: Enter Email and verification code */}
         {step === "email" && (
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setIsLoading(true);
-              setServerMessage("");
-              try {
-                const res = await axios.post(
-                  `${import.meta.env.VITE_BACKEND_URL}/request-register-code`,
-                  { email }
-                );
-                setServerMessage(res.data.message);
-                setMessageType("success");
-                setStep("verify");
-              } catch (error: any) {
-                setServerMessage(error.response?.data?.message || "Failed to send code.");
-                setMessageType("error");
-              } finally {
-                setIsLoading(false);
-              }
-            }}
-            className={authStyles.authForm}
-          >
+          <form onSubmit={handleEmailAndCode} className={authStyles.authForm}>
             <div className={authStyles.formGroup}>
               <label htmlFor="email" className={authStyles.label}>
                 <Mail size={18} />
@@ -125,54 +118,33 @@ const Register: React.FC = () => {
                 />
               </div>
             </div>
-            <button type="submit" className={authStyles.submitButton} disabled={isLoading}>
+            <button
+              type="button"
+              className={authStyles.submitButton}
+              disabled={isLoading || !email}
+              onClick={async () => {
+                setIsLoading(true);
+                setServerMessage("");
+                try {
+                  const res = await axios.post(
+                    `${import.meta.env.VITE_BACKEND_URL}/request-register-code`,
+                    { email }
+                  );
+                  setServerMessage(res.data.message);
+                  setMessageType("success");
+                  setCodeSent(true);
+                } catch (error: any) {
+                  setServerMessage(error.response?.data?.message || "Failed to send code.");
+                  setMessageType("error");
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+            >
               {isLoading ? <div className={authStyles.spinner}></div> : "Send Verification Code"}
             </button>
-            {serverMessage && (
-              <p className={`${authStyles.serverMessage} ${messageType === 'success' ? authStyles.success : authStyles.error}`}>
-                {serverMessage}
-              </p>
-            )}
-            <div className={authStyles.linksSection}>
-              <Link to="/login" className={authStyles.link}>
-                Already have an account? <span>Sign in</span>
-              </Link>
-              <Link to="/forgot-password" className={authStyles.link}>
-                Forgot your password?
-              </Link>
-            </div>
-          </form>
-        )}
 
-        {/* Step 2: Enter Code */}
-        {step === "verify" && (
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setIsLoading(true);
-              setServerMessage("");
-              try {
-                const res = await axios.post(
-                  `${import.meta.env.VITE_BACKEND_URL}/verify-register-code`,
-                  { email, code }
-                );
-                if (res.data.success) {
-                  setStep("register");
-                  setServerMessage("Email verified! Please complete your registration.");
-                  setMessageType("success");
-                } else {
-                  setServerMessage(res.data.message);
-                  setMessageType("error");
-                }
-              } catch (error: any) {
-                setServerMessage(error.response?.data?.message || "Verification failed.");
-                setMessageType("error");
-              } finally {
-                setIsLoading(false);
-              }
-            }}
-            className={authStyles.authForm}
-          >
+            {/* Verification Code Field always visible */}
             <div className={authStyles.formGroup}>
               <label htmlFor="code" className={authStyles.label}>
                 <Mail size={18} />
@@ -190,19 +162,56 @@ const Register: React.FC = () => {
                 />
               </div>
             </div>
-            <button type="submit" className={authStyles.submitButton} disabled={isLoading}>
-              {isLoading ? <div className={authStyles.spinner}></div> : "Verify Code"}
-            </button>
+
+            <button
+                type="button"
+                className={authStyles.submitButton}
+                disabled={isLoading || !email || !code}
+                onClick={async () => {
+                  setIsLoading(true);
+                  setServerMessage("");
+                  try {
+                    const res = await axios.post(
+                      `${import.meta.env.VITE_BACKEND_URL}/verify-register-code`,
+                      { email, code }
+                    );
+                    if (res.data.success) {
+                      setStep("register");
+                      setServerMessage("Email verified! Please complete your registration.");
+                      setMessageType("success");
+                    } else {
+                      setServerMessage(res.data.message);
+                      setMessageType("error");
+                    }
+                  } catch (error: any) {
+                    setServerMessage(error.response?.data?.message || "Failed to verify code.");
+                    setMessageType("error");
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+                style={{ marginLeft: 8 }}
+              >
+                {isLoading ? <div className={authStyles.spinner}></div> : "Verify Code"}
+              </button>
+            
             {serverMessage && (
               <p className={`${authStyles.serverMessage} ${messageType === 'success' ? authStyles.success : authStyles.error}`}>
                 {serverMessage}
               </p>
             )}
+            <div className={authStyles.linksSection}>
+              <Link to="/login" className={authStyles.link}>
+                Already have an account? <span>Sign in</span>
+              </Link>
+              <Link to="/forgot-password" className={authStyles.link}>
+                Forgot your password?
+              </Link>
+            </div>
           </form>
         )}
 
-
-        {/* Step 3: Registration Form */}
+        {/* Step 2: Registration Form */}
         {step === "register" && (
           <form
             onSubmit={handleSubmit(async (data) => {

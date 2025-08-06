@@ -24,6 +24,10 @@
   justify-content: center;
 }
 
+.passwordToggle:focus {
+  outline: none;
+}
+
 /* Success message styling */
 .successMessage {
   background-color: rgba(16, 185, 129, 0.1);

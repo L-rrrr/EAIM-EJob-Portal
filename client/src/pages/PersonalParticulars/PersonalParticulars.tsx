@@ -212,7 +212,7 @@ const PersonalParticulars: React.FC = () => {
         axios.post(
           `${import.meta.env.VITE_BACKEND_URL}/save-military-service`,
           {
-            ...militaryService,
+            ...prepareMilitaryServiceForSave(militaryService),
             is_draft: "N", // Set as final submission
           },
           {
@@ -383,7 +383,7 @@ const PersonalParticulars: React.FC = () => {
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/save-military-service`,
         {
-          ...militaryService,
+          ...prepareMilitaryServiceForSave(militaryService),
           is_draft: "Y",
         },
         {
@@ -618,6 +618,23 @@ type MilitaryServiceKeys =
     { label: "NSman Vocation", required: false, name: "nsman_vocation", type: "text" },
     { label: "Exemption Reason", required: militaryService.ns_status !== "Completed", name: "ns_exemption_reason", type: "textarea" },
   ];
+
+  const prepareMilitaryServiceForSave = (militaryService: Record<MilitaryServiceKeys, string>) => {
+    const nsStatus = militaryService.ns_status;
+    let prepared = { ...militaryService };
+  
+    if (nsStatus === "Completed") {
+      // Clear exemption reason if NS is completed
+      prepared.ns_exemption_reason = "";
+    } else {
+      // Only keep ns_status and ns_exemption_reason, clear all others
+      prepared = {
+        ns_status: prepared.ns_status,
+        ns_exemption_reason: prepared.ns_exemption_reason
+      } as Record<MilitaryServiceKeys, string>;
+    }
+    return prepared;
+  };
 
 
 
