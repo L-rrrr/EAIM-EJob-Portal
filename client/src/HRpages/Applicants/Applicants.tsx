@@ -1610,21 +1610,25 @@ const Applicants = () => {
       return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>`;
     });
   
-    // Existing formatting logic...
+    // Remove markdown headings like "#", "##", "###" at the start of lines
+    formatted = formatted.replace(/^#{1,6}\s*/gm, '');
+  
+    // Remove numbering from lines like "1. Education Foundation"
+    formatted = formatted.replace(/^\d+\.\s+/gm, '');
+  
+    // Existing formatting logic (without numbered list logic)
     formatted = formatted
-      .replace(/###\s*(.*?)(?=\n|$)/g, '<h3 class="ai-section-heading">$1</h3>')
+      // .replace(/###\s*(.*?)(?=\n|$)/g, '<h3 class="ai-section-heading">$1</h3>') // REMOVE this line
       .replace(/^---+$/gm, '<div class="ai-section-divider"></div>')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/^-\s+(.*?)$/gm, '<li class="ai-bullet-point">$1</li>')
       .replace(/(<li class="ai-bullet-point">.*?<\/li>)(\s*<li class="ai-bullet-point">.*?<\/li>)*/gs, '<ul class="ai-bullet-list">$&</ul>')
-      .replace(/^\d+\.\s+(.*?)$/gm, '<li class="ai-numbered-point">$1</li>')
-      .replace(/(<li class="ai-numbered-point">.*?<\/li>)(\s*<li class="ai-numbered-point">.*?<\/li>)*/gs, '<ol class="ai-numbered-list">$&</ol>')
       .replace(/\n\n/g, '</p><p class="ai-paragraph">')
       .replace(/^(.*)$/gm, '<p class="ai-paragraph">$1</p>')
       .replace(/<p class="ai-paragraph"><\/p>/g, '')
-      .replace(/<p class="ai-paragraph">(<h3|<div|<ul|<ol)/g, '$1')
-      .replace(/(<\/h3>|<\/div>|<\/ul>|<\/ol>)<\/p>/g, '$1');
+      .replace(/<p class="ai-paragraph">(<div|<ul|<ol)/g, '$1')
+      .replace(/(<\/div>|<\/ul>|<\/ol>)<\/p>/g, '$1');
   
     return formatted;
   };

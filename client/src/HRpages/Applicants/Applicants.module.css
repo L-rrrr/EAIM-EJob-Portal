@@ -602,6 +602,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: absolute;      /* Add this */
+  top: 1rem;               /* Add this */
+  right: 1rem;             /* Add this */
+  z-index: 2;   
 }
 
 .closeAiPanel:hover {
@@ -660,21 +664,30 @@
 .aiPlaceholderContent {
   text-align: center;
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(243, 244, 246, 0.7); /* Light gray background for light mode */
   border-radius: 12px;
-  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border: 2px dashed #b3238b;           /* Visible magenta border for light mode */
 }
 
 .aiPlaceholderContent h4 {
-  color: rgba(255, 255, 255, 0.9);
+  color: #495057;
   margin-bottom: 0.5rem;
   font-size: 1.1rem;
 }
 
 .aiPlaceholderContent p {
-  color: rgba(255, 255, 255, 0.7);
+  color: #495057;
   margin-bottom: 1rem;
   line-height: 1.5;
+}
+
+:global(.dark) .aiPlaceholderContent {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+}
+:global(.dark) .aiPlaceholderContent h4,
+:global(.dark) .aiPlaceholderContent p {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .startAnalysisBtn {
