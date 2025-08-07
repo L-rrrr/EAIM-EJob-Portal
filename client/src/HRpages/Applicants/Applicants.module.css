@@ -14,7 +14,6 @@
   display: flex;
   gap: 1.5rem;
   flex: 1;
-  min-height: 0;
 }
 
 /* TABLE PANEL */
@@ -390,6 +389,10 @@
   box-shadow: 0 4px 8px rgba(108, 92, 231, 0.3);
 }
 
+.aiAnalyzeBtn:focus {
+  outline: none;
+}
+
 .aiAnalyzeBtn:disabled {
   background: #9ca3af;
   cursor: not-allowed;
@@ -552,7 +555,7 @@
 .aiPanelHeader {
   background: linear-gradient(135deg, #B3238B, #97006c);
   color: white;
-  padding: 1.5rem;
+  padding: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -608,7 +611,7 @@
 .aiPanelContent {
   padding: 2rem;
   min-height: 200px;
-  max-height: 400px;
+  max-height: 800px;
   overflow-y: auto;
 }
 

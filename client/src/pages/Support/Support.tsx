@@ -820,7 +820,7 @@ const Support: React.FC = () => {
                       Contact No.<span className={styles.requiredAsterisk}>*</span>
                     </span>
                     <input
-                      type="text"
+                      type="number"
                       className={styles.input}
                       value={ref.contactNo}
                       onChange={(e) => updateReference(ref.id, 'contactNo', e.target.value)}

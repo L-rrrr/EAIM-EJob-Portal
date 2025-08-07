@@ -19,8 +19,7 @@ import {
   languagesFields,
   familyBackgroundFields,
   emergencyContactFields,
-  referencesFields,
-  applicationInformationFields
+  referencesFields
 } from "../../utils/FormFields";
 
 const Applicants = () => {
@@ -1633,8 +1632,14 @@ const Applicants = () => {
   return (
     <div className={styles.applicantsContainer}>
       {/* TOP SECTION: TABLE AND FILTER SIDE BY SIDE */}
-      <div className={styles.topSection}> 
-        
+      <div 
+        className={styles.topSection}
+        style={
+          (selectedCandidate || isAnalyzing)
+            ? { maxHeight: "650px" }
+            : { maxHeight: "100%" }
+        }
+      >
 
         {/* APPLICANTS TABLE PANEL */}
         <div className={styles.tablePanel}>

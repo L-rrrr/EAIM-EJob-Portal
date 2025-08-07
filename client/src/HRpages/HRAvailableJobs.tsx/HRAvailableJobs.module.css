@@ -14,7 +14,7 @@
   display: flex;
   gap: 1.5rem;
   flex: 1;
-  min-height: 0;
+  max-height: 650px;
 }
 
 /* TABLE PANEL */
@@ -81,7 +81,7 @@
 .tableWrapper {
   flex: 1;
   overflow: auto;
-  padding: 1rem;
+  padding: 0rem 0rem 1rem 0rem;
 }
 
 .jobsTable {
@@ -478,7 +478,7 @@
 .aiPanelContent {
   padding: 2rem;
   min-height: 200px;
-  max-height: 400px;
+  max-height: 800px;
   overflow-y: auto;
 }
 
