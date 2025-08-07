@@ -4152,6 +4152,7 @@ const getAssessmentDetails = async (req, res) => {
   }
 };
 
+// Replace getAllJobRequisitionsWithRequestor with this version:
 const getAllJobRequisitionsWithRequestor = async (req, res) => {
   try {
     const sql = `
@@ -4161,24 +4162,21 @@ const getAllJobRequisitionsWithRequestor = async (req, res) => {
         r.posting_date,
         r.requisition_status,
         r.user_id,
-        u.first_name,
-        u.last_name
+        s.display_name AS requestor_name
       FROM tbl_job_requisition r
-      LEFT JOIN tbl_users u ON r.user_id = u.user_id
+      LEFT JOIN vw_staff s ON r.user_id = s.emp_no
       ORDER BY r.posting_date DESC
     `;
     const rows = await db.executeQuery(sql);
 
-    // Format requestor name
+    // Format requestor name (fallback to user_id if display_name is missing)
     const data = rows.map(row => ({
       job_requisition_id: row.job_requisition_id,
       job_title: row.job_title,
       posting_date: row.posting_date,
       requisition_status: row.requisition_status,
       user_id: row.user_id,
-      requestor_name: row.first_name && row.last_name
-        ? `${row.first_name} ${row.last_name}`
-        : row.first_name || row.last_name || "—"
+      requestor_name: row.requestor_name || row.user_id || "—"
     }));
 
     return res.status(200).json({ success: true, data });
@@ -4371,6 +4369,21 @@ const getAllFullApplicantProfiles = async (req, res) => {
   }
 };
 
+// Add this function:
+const getUserEmailById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const sql = `SELECT email FROM tbl_users WHERE user_id = ? LIMIT 1`;
+    const rows = await db.executeQuery(sql, [userId]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    return res.status(200).json({ success: true, email: rows[0].email });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
 
 
 module.exports = {
@@ -4469,7 +4482,8 @@ module.exports = {
   getJobRequisitionDetails,
   reviewJobRequisition,
   postVerifiedRequisitionAsJob,
-  getAllFullApplicantProfiles
+  getAllFullApplicantProfiles,
+  getUserEmailById
 };
 
 

@@ -327,6 +327,42 @@ const upcomingInterviews = events
   })
   .slice(0, 5);
 
+  const getUserEmail = async (userId: string | number) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/user-email/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.success && res.data.email) {
+        return res.data.email;
+      }
+      return "";
+    } catch {
+      return "";
+    }
+  };
+
+  const openMicrosoftCalendar = async () => {
+    if (!formData.date || !formData.startTime || !formData.endTime || !formData.job || !formData.applicant || !formData.user_id) {
+      alert("Please fill in all required fields before adding to calendar.");
+      return;
+    }
+    // Fetch interviewee email
+    const attendeeEmail = await getUserEmail(formData.user_id);
+  
+    const start = `${formData.date}T${formData.startTime}:00`;
+    const end = `${formData.date}T${formData.endTime}:00`;
+  
+    const subject = encodeURIComponent(`Interview: ${formData.job} with ${formData.applicant}`);
+    const body = encodeURIComponent(formData.description || "");
+    const location = encodeURIComponent(formData.venue || "");
+    // Add attendee email to the "to" parameter
+    const url = `https://outlook.office.com/calendar/0/deeplink/compose?subject=${subject}&body=${body}&startdt=${start}&enddt=${end}&location=${location}${attendeeEmail ? `&to=${encodeURIComponent(attendeeEmail)}` : ""}`;
+  
+    window.open(url, "_blank");
+  };
+
   return (
     <div className={styles.interviewContainer}>
       {/* TOP SECTION: STATS ONLY */}
@@ -822,6 +858,17 @@ const upcomingInterviews = events
                   <CalendarIcon size={16} />
                   {formMode === 'add' ? 'Schedule' : 'Update'}
                 </button>
+
+                {addToCalendar === "Yes" && (
+                  <button
+                    type="button"
+                    className={styles.outlookBtn}
+                    onClick={openMicrosoftCalendar}
+                    style={{ marginLeft: 8 }}
+                  >
+                    Add to Microsoft Calendar
+                  </button>
+                )}
               </div>
             </form>
           </div>

@@ -208,6 +208,9 @@ app.post("/api/job-requisition/:id/post-job", authenticateToken, accountApi.post
 app.post("/api/ai/assess-candidates", authenticateToken, openaiApi.assessCandidatesForJob);
 app.get("/api/all-full-applicant-profiles", authenticateToken, accountApi.getAllFullApplicantProfiles);
 
+// Get applicant's email by ID endpoint
+app.get("/api/user-email/:userId", authenticateToken, accountApi.getUserEmailById);
+
 
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
