@@ -442,11 +442,14 @@ const Support: React.FC = () => {
       if (responses.length > 1 && responses[1].data.success && responses[1].data.data) {
         const updatedAttachments = attachments.map((frontendRecord, index) => {
           if (index < responses[1].data.data.length) {
+            const file_path = responses[1].data.data[index].file_path;
+            const server_file_name = file_path ? file_path.split(/[/\\]/).pop() : "";
             return {
               ...frontendRecord,
               attachment_id: responses[1].data.data[index].attachment_id,
               file_name: responses[1].data.data[index].file_name,
-              file_path: responses[1].data.data[index].file_path,
+              file_path: file_path,
+              server_file_name: server_file_name,
               file_size: responses[1].data.data[index].file_size,
               file_type: responses[1].data.data[index].file_type,
               file: null, // Clear file after successful upload
@@ -680,33 +683,21 @@ const Support: React.FC = () => {
     if (field === 'file' && value instanceof File) {
       if (!validateFileSize(value)) {
         alert(`File "${value.name}" is too large. Maximum file size is 10MB. Your file is ${formatFileSize(value.size)}.`);
-        
-        // Clear the specific file input that triggered this event
-        if (event?.target) {
-          event.target.value = '';
-        }
-        
-        return; // Don't update state - file is rejected
+        if (event?.target) event.target.value = '';
+        return;
       }
-
-      // Check if there's already a file for this attachment
+  
+      // Optionally: confirm replace if there's already a file
       const currentAttachment = attachments.find(att => att.id === id);
       if (currentAttachment?.file_path && currentAttachment?.attachment_id) {
-        // There's already a file saved in database, we need to replace it
         const confirmReplace = window.confirm(
           `This will replace the existing file "${currentAttachment.file_name}". Do you want to continue?`
         );
-        
         if (!confirmReplace) {
-          // User cancelled, clear the file input
-          if (event?.target) {
-            event.target.value = '';
-          }
+          if (event?.target) event.target.value = '';
           return;
         }
-
         try {
-          // Delete the old file first
           const token = localStorage.getItem("token");
           await axios.delete(
             `${import.meta.env.VITE_BACKEND_URL}/replace-attachment-file`,
@@ -718,20 +709,53 @@ const Support: React.FC = () => {
               }
             }
           );
-          
-          console.log("Old file deleted successfully");
         } catch (error) {
-          console.error("Failed to delete old file:", error);
           alert("Warning: Could not delete the old file, but will proceed with upload.");
         }
       }
+  
+      // Immediately upload the file
+      try {
+        const fileInfo = await uploadFile(value);
+        const server_file_name = fileInfo.file_path ? fileInfo.file_path.split(/[/\\]/).pop() : "";
+        setAttachments(attachments.map(att =>
+          att.id === id
+            ? {
+                ...att,
+                file: value,
+                file_name: fileInfo.file_name,
+                file_path: fileInfo.file_path,
+                server_file_name,
+                file_size: fileInfo.file_size,
+                file_type: fileInfo.file_type,
+              }
+            : att
+        ));
+      } catch (error: any) {
+        alert(`Failed to upload file: ${error.message || error}`);
+        if (event?.target) event.target.value = '';
+      }
+      // Clear validation error if any
+      if (attachmentValidationErrors[id]?.[field]) {
+        setAttachmentValidationErrors((prev) => {
+          const updated = { ...prev };
+          if (updated[id]) {
+            delete updated[id][field];
+            if (Object.keys(updated[id]).length === 0) {
+              delete updated[id];
+            }
+          }
+          return updated;
+        });
+      }
+      return;
     }
-
-    // Update the state
+  
+    // For other fields, just update state as usual
     setAttachments(attachments.map(att =>
       att.id === id ? { ...att, [field]: value } : att
     ));
-
+  
     // Clear validation error when user updates
     if (attachmentValidationErrors[id]?.[field] && 
         ((typeof value === 'string' && value.trim() !== "") || 
