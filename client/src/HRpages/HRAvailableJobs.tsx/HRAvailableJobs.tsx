@@ -401,24 +401,98 @@ const HRAvailableJobs: React.FC = () => {
   };
 
   // Add this function above your return statement
-  const formatAiResponse = (response: string) => {
-    if (!response) return "";
+  const formatAiResponse = (text: string) => {
+    // URL auto-linking (optional, similar to Applicants)
+    const urlRegex = /(https?:\/\/[^\s<\)]+[^\s<\)\.,"'])/g;
+    let formatted = text.replace(urlRegex, url => {
+      let cleanUrl = url.replace(/[)\].,;:'"]+$/, '');
+      return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>`;
+    });
   
-    // Remove Markdown headings, bold, and table syntax
-    let formatted = response
-      .replace(/---+/g, "") // Remove horizontal rules
-      .replace(/#+\s?/g, "") // Remove headings
-      .replace(/\*\*/g, "") // Remove bold
-      .replace(/\|.*\|/g, "") // Remove table rows
-      .replace(/\|/g, "") // Remove table pipes
-      .replace(/^- /gm, "") // Remove bullet points
-      .replace(/\* /g, "") // Remove asterisks at line start
-      .replace(/^\s*$/gm, "") // Remove empty lines
-      .replace(/Summary Table/gi, "") // Remove summary table heading
-      .trim();
+    // Headings (optional, for markdown style)
+    formatted = formatted.replace(/^#{1,6}\s*/gm, '');
+  
+    // Ordered list: group consecutive "1. ..." lines into <ol>
+    formatted = formatted.replace(
+      /((?:^\d+\.\s+.*$(?:\r?\n)?)+)/gm,
+      match => {
+        const items = match
+          .trim()
+          .split(/\r?\n/)
+          .filter(Boolean)
+          .map(line => line.replace(/^\d+\.\s+/, ''))
+          .map(content => `<li class="ai-numbered-point">${content}</li>`)
+          .join('');
+        return `<ol class="ai-numbered-list">${items}</ol>`;
+      }
+    );
+  
+    // Unordered list: group consecutive "- ..." lines into <ul>
+    formatted = formatted.replace(
+      /((?:^-\s+.*$(?:\r?\n)?)+)/gm,
+      match => {
+        const items = match
+          .trim()
+          .split(/\r?\n/)
+          .filter(Boolean)
+          .map(line => line.replace(/^-+\s+/, ''))
+          .map(content => `<li class="ai-bullet-point">${content}</li>`)
+          .join('');
+        return `<ul class="ai-bullet-list">${items}</ul>`;
+      }
+    );
+  
+    // Bold/italic markdown
+    formatted = formatted.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+    // Horizontal rule --- to divider
+    formatted = formatted.replace(/^---+$/gm, '<div class="ai-section-divider"></div>');
+  
+    // Markdown tables to HTML tables
+    formatted = formatted.replace(
+      /((?:\|.*\|\n)+\|(?:[\s:-]+\|)+\n((?:\|.*\|\n?)+))/g,
+      match => {
+        const lines = match.trim().split('\n');
+        if (lines.length < 2) return match;
+        const header = lines[0];
+        const rows = lines.slice(2);
+        const headerCells = header.split('|').map(cell => cell.trim()).filter(Boolean);
+        const rowCells = rows.map(row => row.split('|').map(cell => cell.trim()).filter(Boolean));
+        let html = '<table class="ai-table"><thead><tr>';
+        headerCells.forEach(cell => { html += `<th>${cell}</th>`; });
+        html += '</tr></thead><tbody>';
+        rowCells.forEach(rowArr => {
+          if (rowArr.length === 0) return;
+          html += '<tr>';
+          rowArr.forEach(cell => { html += `<td>${cell}</td>`; });
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+        return html;
+      }
+    );
+  
+    // Paragraphs: split by double newlines, wrap in <p>
+    formatted = formatted
+      .split(/\n{2,}/)
+      .map(line => {
+        if (
+          /^<\/?(ul|ol|li|h2|h3|h4|table|thead|tbody|tr|th|td|pre|div|code)/.test(line.trim())
+        ) {
+          return line;
+        }
+        return `<p class="ai-paragraph">${line.trim()}</p>`;
+      })
+      .join('');
+  
+    // Remove empty paragraphs
+    formatted = formatted.replace(/<p class="ai-paragraph">\s*<\/p>/g, '');
   
     return formatted;
   };
+
 
   return (
     <div className={styles.jobsContainer}>
@@ -685,7 +759,10 @@ const HRAvailableJobs: React.FC = () => {
           ) : (
             <div className={styles.aiResponseArea}>
               {aiResponse ? (
-                <div className={styles.aiResponse}>{formatAiResponse(aiResponse)}</div>
+                <div
+                  className={styles.aiResponse}
+                  dangerouslySetInnerHTML={{ __html: formatAiResponse(aiResponse) }}
+                />
               ) : (
                 <div className={styles.aiPlaceholder}>
                   <p>💡 Enter a job title above and click "Find Candidates" to get AI-powered candidate recommendations from your application database</p>

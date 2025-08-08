@@ -28,6 +28,7 @@ const Support: React.FC = () => {
     file_path?: string;
     file_size?: number;
     file_type?: string;
+    server_file_name?: string;
   };
 
   type ValidationErrors = {
@@ -103,17 +104,21 @@ const Support: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
-        const records = res.data.data.map((rec: any, index: number) => ({
-          id: index + 1,
-          attachment_id: rec.attachment_id,
-          documentType: rec.document_type || "",
-          documentName: rec.document_name || "",
-          file: null, // File objects don't come from backend
-          file_name: rec.file_name || "",
-          file_path: rec.file_path || "",
-          file_size: rec.file_size || 0,
-          file_type: rec.file_type || "",
-        }));
+        const records = res.data.data.map((rec: any, index: number) => {
+          const serverFileName = rec.file_path ? rec.file_path.split(/[/\\]/).pop() : "";
+          return {
+            id: index + 1,
+            attachment_id: rec.attachment_id,
+            documentType: rec.document_type || "",
+            documentName: rec.document_name || "",
+            file: null, // File objects don't come from backend
+            file_name: rec.file_name || "",
+            file_path: rec.file_path || "",
+            server_file_name: serverFileName,
+            file_size: rec.file_size || 0,
+            file_type: rec.file_type || "",
+          };
+        });
         
         // Ensure we always have at least 1 record (Resume)
         while (records.length < 1) {
@@ -971,9 +976,19 @@ const Support: React.FC = () => {
                         {attachmentValidationErrors[att.id].file}
                       </div>
                     )}
-                    {att.file_name && (
+                    {att.file_name && att.file_path && (
                       <div style={{ fontSize: "0.85rem", marginTop: "0.25rem", color: "green" }}>
                         Current file: {att.file_name}
+                        {" "}
+                        <a
+                          href={`${import.meta.env.VITE_BACKEND_URL.replace(/\/api$/, "")}/uploads/${att.server_file_name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ marginLeft: "0.5em", color: "#2563eb", textDecoration: "underline" }}
+                          download={att.file_name}
+                        >
+                          View
+                        </a>
                       </div>
                     )}
                   </div>

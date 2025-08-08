@@ -1210,6 +1210,9 @@
 }
 
 .editFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   margin-bottom: 1.5rem;
 }
 
@@ -1218,6 +1221,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   margin-bottom: 1.5rem;
+  width: 100%;
 }
 
 .editFormLabel {
@@ -1242,6 +1246,7 @@
   transition: all 0.2s ease;
   background: white;
   color: black;
+  box-sizing: border-box;
 
 }
 

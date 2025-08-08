@@ -212,14 +212,20 @@ const bookmarkJob = async (req, res) => {
       return res.status(400).json({ success: false, message: "This job is already bookmarked." });
     }
 
-    // Only save user_id and job_id
+    // Get current Singapore time (UTC+8)
+    const createdAt = new Date(Date.now() + 8 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
+
+    // Insert user_id, job_id, created_at
     const insertSql = `
       INSERT INTO tbl_bookmark
-      (user_id, job_id)
-      VALUES (?, ?)
+      (user_id, job_id, created_at)
+      VALUES (?, ?, ?)
     `;
 
-    await db.executeQuery(insertSql, [user_id, job_id]);
+    await db.executeQuery(insertSql, [user_id, job_id, createdAt]);
 
     return res.status(200).json({ success: true, message: "Job bookmarked successfully." });
   } catch (e) {
