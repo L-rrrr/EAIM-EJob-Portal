@@ -58,7 +58,6 @@
   padding: 2rem 2rem 2rem;
   font-size: 1.5rem;
   font-weight: 700;
-  cursor: pointer;
   color: #1e293b;
   background: linear-gradient(135deg, rgba(179, 35, 139, 0.08), rgba(124, 58, 237, 0.08));
   border-bottom: 1px solid rgba(226, 232, 240, 0.8);
@@ -273,4 +272,89 @@ a {
 :global(.dark) .loading, 
 :global(.dark) .notFound {
   color: #f8fafc;
+}
+
+.formButtons {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  gap: 1rem;
+  z-index: 100;
+  background: rgb(255, 255, 255);
+  padding: 1rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.btn {
+  padding: 0.875rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.btnSave {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.1));
+  color: #059669;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.btnSave:hover {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+}
+
+.btnSave:focus {
+  outline: none;
+}
+
+.btnSubmit {
+  background: linear-gradient(135deg, #B3238B, #7c3aed);
+  color: white;
+  box-shadow: 0 4px 12px rgba(179, 35, 139, 0.3);
+}
+
+.btnSubmit:hover {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(179, 35, 139, 0.4);
+}
+
+:global(.dark) .formButtons {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+:global(.dark) .btnSave {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(34, 197, 94, 0.1));
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+:global(.dark) .btnSave:hover {
+  background: linear-gradient(135deg, #34d399, #22c55e);
+  color: #1e293b;
+  box-shadow: 0 8px 20px rgba(52, 211, 153, 0.4);
+}
+
+:global(.dark) .btnSubmit {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+:global(.dark) .btnSubmit:hover {
+  background: linear-gradient(135deg, #5b21b6, #4c1d95);
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.5);
 }

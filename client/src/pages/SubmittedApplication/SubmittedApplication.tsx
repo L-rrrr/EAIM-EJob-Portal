@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import styles from "./HRApply.module.css";
+import styles from "../../HRpages/HRApply/HRApply.module.css";
 import axios from "axios";
 
-const HRApply: React.FC = () => {
+const SubmittedApplication: React.FC = () => {
   const [searchParams] = useSearchParams();
   const applicationId = searchParams.get("applicationId");
   const [application, setApplication] = useState<any>(null);
@@ -114,13 +114,13 @@ const HRApply: React.FC = () => {
         <div className={styles.formButtons}>
           <button 
             className={`${styles.btn} ${styles.btnSave}`} 
-            onClick={() => navigate("/hr/applicants")}
+            onClick={() => navigate("/jobs-applied")}
           >
-            Back to All Applicants
+            Back to All Applications
           </button>
           <button 
             className={`${styles.btnSubmit} ${styles.submit}`} 
-            onClick={() => navigate(`/hr/applicant-details/personal-particulars?applicationId=${applicationId}`)}
+            onClick={() => navigate(`/submitted-application/personal-particulars?applicationId=${applicationId}`)}
           >
             Next →
           </button>
@@ -130,4 +130,4 @@ const HRApply: React.FC = () => {
   );
 };
 
-export default HRApply;
+export default SubmittedApplication;

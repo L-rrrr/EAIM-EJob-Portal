@@ -136,6 +136,7 @@ app.get("/api/get-applicant-education/:userId", authenticateToken, accountApi.ge
 app.get("/api/get-applicant-work/:userId", authenticateToken, accountApi.getApplicantWork);
 app.get("/api/get-applicant-family/:userId", authenticateToken, accountApi.getApplicantFamily);
 app.get("/api/get-applicant-support/:userId", authenticateToken, accountApi.getApplicantSupport);
+app.get("/api/get-applicant-support-full/:userId", authenticateToken, accountApi.getApplicantSupportFullDetails);
 
 // Schedule interview endpoint
 app.post("/api/schedule-interview", authenticateToken, accountApi.scheduleInterview);
@@ -214,6 +215,8 @@ app.get("/api/all-full-applicant-profiles", authenticateToken, accountApi.getAll
 
 // Get applicant's email by ID endpoint
 app.get("/api/user-email/:userId", authenticateToken, accountApi.getUserEmailById);
+
+
 
 
 app.listen(PORT, () => {

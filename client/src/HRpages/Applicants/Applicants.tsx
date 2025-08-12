@@ -80,10 +80,10 @@ const Applicants = () => {
   ];
 
   // Helper to fetch full details for an applicant
-  async function fetchFullDetails(userId: number) {
+  async function fetchFullDetails(applicationId: number) {
     const token = localStorage.getItem("token");
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/application-full-details?userId=${userId}`,
+      `${import.meta.env.VITE_BACKEND_URL}/application-full-details?applicationId=${applicationId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     const data = await res.json();
@@ -103,9 +103,9 @@ const Applicants = () => {
   }
 
   
-  async function handlePrintApplicationForm(userId: number) {
+  async function handlePrintApplicationForm(applicationId: number) {
     try {
-      const details = await fetchFullDetails(userId);
+      const details = await fetchFullDetails(applicationId);
 
       // Fetch job title using job_id
         let jobTitle = "Unknown Position";
@@ -1770,7 +1770,7 @@ const Applicants = () => {
 
                             <button
                               className={styles.actionBtn}
-                              onClick={() => handlePrintApplicationForm(applicant.user_id)}
+                              onClick={() => handlePrintApplicationForm(applicant.application_id)}
                               title="Print Application Form"
                             >
                               <Printer size={14} />

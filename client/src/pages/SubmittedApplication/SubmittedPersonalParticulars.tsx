@@ -4,10 +4,9 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import styles from "../../pages/PersonalParticulars/PersonalParticulars.module.css";
 import axios from "axios";
 
-const ApplicantPersonalParticulars: React.FC = () => {
+const SubmittedPersonalParticulars: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const userId = searchParams.get('userId'); // to be removed
   const applicationId = searchParams.get('applicationId'); 
   const [showPersonalParticulars, setShowPersonalParticulars] = useState(true);
   const [showSingaporeAddress, setShowSingaporeAddress] = useState(true);
@@ -753,19 +752,20 @@ const ApplicantPersonalParticulars: React.FC = () => {
         <div className={styles.formButtons}>
           <button 
             className={`${styles.btn} ${styles.btnSave}`} 
-            onClick={() => navigate("/hr/applicants")}
+            onClick={() => navigate("/jobs-applied")}
           >
-            Back to All Applicants
+            Back to All Applications
           </button>
+
           <button 
-            className={`${styles.btn} ${styles.submit}`} 
-            onClick={() => navigate(`/hr/applicant-details/overview?applicationId=${applicationId}`)}
+            className={`${styles.btnSubmit} ${styles.submit}`} 
+            onClick={() => navigate(`/submitted-application/overview?applicationId=${applicationId}`)}
           >
             ← Previous
           </button>
           <button 
             className={`${styles.btnSubmit} ${styles.submit}`} 
-            onClick={() => navigate(`/hr/applicant-details/education?applicationId=${applicationId}`)}
+            onClick={() => navigate(`/submitted-application/education?applicationId=${applicationId}`)}
           >
             Next →
           </button>
@@ -775,4 +775,4 @@ const ApplicantPersonalParticulars: React.FC = () => {
   );
 };
 
-export default ApplicantPersonalParticulars;
+export default SubmittedPersonalParticulars;

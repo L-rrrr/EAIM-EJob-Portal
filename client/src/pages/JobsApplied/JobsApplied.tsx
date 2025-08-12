@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, Calendar, Clock, MapPin, Briefcase, Users, CheckCircle, AlertCircle, BellRing } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import styles from "./JobsApplied.module.css";
 import axios from "axios";
 
@@ -17,10 +18,12 @@ type Job = {
 };
 
 const JobsApplied: React.FC = () => {
+  const navigate = useNavigate();
   const [appliedJobs, setAppliedJobs] = useState<Job[]>([]);
   const [expandedJobIds, setExpandedJobIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
 
   useEffect(() => {
     fetchAppliedJobs();
@@ -264,6 +267,18 @@ const JobsApplied: React.FC = () => {
                         className={styles.sectionContent}
                         dangerouslySetInnerHTML={{ __html: job.job_requirements || "No requirements listed" }} 
                       />
+                    </div>
+
+                    <div className={styles.detailsSection}>
+                      <div className={styles.viewBtnRight}>
+                        <button
+                          className={styles.viewBtn}
+                          onClick={() => navigate(`/submitted-application/overview?applicationId=${job.application_id}`)}
+                          style={{ marginTop: "1em" }}
+                        >
+                          View Application
+                        </button>
+                      </div>
                     </div>
 
                     {job.application_status === "Offer Made" && (

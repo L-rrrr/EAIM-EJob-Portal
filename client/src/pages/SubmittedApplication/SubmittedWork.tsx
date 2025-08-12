@@ -14,7 +14,7 @@ const proficiencyLevels = ["Advanced", "Intermediate", "Beginner"];
 const languageOptions = ["English", "Mandarin", "Malay", "Tamil", "Hindi", "French", "German", "Japanese"];
 const languageProficiencies = ["Excellent", "Good", "Fair", "Not Applicable"];
 
-const ApplicantWork: React.FC = () => {
+const SubmittedWork: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const applicationId = searchParams.get('applicationId');
@@ -628,20 +628,20 @@ const ApplicantWork: React.FC = () => {
         <div className={styles.formButtons}>
           <button 
             className={`${styles.btn} ${styles.save}`} 
-            onClick={() => navigate("/hr/applicants")}
+            onClick={() => navigate("/jobs-applied")}
           >
-            Back to All Applicants
+            Back to All Applications
           </button>
 
           <button 
             className={`${styles.btn} ${styles.submit}`} 
-            onClick={() => navigate(`/hr/applicant-details/education?applicationId=${applicationId}`)}
+            onClick={() => navigate(`/submitted-application/education?applicationId=${applicationId}`)}
           >
             ← Previous
           </button>
           <button 
             className={`${styles.btn} ${styles.submit}`} 
-            onClick={() => navigate(`/hr/applicant-details/family?applicationId=${applicationId}`)}
+            onClick={() => navigate(`/submitted-application/family?applicationId=${applicationId}`)}
           >
             Next →
           </button>
@@ -651,4 +651,4 @@ const ApplicantWork: React.FC = () => {
   );
 };
 
-export default ApplicantWork;
+export default SubmittedWork;

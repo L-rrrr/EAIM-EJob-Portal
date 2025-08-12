@@ -31,7 +31,6 @@ const Apply: React.FC = () => {
     job_id: jobData?.job_id || null,
     positionType: jobData?.job_type || "Not Specified",
     position: jobData?.title || "Not Specified",
-    // jobCategory: jobData?.job_category || "Not Specified",
   });
 
 

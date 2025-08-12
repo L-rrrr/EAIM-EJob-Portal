@@ -4,7 +4,7 @@ import styles from "../../pages/Education/Education.module.css";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import axios from "axios";
 
-const ApplicantEducation: React.FC = () => {
+const SubmittedEducation: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const applicationId = searchParams.get('applicationId');
@@ -566,19 +566,19 @@ const ApplicantEducation: React.FC = () => {
         <div className={styles.formButtons}>
           <button 
             className={`${styles.btn} ${styles.save}`} 
-            onClick={() => navigate("/hr/applicants")}
+            onClick={() => navigate("/jobs-applied")}
           >
-            Back to All Applicants
+            Back to All Applications
           </button>
           <button 
             className={`${styles.btn} ${styles.submit}`} 
-            onClick={() => navigate(`/hr/applicant-details/personal-particulars?applicationId=${applicationId}`)}
+            onClick={() => navigate(`/submitted-application/personal-particulars?applicationId=${applicationId}`)}
           >
             ← Previous
           </button>
           <button 
             className={`${styles.btn} ${styles.submit}`} 
-            onClick={() => navigate(`/hr/applicant-details/work?applicationId=${applicationId}`)}
+            onClick={() => navigate(`/submitted-application/work?applicationId=${applicationId}`)}
           >
             Next →
           </button>
@@ -588,4 +588,4 @@ const ApplicantEducation: React.FC = () => {
   );
 };
 
-export default ApplicantEducation;
+export default SubmittedEducation;

@@ -44,6 +44,13 @@ import Assessment from "./ManagerPages/Assessment/Assessment";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ResetPassword from "./pages/Authentication/ResetPassword/ResetPassword";
 import HRApply from "./HRpages/HRApply/HRApply";
+import SubmittedApplicationLayout from "./pages/SubmittedApplicationLayout";
+import SubmittedApplication from "./pages/SubmittedApplication/SubmittedApplication";
+import SubmittedPersonalParticulars from "./pages/SubmittedApplication/SubmittedPersonalParticulars";
+import SubmittedEducation from "./pages/SubmittedApplication/SubmittedEducation";
+import SubmittedWork from "./pages/SubmittedApplication/SubmittedWork";
+import SubmittedFamily from "./pages/SubmittedApplication/SubmittedFamily";
+import SubmittedSupport from "./pages/SubmittedApplication/SubmittedSupport";
 
 // ------------------------ App Routes ------------------------
 
@@ -62,6 +69,16 @@ const AppRoutes = () => {
           <Route path="home" element={<Home />} />
           <Route path="available-jobs" element={<AvailableJobs />} />
           <Route path="jobs-applied" element={<JobsApplied />} />
+
+          <Route path="submitted-application" element={<SubmittedApplicationLayout />}>
+            <Route path="overview" element={<SubmittedApplication />} />
+            <Route path="personal-particulars" element={<SubmittedPersonalParticulars />} />
+            <Route path="education" element={<SubmittedEducation />} />
+            <Route path="work" element={<SubmittedWork />} />
+            <Route path="family" element={<SubmittedFamily />} />
+            <Route path="support" element={<SubmittedSupport />} />
+          </Route>
+
           <Route path="bookmark" element={<Bookmark />} />
           <Route path="help" element={<Help />} />
           <Route path="settings" element={<Settings />} />
@@ -93,7 +110,6 @@ const AppRoutes = () => {
           </Route>
           <Route path="post-job" element={<PostJob />} />
           <Route path="interview" element={<Interview />} />
-          {/* <Route path="application-form" element={<Apply />} /> */}
         </Route>
       </Route>
 

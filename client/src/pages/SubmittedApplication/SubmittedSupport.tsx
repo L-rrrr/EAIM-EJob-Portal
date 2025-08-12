@@ -5,7 +5,7 @@ import axios from "axios";
 import styles from "../../pages/Education/Education.module.css"; 
 import supportStyles from "../../pages/Support/Support.module.css";
 
-const ApplicantSupport: React.FC = () => {
+const SubmittedSupport: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const applicationId = searchParams.get('applicationId');
@@ -344,14 +344,14 @@ const ApplicantSupport: React.FC = () => {
         <div className={styles.formButtons}>
           <button 
             className={`${styles.btn} ${styles.save}`} 
-            onClick={() => navigate("/hr/applicants")}
+            onClick={() => navigate("/jobs-applied")}
           >
-            Back to All Applicants
+            Back to All Applications
           </button>
 
           <button 
             className={`${styles.btn} ${styles.submit}`} 
-            onClick={() => navigate(`/hr/applicant-details/family?applicationId=${applicationId}`)}
+            onClick={() => navigate(`/submitted-application/family?applicationId=${applicationId}`)}
           >
             ← Previous
           </button>
@@ -361,4 +361,4 @@ const ApplicantSupport: React.FC = () => {
   );
 };
 
-export default ApplicantSupport;
+export default SubmittedSupport;

@@ -5,7 +5,7 @@ import axios from "axios";
 import styles from "../../pages/Education/Education.module.css"; 
 import familyStyles from "../../pages/Family/Family.module.css";
 
-const ApplicantFamily: React.FC = () => {
+const SubmittedFamily: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const applicationId = searchParams.get('applicationId');
@@ -301,20 +301,20 @@ const ApplicantFamily: React.FC = () => {
         <div className={styles.formButtons}>
           <button 
             className={`${styles.btn} ${styles.save}`} 
-            onClick={() => navigate("/hr/applicants")}
+            onClick={() => navigate("/jobs-applied")}
           >
-            Back to All Applicants
+            Back to All Applications
           </button>
 
           <button 
             className={`${styles.btn} ${styles.submit}`} 
-            onClick={() => navigate(`/hr/applicant-details/work?applicationId=${applicationId}`)}
+            onClick={() => navigate(`/submitted-application/work?applicationId=${applicationId}`)}
           >
             ← Previous
           </button>
           <button 
             className={`${styles.btn} ${styles.submit}`} 
-            onClick={() => navigate(`/hr/applicant-details/support?applicationId=${applicationId}`)}
+            onClick={() => navigate(`/submitted-application/support?applicationId=${applicationId}`)}
           >
             Next →
           </button>
@@ -324,4 +324,4 @@ const ApplicantFamily: React.FC = () => {
   );
 };
 
-export default ApplicantFamily;
+export default SubmittedFamily;

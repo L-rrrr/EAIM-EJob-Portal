@@ -3719,10 +3719,17 @@ const saveApplicationFullDetails = async (req, res) => {
 
 const getApplicationFullDetails = async (req, res) => {
   try {
-    // Allow admin/HR to fetch by userId param, otherwise use logged-in user
-    const user_id = req.query.userId || req.user.user_id;
-    const sql = `SELECT * FROM tbl_application_full_details WHERE user_id = ? ORDER BY created_at DESC LIMIT 1`;
-    const rows = await db.executeQuery(sql, [user_id]);
+    const application_id = req.query.applicationId;
+    let sql, params;
+    if (application_id) {
+      sql = `SELECT * FROM tbl_application_full_details WHERE application_id = ? LIMIT 1`;
+      params = [application_id];
+    } else {
+      const user_id = req.query.userId || req.user.user_id;
+      sql = `SELECT * FROM tbl_application_full_details WHERE user_id = ? ORDER BY created_at DESC LIMIT 1`;
+      params = [user_id];
+    }
+    const rows = await db.executeQuery(sql, params);
     if (!rows.length) {
       return res.status(404).json({ success: false, message: "No application details found." });
     }
@@ -4390,6 +4397,42 @@ const getUserEmailById = async (req, res) => {
   }
 };
 
+// Get applicant support from tbl_application_full_details
+const getApplicantSupportFullDetails = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    const sql = `SELECT \`references\`, attachments FROM tbl_application_full_details WHERE user_id = ? ORDER BY created_at DESC LIMIT 1`;
+    const rows = await db.executeQuery(sql, [userId]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: "No application details found." });
+    }
+
+    // Parse JSON fields
+    let references = [];
+    let attachments = [];
+    try {
+      references = JSON.parse(rows[0].references || "[]");
+    } catch {}
+    try {
+      attachments = JSON.parse(rows[0].attachments || "[]");
+    } catch {}
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        references,
+        attachments
+      }
+    });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: "Server error", error: e.message });
+  }
+};
+
 
 
 module.exports = {
@@ -4489,7 +4532,8 @@ module.exports = {
   reviewJobRequisition,
   postVerifiedRequisitionAsJob,
   getAllFullApplicantProfiles,
-  getUserEmailById
+  getUserEmailById,
+  getApplicantSupportFullDetails
 };
 
 

@@ -23,7 +23,3 @@ dist-ssr
 *.sln
 *.sw?
 .env
-
-
-# Upload directories - don't commit uploaded files
-server/uploads/
