@@ -196,14 +196,26 @@ const JobsApplied: React.FC = () => {
                 >
                   <div className={styles.jobMainInfo}>
                     <div className={styles.jobTitleSection}>
-                      <h3 className={styles.jobTitle}>
-                        {job.title}
-                        {(job.application_status === "Offer Made" || job.application_status === "Not Selected") && (
-                          <span className={styles.actionRequiredIcon} title="Action Required">
-                            <BellRing size={18} />
+                      
+                      <div className={styles.jobTitleRow}>
+                        <h3 className={styles.jobTitle} style={{ display: "flex", alignItems: "center", gap: "0.75rem", margin: 0 }}>
+                          {job.title}
+                          <span className={`${styles.jobStatusBadge} ${getStatusColor(job.application_status)}`}>
+                            {getStatusIcon(job.application_status)}
+                            {(job.application_status === "Assessed" || job.application_status === "Reviewing")
+                              ? "Reviewing"
+                              : (job.application_status === "Offer Made" || job.application_status === "Not Selected")
+                                ? "Outcome Ready"
+                                : job.application_status}
                           </span>
-                        )}
-                      </h3>
+                          {(job.application_status === "Offer Made" || job.application_status === "Not Selected") && (
+                            <span className={styles.actionRequiredIcon} title="Action Required">
+                              <BellRing size={18} />
+                            </span>
+                          )}
+                        </h3>
+                      </div>
+
                       <div className={styles.jobMeta}>
                         <span className={styles.jobTypeBadge}>
                           <Clock size={12} />
@@ -213,15 +225,6 @@ const JobsApplied: React.FC = () => {
                           <MapPin size={12} />
                           {job.job_category}
                         </span>
-                        <span className={`${styles.jobStatusBadge} ${getStatusColor(job.application_status)}`}>
-                          {getStatusIcon(job.application_status)}
-                          {(job.application_status === "Assessed" || job.application_status === "Reviewing")
-                            ? "Reviewing"
-                            : (job.application_status === "Offer Made" || job.application_status === "Not Selected")
-                              ? "Outcome Ready"
-                              : job.application_status}
-                        </span>
-                        
                       </div>
                     </div>
                     

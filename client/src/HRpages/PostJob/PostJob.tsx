@@ -14,7 +14,6 @@ import {
   FileUp
 } from "lucide-react";
 
-// Replace the TiptapEditor component with this version
 const TiptapEditor = ({
   content,
   onChange,
@@ -155,10 +154,6 @@ const PostJob: React.FC = () => {
     const [date] = dateStr.split(" ");
     const [year, month, day] = date.split("-");
     return `${day}-${month}-${year}`;
-  }
-
-  function isEditorContentEmpty(html: string) {
-    return !html || html.replace(/<[^>]+>/g, '').trim() === '';
   }
 
   const handleViewRequisition = async (req: Requisition) => {

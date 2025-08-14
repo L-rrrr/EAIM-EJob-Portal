@@ -5,12 +5,11 @@ import styles from "./Login.module.css";
 import EAIM from "../../../assets/EAIM.png";
 import background from "../../../assets/background4.jpg";
 import axios from "axios";
-import { Eye, EyeOff, Mail, Lock, User, Sun, Moon } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Sun, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
 
 type LoginFormInputs = {
-  role: string;
-  email: string;
+  emailOrUsername: string;
   password: string;
 };
 
@@ -21,10 +20,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverMessage, setServerMessage] = useState("");
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
-
-  const [darkMode, setDarkMode] = useState(() => {
-    return document.documentElement.classList.contains('dark');
-  });
+  const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
 
   useEffect(() => {
     setDarkMode(document.documentElement.classList.contains('dark'));
@@ -40,25 +36,23 @@ const Login = () => {
   const onSubmit = async (data: LoginFormInputs) => {
     setIsLoading(true);
     setServerMessage("");
-    
     try {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/login`, {
-        email: data.email,
+        emailOrUsername: data.emailOrUsername,
         password: data.password,
-        role: data.role,
       });
 
       if (response.data.success) {
         localStorage.setItem("token", response.data.token);
         setServerMessage("Login successful! Redirecting...");
         setMessageType('success');
-        
         setTimeout(() => {
-          if (data.role === "Applicant") {
+          const role = response.data.role;
+          if (role === "Applicant") {
             navigate("/home");
-          } else if (data.role === "HR") {
+          } else if (role === "HR") {
             navigate("/hr/dashboard");
-          } else if (data.role === "Manager") {
+          } else if (role === "Manager") {
             navigate("/manager/available-jobs");
           }
         }, 1000);
@@ -80,18 +74,12 @@ const Login = () => {
 
   return (
     <div className={authStyles.authBackground} style={{ backgroundImage: `url(${background})`}}>
-      {/* Theme Toggle Button */}
-
-
       <div className={authStyles.authContainer}>
-        
-
         <div className={authStyles.logoSection}>
           <img src={EAIM} className={authStyles.logo} alt="EAIM Logo" />
           <h1 className={authStyles.title}>Welcome Back</h1>
           <p className={authStyles.subtitle}>Sign in to your account to continue</p>
         </div>
-
         <button 
           className={authStyles.themeToggle}
           onClick={toggleDarkMode}
@@ -99,49 +87,24 @@ const Login = () => {
         >
           {darkMode ? <Moon size={20} /> : <Sun size={20} />}
         </button>
-
         <form onSubmit={handleSubmit(onSubmit)} className={authStyles.authForm}>
-          {/* Role Selection */}
+          {/* Email or Username Input */}
           <div className={authStyles.formGroup}>
-            <label htmlFor="role" className={authStyles.label}>
-              <User size={18} />
-              Login as
-            </label>
-            <div className={authStyles.inputWrapper}>
-              <select 
-                id="role" 
-                {...register("role", { required: "Please select a role" })} 
-                className={`${authStyles.input} ${styles.selectInput} ${errors.role ? authStyles.inputError : ''}`}
-              >
-                <option value="">-- Select Your Role --</option>
-                <option value="Applicant">Job Applicant</option>
-                <option value="Manager">Hiring Manager</option>
-                <option value="HR">HR</option>
-              </select>
-            </div>
-            {errors.role && <p className={authStyles.errorMessage}>{errors.role.message}</p>}
-          </div>
-
-          {/* Email Input */}
-          <div className={authStyles.formGroup}>
-            <label htmlFor="email" className={authStyles.label}>
+            <label htmlFor="emailOrUsername" className={authStyles.label}>
               <Mail size={18} />
               Email / Username
             </label>
             <div className={authStyles.inputWrapper}>
               <input
-                id="email"
+                id="emailOrUsername"
                 type="text"
-                placeholder="Enter your username"
-                {...register("email", { 
-                  required: "Username is required"
-                })}
-                className={`${authStyles.input} ${errors.email ? authStyles.inputError : ''}`}
+                placeholder="Enter your email or username"
+                {...register("emailOrUsername", { required: "Email or username is required" })}
+                className={`${authStyles.input} ${errors.emailOrUsername ? authStyles.inputError : ''}`}
               />
             </div>
-            {errors.email && <p className={authStyles.errorMessage}>{errors.email.message}</p>}
+            {errors.emailOrUsername && <p className={authStyles.errorMessage}>{errors.emailOrUsername.message}</p>}
           </div>
-
           {/* Password Input */}
           <div className={authStyles.formGroup}>
             <label htmlFor="password" className={authStyles.label}>
@@ -155,10 +118,6 @@ const Login = () => {
                 placeholder="Enter your password"
                 {...register("password", { 
                   required: "Password is required",
-                  minLength: {
-                    value: 8,
-                    message: "Password must be at least 8 characters"
-                  }
                 })}
                 className={`${authStyles.input} ${styles.passwordInput} ${errors.password ? authStyles.inputError : ''}`}
               />
@@ -172,7 +131,6 @@ const Login = () => {
             </div>
             {errors.password && <p className={authStyles.errorMessage}>{errors.password.message}</p>}
           </div>
-
           {/* Submit Button */}
           <button 
             type="submit" 
@@ -185,14 +143,12 @@ const Login = () => {
               'Sign In'
             )}
           </button>
-
           {/* Server Message */}
           {serverMessage && (
             <p className={`${authStyles.serverMessage} ${authStyles[messageType]}`}>
               {serverMessage}
             </p>
           )}
-
           {/* Links */}
           <div className={authStyles.linksSection}>
             <Link to="/register" className={authStyles.link}>
@@ -203,8 +159,6 @@ const Login = () => {
             </Link>
           </div>
         </form>
-
-        {/* Footer */}
         <div className={authStyles.footer}>
           <p>&copy; 2025 EAIM. All rights reserved.</p>
         </div>

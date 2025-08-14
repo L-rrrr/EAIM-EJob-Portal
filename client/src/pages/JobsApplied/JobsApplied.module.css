@@ -649,3 +649,9 @@
   background: linear-gradient(90deg, #a21caf 0%, #6366f1 100%);
   box-shadow: 0 4px 16px rgba(124, 58, 237, 0.18);
 }
+
+.jobTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}

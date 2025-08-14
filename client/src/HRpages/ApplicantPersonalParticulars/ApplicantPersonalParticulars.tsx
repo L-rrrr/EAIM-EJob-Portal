@@ -7,7 +7,6 @@ import axios from "axios";
 const ApplicantPersonalParticulars: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const userId = searchParams.get('userId'); // to be removed
   const applicationId = searchParams.get('applicationId'); 
   const [showPersonalParticulars, setShowPersonalParticulars] = useState(true);
   const [showSingaporeAddress, setShowSingaporeAddress] = useState(true);

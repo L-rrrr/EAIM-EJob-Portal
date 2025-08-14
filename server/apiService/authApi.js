@@ -88,7 +88,7 @@ const register = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const insertSql = `INSERT INTO tbl_users (email, password, first_name, last_name, nationality, role) VALUES (?, ?, ?, ?, ?, "Applicant")`;
+    const insertSql = `INSERT INTO tbl_users (email, password, first_name, last_name, nationality) VALUES (?, ?, ?, ?, ?)`;
     await db.executeQuery(insertSql, [email, hashed, first_name, last_name, nationality]);
 
     return res.status(201).json({ success: true, message: "Registration successful" });
@@ -99,92 +99,72 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { email, password, role } = req.body;
+  const { emailOrUsername, password } = req.body;
   try {
-    const sha1Password = crypto.createHash("sha1").update(password).digest("hex");
-    
-    // Hiring Manager login logic
-    if (role === "Manager") {
-      // 1. Match user_name and user_password in vw_staff (password is SHA1 hash in DB)
-      const sha1Password = crypto.createHash("sha1").update(password).digest("hex");
-      const staffSql = `
-        SELECT * FROM vw_staff 
-        WHERE user_name = ? AND user_password = ?
-      `;
-      const staffRows = await db.executeQuery(staffSql, [email, sha1Password]);
+    // If input contains '@', treat as applicant (tbl_users)
+    if (emailOrUsername.includes("@")) {
+      const rows = await db.executeQuery(`SELECT * FROM tbl_users WHERE email = ?`, [emailOrUsername]);
+      if (!rows.length) {
+        return res.status(401).json({ success: false, message: "User not found" });
+      }
+      const isMatch = await bcrypt.compare(password, rows[0].password);
+      if (!isMatch) {
+        return res.status(401).json({ success: false, message: "Invalid password" });
+      }
+      const payload = {
+        user_id: rows[0].user_id,
+        email: rows[0].email,
+        role: "Applicant",
+        iat: Math.floor(Date.now() / 1000),
+        jti: crypto.randomUUID()
+      };
+      const token = generateToken(payload);
+      return res.status(200).json({ success: true, message: "Login successful", token, role: "Applicant" });
+    } else {
+      // HR/Manager logic (vw_staff, SHA1)
+      const staffRows = await db.executeQuery(
+        `SELECT * FROM vw_staff WHERE user_name = ?`, [emailOrUsername]
+      );
       if (!staffRows.length) {
-        return res.status(401).json({ success: false, message: "Invalid username or password." });
+        return res.status(401).json({ success: false, message: "User not found" });
       }
       const staff = staffRows[0];
-
-      // 2. Check staff_status is Active
       if (staff.staff_status !== "Active") {
         return res.status(403).json({ success: false, message: "Account is not active." });
       }
-
-      // 3. Allow login if dept_code is DEP-09
-      if (staff.dept_code === "DEP-09") {
-        const payload = {
-          user_id: staff.emp_no,
-          email: staff.user_name,
-          role: "Manager",
-          name: staff.staff_name,
-          iat: Math.floor(Date.now() / 1000),
-          jti: crypto.randomUUID()
-        };
-        const token = generateToken(payload);
-        return res.status(200).json({ success: true, message: "Login successful", token });
+      // Determine role
+      let role = "";
+      if (staff.dept_code === "DEP-10") {
+        role = "HR";
+      } else if (staff.dept_code === "DEP-09") {
+        role = "Manager";
+      } else {
+        // Check if user is a manager (supervisor logic)
+        const supervisorRows = await db.executeQuery(
+          `SELECT 1 FROM vw_staff WHERE supervisor = ? LIMIT 1`, [staff.emp_no]
+        );
+        if (supervisorRows.length) {
+          role = "Manager";
+        } else {
+          return res.status(403).json({ success: false, message: "You are not assigned as HR or Manager." });
+        }
       }
-
-      // 4. Otherwise, check if emp_no exists in supervisor column
-      const supervisorSql = `SELECT 1 FROM vw_staff WHERE supervisor = ? LIMIT 1`;
-      const supervisorRows = await db.executeQuery(supervisorSql, [staff.emp_no]);
-      if (!supervisorRows.length) {
-        return res.status(403).json({ success: false, message: "You are not assigned as a supervisor/hiring manager." });
+      // Check password (SHA1)
+      const sha1Password = crypto.createHash("sha1").update(password).digest("hex");
+      if (staff.user_password !== sha1Password) {
+        return res.status(401).json({ success: false, message: "Invalid password" });
       }
-
-      // Success: generate token
       const payload = {
         user_id: staff.emp_no,
         email: staff.user_name,
-        role: "Manager",
+        role,
         name: staff.staff_name,
         iat: Math.floor(Date.now() / 1000),
         jti: crypto.randomUUID()
       };
       const token = generateToken(payload);
-      return res.status(200).json({ success: true, message: "Login successful", token });
+      return res.status(200).json({ success: true, message: "Login successful", token, role });
     }
-
-    // Default: Applicant/HR logic (existing)
-    const rows = await db.executeQuery(`SELECT * FROM tbl_users WHERE email = ?`, [email]);
-    if (!rows.length) {
-      console.log("User not found");
-      return res.status(401).json({ success: false, message: "User not found" });
-    }
-    const isMatch = await bcrypt.compare(password, rows[0].password);
-    const userRole = rows[0].role;
-    if (email !== "admin") {
-      if (role && role !== userRole) {
-        return res.status(403).json({ success: false, message: "Access denied: Incorrect role" });
-      }
-      if (!isMatch) {
-        return res.status(401).json({ success: false, message: "Invalid password" });
-      }
-    } else {
-      if (!isMatch) {
-        return res.status(401).json({ success: false, message: "Invalid password" });
-      }
-    }
-    const payload = {
-      user_id: rows[0].user_id,
-      email: rows[0].email,
-      role: rows[0].role,
-      iat: Math.floor(Date.now() / 1000),
-      jti: crypto.randomUUID()
-    };
-    const token = generateToken(payload);
-    return res.status(200).json({ success: true, message: "Login successful", token });
   } catch (e) {
     console.error("Login error:", e);
     return res.status(500).json({ success: false, message: "Login failed", error: e.message });
