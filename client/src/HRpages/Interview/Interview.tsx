@@ -101,16 +101,6 @@ const Interview: React.FC = () => {
     setCurrentDate(new Date());
   };
 
-  const handleDateClick = (dateString: string) => {
-    setClickedDate(dateString);
-    setFormMode('add');
-    setFormData({
-      date: dateString,
-    });
-    setSelectedDate(new Date(dateString));
-    setShowForm(true);
-  };
-
   const handleEventClick = (event: InterviewEvent) => {
     setSelectedEvent(event);
     setFormMode('edit');
@@ -204,7 +194,6 @@ const Interview: React.FC = () => {
     if (!formData.format) errors.format = "Meeting Format is required.";
     if (!formData.startTime) errors.startTime = "Start Time is required.";
     if (!formData.endTime) errors.endTime = "End Time is required.";
-    if (!addToCalendar) errors.addToCalendar = "Please select if you want to add to your calendar.";
 
     setFieldErrors(errors);
 
@@ -223,7 +212,6 @@ const Interview: React.FC = () => {
       start_time: formData.startTime,
       end_time: formData.endTime,
       venue: formData.venue,
-      add_to_my_calendar: addToCalendar === "Yes" ? 1 : 0,
       additional_notes: formData.description
     };
 
@@ -482,7 +470,6 @@ const upcomingInterviews = events
                     <div
                       key={`${currentYear}-${currentMonth}-${day}`}
                       className={`${styles.calendarDay} ${isTodayDate ? styles.today : ''}`}
-                      onClick={() => handleDateClick(dateString)}
                     >
                       <div className={styles.dayNumber}>
                         {day}
@@ -630,63 +617,30 @@ const upcomingInterviews = events
                   <label htmlFor="applicant">
                     Applicant <span style={{ color: "red" }}>*</span>
                   </label>
-
-                  <select
+                  <input
                     id="applicant"
-                    className={`${styles.formInput} ${fieldErrors.applicant ? styles.inputError : ""}`}
-                    value={formData.user_id || ''}
-                    onChange={e => {
-                      const selectedUserId = e.target.value;
-                      const selectedApplicant = applicantList.find(app => String(app.user_id) === selectedUserId);
-                      setFormData({
-                        ...formData,
-                        user_id: selectedUserId,
-                        applicant: selectedApplicant ? selectedApplicant.full_name : ''
-                      });
-                      setFieldErrors({ ...fieldErrors, applicant: "" });
-                    }}
-                    required
-                    disabled={formMode === 'edit'}
-                    title={formMode === 'edit' ? "To change applicant, delete and schedule a new interview." : ""}
-                  >
-                    <option value="" disabled>Select applicant</option>
-                    {applicantList.map(app => (
-                      <option key={app.user_id} value={app.user_id}>{app.full_name}</option>
-                    ))}
-                  </select>
-                  
+                    type="text"
+                    className={styles.formInput}
+                    value={formData.applicant || ''}
+                    disabled
+                    readOnly
+                  />
                   {fieldErrors.applicant && (
                     <div className={styles.fieldError}>{fieldErrors.applicant}</div>
                   )}
                 </div>
-
                 <div className={styles.formGroup}>
                   <label htmlFor="job">
                     Job Position <span style={{ color: "red" }}>*</span>
                   </label>
-                  <select
+                  <input
                     id="job"
-                    className={`${styles.formInput} ${fieldErrors.job ? styles.inputError : ""}`}
-                    value={formData.job_id || ''}
-                    onChange={e => {
-                      const selectedJobId = e.target.value;
-                      const selectedJob = jobList.find(job => String(job.job_id) === selectedJobId);
-                      setFormData({
-                        ...formData,
-                        job_id: selectedJobId,
-                        job: selectedJob ? selectedJob.title : ''
-                      });
-                      setFieldErrors({ ...fieldErrors, job: "" });
-                    }}
-                    required
-                    disabled={formMode === 'edit'}
-                    title={formMode === 'edit' ? "To change job position, delete and schedule a new interview." : ""}
-                  >
-                    <option value="" disabled>Select job</option>
-                    {jobList.map(job => (
-                      <option key={job.job_id} value={job.job_id}>{job.title}</option>
-                    ))}
-                  </select>
+                    type="text"
+                    className={styles.formInput}
+                    value={formData.job || ''}
+                    disabled
+                    readOnly
+                  />
                   {fieldErrors.job && (
                     <div className={styles.fieldError}>{fieldErrors.job}</div>
                   )}
@@ -791,31 +745,6 @@ const upcomingInterviews = events
                     onChange={(e) => handleInputChange('venue', e.target.value)}
                   />
                 </div>
-
-                {/* Add to my calendar question */}
-                <div className={styles.formGroup}>
-                  <label htmlFor="addToCalendar">
-                    Add to my calendar? <span style={{ color: "red" }}>*</span>
-                  </label>
-                  <select
-                    id="addToCalendar"
-                    className={`${styles.formInput} ${fieldErrors.addToCalendar ? styles.inputError : ""}`}
-                    value={addToCalendar}
-                    onChange={e => {
-                      setAddToCalendar(e.target.value);
-                      setFieldErrors({ ...fieldErrors, addToCalendar: "" });
-                    }}
-                    required
-                  >
-                    <option value="" disabled>Select</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                  {fieldErrors.addToCalendar && (
-                    <div className={styles.fieldError}>{fieldErrors.addToCalendar}</div>
-                  )}
-                </div>
-
               </div>
 
               <div className={styles.formGroup}>
@@ -859,16 +788,16 @@ const upcomingInterviews = events
                   {formMode === 'add' ? 'Schedule' : 'Update'}
                 </button>
 
-                {addToCalendar === "Yes" && (
-                  <button
-                    type="button"
-                    className={styles.outlookBtn}
-                    onClick={openMicrosoftCalendar}
-                    style={{ marginLeft: 8 }}
-                  >
-                    Add to Microsoft Calendar
-                  </button>
-                )}
+                
+                <button
+                  type="button"
+                  className={styles.outlookBtn}
+                  onClick={openMicrosoftCalendar}
+                  style={{ marginLeft: 8 }}
+                >
+                  Add to Microsoft Calendar
+                </button>
+              
               </div>
             </form>
           </div>

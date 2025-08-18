@@ -3094,15 +3094,14 @@ const scheduleInterview = async (req, res) => {
       start_time,
       end_time,
       venue,
-      add_to_my_calendar,
       additional_notes
     } = req.body;
 
     const sql = `
       INSERT INTO tbl_interview (
         interview_id, user_id, job_id, applicant, job, interview_date, meeting_format,
-        start_time, end_time, venue, add_to_my_calendar, additional_notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        start_time, end_time, venue, additional_notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         user_id = VALUES(user_id),
         job_id = VALUES(job_id),
@@ -3113,7 +3112,6 @@ const scheduleInterview = async (req, res) => {
         start_time = VALUES(start_time),
         end_time = VALUES(end_time),
         venue = VALUES(venue),
-        add_to_my_calendar = VALUES(add_to_my_calendar),
         additional_notes = VALUES(additional_notes)
     `;
 
@@ -3128,7 +3126,6 @@ const scheduleInterview = async (req, res) => {
       start_time || null,
       end_time || null,
       venue || null,
-      add_to_my_calendar ? 1 : 0,
       additional_notes || null
     ]);
 
@@ -3400,6 +3397,82 @@ const updateApplicationStatus = async (req, res) => {
       WHERE application_id = ?
     `;
     await db.executeQuery(sql, [status, id]);
+
+    // Fetch applicant's email and name
+    const userSql = `
+      SELECT a.user_id, u.email, u.first_name, u.last_name
+      FROM tbl_application a
+      LEFT JOIN tbl_users u ON a.user_id = u.user_id
+      WHERE a.application_id = ?
+      LIMIT 1
+    `;
+    const userRows = await db.executeQuery(userSql, [id]);
+    if (userRows.length) {
+      const { email, first_name, last_name } = userRows[0];
+      const userName = `${first_name || ""} ${last_name || ""}`.trim() || "Applicant";
+      if (status === "Offer Made") {
+        // Compose offer email with link
+        const frontendUrl = process.env.FRONTEND_URL || "https://ejob.eaim.edu.sg";
+        const jobsAppliedLink = `${frontendUrl}/jobs-applied`;
+        const html = `
+          <p>Dear ${userName},</p>
+          <p>
+            Congratulations! We are pleased to inform you that you have received an offer for your application with EAIM.
+            Your qualifications and experiences have impressed our team, and we believe you would be a valuable addition to our organization.
+          </p>
+          <p>
+            To review the details of your offer and respond, please <a href="${jobsAppliedLink}">click here</a> to visit your Jobs Applied page.
+            There, you can accept or decline the offer at your convenience.
+          </p>
+          <p>
+            If the above link does not work, you may copy and paste this URL into your browser:<br>
+            ${jobsAppliedLink}
+          </p>
+          <p>
+            Should you have any questions or require further information, please do not hesitate to reach out to us.
+            We look forward to the possibility of welcoming you to the EAIM family.
+          </p>
+          <p>
+            Best regards,<br/>
+            EAIM Recruitment Team
+          </p>
+        `;
+        await transporter.sendMail({
+          from: `"EAIM" <${process.env.SMTP_USER}>`,
+          to: email,
+          subject: "Job Offer Notification",
+          html
+        });
+      } else if (status === "Not Selected") {
+        // Compose rejection email (no link)
+        const html = `
+          <p>Dear ${userName},</p>
+
+          <p>Thank you very much for taking the time to apply for the position with EAIM and for your interest in joining our team. 
+          We truly appreciate the effort you put into your application and the opportunity to learn more about your background, skills, and experiences.</p>
+
+          <p>After careful consideration of all applications, we have decided to move forward with other candidates whose qualifications more closely match the requirements of this role at this time. 
+          This was by no means an easy decision, as we received a number of strong applications, including yours.</p>
+
+          <p>We want to emphasize that your application was reviewed thoroughly, and we genuinely value the time and thought you dedicated to it. 
+          We encourage you to stay connected with EAIM and apply for future openings that match your expertise and career aspirations, as we would be pleased to consider your profile again.</p>
+
+          <p>Thank you once again for your interest in EAIM. 
+          We wish you every success in your professional journey and hope our paths may cross again in the future.</p>
+
+          <p>Best regards,<br/>
+          EAIM Recruitment Team</p>
+        `;
+
+        await transporter.sendMail({
+          from: `"EAIM" <${process.env.SMTP_USER}>`,
+          to: email,
+          subject: "Application Status Update",
+          html
+        });
+      }
+    }
+
     return res.status(200).json({ success: true, message: "Status updated" });
   } catch (e) {
     return res.status(500).json({ success: false, message: "Server error", error: e.message });

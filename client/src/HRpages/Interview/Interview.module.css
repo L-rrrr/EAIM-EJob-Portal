@@ -287,7 +287,6 @@
   border-right: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
   background: white;
-  cursor: pointer;
   transition: background-color 0.2s ease;
   display: flex;
   flex-direction: column;

@@ -194,7 +194,15 @@ const Assessment: React.FC = () => {
       );
       const data = await res.json();
       if (data.success && data.assessment) {
-        setSelectedCompletedApp({ ...app, ...data.assessment });
+        setSelectedCompletedApp({ 
+          ...app, 
+          ...data.assessment,
+          candidateName: data.assessment.candidate_name,
+          currentSalary: data.assessment.current_salary,
+          expectedSalary: data.assessment.expected_salary,
+          interviewDate: data.assessment.interview_date,
+          interviewTime: data.assessment.interview_time
+        });
       }
     } finally {
       setLoadingReviewApps(false);
