@@ -532,3 +532,11 @@
     height: 300px; /* Even smaller on very small screens */
   }
 }
+
+/* Dashboard.module.css */
+.noChartData {
+  text-align: center;
+  color: #888;
+  font-size: 1.1rem;
+  padding: 3rem 0;
+}
