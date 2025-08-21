@@ -5,7 +5,6 @@ const db = require("../dbConn");
 const nodemailer = require("nodemailer");
 
 const secretKey = crypto.randomBytes(32).toString("hex");
-const pendingCodes = {};
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
@@ -18,15 +17,29 @@ const transporter = nodemailer.createTransport({
 
 const requestRegisterCode = async (req, res) => {
   const { email } = req.body;
-  // Check if email already exists
+
+  // Check if email already exists in users table
   const checkSql = `SELECT * FROM tbl_users WHERE email = ?`;
   const existingUsers = await db.executeQuery(checkSql, [email]);
   if (existingUsers.length > 0) {
     return res.status(400).json({ success: false, message: "This account already exists" });
   }
+
   // Generate code
   const code = Math.floor(100000 + Math.random() * 900000).toString();
-  pendingCodes[email] = { code, expires: Date.now() + 10 * 60 * 1000 }; // 10 min expiry
+
+  // Calculate Singapore time + 10 minutes for expires_at
+  const now = new Date();
+  // Add 10 minutes to current UTC time, then convert to Singapore time
+  const expiresAt = new Date(now.getTime() + (8 * 60 + 10) * 60 * 1000);
+
+  // Upsert code for this email
+  const upsertSql = `
+    INSERT INTO tbl_pending_code (email, code, expires_at)
+    VALUES (?, ?, ?)
+    ON DUPLICATE KEY UPDATE code = VALUES(code), expires_at = VALUES(expires_at)
+  `;
+  await db.executeQuery(upsertSql, [email, code, expiresAt]);
 
   // Send code
   await transporter.sendMail({
@@ -39,10 +52,15 @@ const requestRegisterCode = async (req, res) => {
   return res.json({ success: true, message: "Verification code sent to your email." });
 };
 
-const verifyRegisterCode = (req, res) => {
+const verifyRegisterCode = async (req, res) => {
   const { email, code } = req.body;
-  const entry = pendingCodes[email];
-  if (!entry || entry.code !== code || Date.now() > entry.expires) {
+  const sql = `SELECT code, expires_at FROM tbl_pending_code WHERE email = ?`;
+  const rows = await db.executeQuery(sql, [email]);
+  if (
+    !rows.length ||
+    rows[0].code != code ||
+    new Date() > new Date(rows[0].expires_at)
+  ) {
     return res.status(400).json({ success: false, message: "Invalid or expired code." });
   }
   return res.json({ success: true });
@@ -50,7 +68,7 @@ const verifyRegisterCode = (req, res) => {
 
 // Generate token function - returns only the token
 const generateToken = (payload) => {
-  const token = jwt.sign(payload, secretKey, { algorithm: 'HS256', expiresIn: '10h' }); // need to change the expiresIn to 1 hour (10 hours is for testing)
+  const token = jwt.sign(payload, secretKey, { algorithm: 'HS256', expiresIn: '2h' }); // need to change the expiresIn to 1 hour (10 hours is for testing)
   return token;
 };
 
@@ -71,23 +89,28 @@ const authenticateToken = (req, res, next) => {
 const register = async (req, res) => {
   const { email, password, first_name, last_name, nationality, code } = req.body;
 
-  const entry = pendingCodes[email];
-  if (!entry || entry.code !== code || Date.now() > entry.expires) {
+  // Check code in DB
+  const sql = `SELECT code, expires_at FROM tbl_pending_code WHERE email = ?`;
+  const rows = await db.executeQuery(sql, [email]);
+  if (
+    !rows.length ||
+    rows[0].code != code ||
+    new Date() > new Date(rows[0].expires_at)
+  ) {
     return res.status(400).json({ success: false, message: "Invalid or expired verification code." });
   }
+
   // Remove code after use
-  delete pendingCodes[email];
+  await db.executeQuery(`DELETE FROM tbl_pending_code WHERE email = ?`, [email]);
 
   try {
     const checkSql = `SELECT * FROM tbl_users WHERE email = ?`;
     const existingUsers = await db.executeQuery(checkSql, [email]);
-
     if (existingUsers.length > 0) {
       return res.status(400).json({ success: false, message: "This account already exists" });
     }
 
     const hashed = await bcrypt.hash(password, 10);
-
     const insertSql = `INSERT INTO tbl_users (email, password, first_name, last_name, nationality) VALUES (?, ?, ?, ?, ?)`;
     await db.executeQuery(insertSql, [email, hashed, first_name, last_name, nationality]);
 
