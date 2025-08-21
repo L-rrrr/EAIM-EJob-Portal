@@ -1,3 +1,34 @@
+/**
+ * ManagerAvailableJobs Page
+ *
+ * This component displays all available jobs for managers, with advanced filtering and a modal for job details.
+ *
+ * Features:
+ * - Fetches and displays all jobs from the backend.
+ * - Provides filters for job category, hiring status, job type, posted date, and search by title.
+ * - Allows posting a new job (navigates to job creation page).
+ * - Shows job details in a modal dialog with formatted responsibilities and requirements.
+ * - Responsive UI with collapsible filter panel.
+ *
+ * State:
+ * - jobs: All jobs fetched from backend.
+ * - filteredJobs: Jobs after applying filters.
+ * - selectedCategories, selectedHiringStatuses, selectedJobTypes: Filter states.
+ * - dateFrom, dateTo: Date filter states.
+ * - searchQuery: Search filter state.
+ * - filtersApplied: Indicates if any filter is active.
+ * - isFilterExpanded: Collapsible filter panel state.
+ * - selectedJob, showJobModal: Modal state for job details.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - lucide-react for icons.
+ * - react-router-dom for navigation.
+ * - ManagerAvailableJobs.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import styles from "./ManagerAvailableJobs.module.css";
 import { Plus, Eye } from "lucide-react";
@@ -11,7 +42,6 @@ const formatDate = (dateString: string) => {
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
-  
   
   return `${day}-${month}-${year}`;
 };
@@ -36,6 +66,7 @@ const formatJobContent = (content: string) => {
 
 const HRAvailableJobs: React.FC = () => {
   const navigate = useNavigate();
+
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedHiringStatuses, setSelectedHiringStatuses] = useState<string[]>([]);
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
@@ -50,18 +81,6 @@ const HRAvailableJobs: React.FC = () => {
   const [jobs, setJobs] = useState<any[]>([]);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [showJobModal, setShowJobModal] = useState(false);
-
-  const handleViewJob = (job: any) => {
-    setSelectedJob(job);
-    setShowJobModal(true);
-  };
-
-  const closeJobModal = () => {
-    setSelectedJob(null);
-    setShowJobModal(false);
-  };
-
-
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -170,6 +189,16 @@ const HRAvailableJobs: React.FC = () => {
     setList(list.includes(item) ? list.filter(i => i !== item) : [...list, item]);
   };
 
+  const handleViewJob = (job: any) => {
+    setSelectedJob(job);
+    setShowJobModal(true);
+  };
+
+  const closeJobModal = () => {
+    setSelectedJob(null);
+    setShowJobModal(false);
+  }; 
+
   return (
     <div className={styles.jobsContainer}>
       {/* TOP SECTION: TABLE AND FILTER SIDE BY SIDE */}
@@ -181,7 +210,6 @@ const HRAvailableJobs: React.FC = () => {
               <div className={styles.tableStats}>
                 <span className={styles.totalCount}>
                   {filteredJobs.length} of {jobs.length} Jobs
-
                   {filtersApplied && <span className={styles.filteredIndicator}> (Filtered)</span>}
                 </span>
                 <button className={styles.addJobBtn} onClick={() => navigate("/manager/new-job")}>

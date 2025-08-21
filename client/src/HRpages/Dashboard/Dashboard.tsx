@@ -1,9 +1,45 @@
+/**
+ * Dashboard Page
+ *
+ * This component provides an HR dashboard with key statistics, charts, and tables for jobs and applicants.
+ *
+ * Features:
+ * - Fetches and displays total jobs, applicants, and applications.
+ * - Shows pie charts for applicants by nationality and application status.
+ * - Lists recent jobs and recent applications in tables.
+ * - Provides navigation to detailed jobs and applicants pages.
+ * - Responsive layout with loading and error handling.
+ *
+ * State:
+ * - jobs: List of job postings.
+ * - applicantsData: List of all applicant records.
+ * - nationalityData: Chart data for applicants by nationality.
+ * - statusData: Chart data for application status.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - recharts for charts.
+ * - lucide-react for icons.
+ * - react-router-dom for navigation.
+ * - Dashboard.module.css for styling.
+ *
+ * @component
+ */
+
 import { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import styles from "./Dashboard.module.css";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Users, BarChart3 } from "lucide-react";
 import axios from "axios";
+
+type Job = {
+  title: string;
+  job_type: string;
+  posting_date: string;
+  seekers_required: number;
+  applicants_now?: number;
+};
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -16,22 +52,13 @@ const Dashboard: React.FC = () => {
     "#B3238B", "#7c3aed", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#059669", "#6366f1", "#f472b6", "#f87171"
   ];
 
-    const statusColors = [
-      "#f59e0b", // Pending
-      "#10b981", // Interview Scheduled
-      "#3b82f6", // Reviewing
-      "#ef4444", // Rejected
-      "#059669", // Accepted
-    ];
-
-
-  type Job = {
-    title: string;
-    job_type: string;
-    posting_date: string;
-    seekers_required: number;
-    applicants_now?: number;
-  };
+  const statusColors = [
+    "#f59e0b", // Pending
+    "#10b981", // Interview Scheduled
+    "#3b82f6", // Reviewing
+    "#ef4444", // Rejected
+    "#059669", // Accepted
+  ];
 
   useEffect(() => {
     const fetchNationalityStats = async () => {

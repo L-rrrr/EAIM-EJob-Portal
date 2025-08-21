@@ -1,9 +1,86 @@
+/**
+ * ApplicantWork Page
+ *
+ * This component displays the applicant's work experience, teaching experience, skills, and languages
+ * for HR review in a read-only format.
+ *
+ * Features:
+ * - Fetches and displays all work, teaching, skill, and language records from the backend
+ *   using the applicationId from the URL.
+ * - Parses JSON fields from the backend response.
+ * - Displays all records in collapsible sections, with all fields disabled (read-only).
+ * - Handles empty states for each section.
+ * - Provides navigation to previous and next sections of the applicant's details.
+ *
+ * Usage:
+ * - Used as a route page: `/hr/applicant-details/work?applicationId=...`
+ *
+ * State:
+ * - workExperiences: List of work experience records.
+ * - teachingExperiences: List of teaching experience records.
+ * - skills: List of skill records.
+ * - languages: List of language records.
+ * - Collapsed/expanded state for each section.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation and query params.
+ * - lucide-react for icons.
+ * - Education.module.css and Work.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronDown, ChevronUp} from "lucide-react";
 import styles from "../../pages/Education/Education.module.css";
 import workStyles from "../../pages/Work/Work.module.css";
 import axios from "axios";
+
+type WorkExperienceRecord = {
+  id: number;
+  work_id?: number;
+  company: string;
+  role: string;
+  salary: string;
+  description: string;
+  reason: string;
+  fromMonth: string;
+  fromYear: string;
+  toMonth: string;
+  toYear: string;
+};
+
+type TeachingExperienceRecord = {
+  id: number;
+  teaching_id?: number;
+  institution: string;
+  position: string;
+  salary: string;
+  subject: string;
+  reason: string;
+  fromMonth: string;
+  fromYear: string;
+  toMonth: string;
+  toYear: string;
+};
+
+type SkillRecord = {
+  id: number;
+  skill_id?: number;
+  name: string;
+  level: string;
+};
+
+type LanguageRecord = {
+  id: number;
+  language_id?: number;
+  name: string;
+  spoken: string;
+  written: string;
+  reading: string;
+};
 
 const months = [
   "January", "February", "March", "April", "May", "June",
@@ -31,50 +108,6 @@ const ApplicantWork: React.FC = () => {
     "AWS", "Azure", "Google Cloud", "Docker", "Kubernetes",
     "Git", "Jenkins", "Linux", "Figma"
   ];
-
-  type WorkExperienceRecord = {
-    id: number;
-    work_id?: number;
-    company: string;
-    role: string;
-    salary: string;
-    description: string;
-    reason: string;
-    fromMonth: string;
-    fromYear: string;
-    toMonth: string;
-    toYear: string;
-  };
-
-  type TeachingExperienceRecord = {
-    id: number;
-    teaching_id?: number;
-    institution: string;
-    position: string;
-    salary: string;
-    subject: string;
-    reason: string;
-    fromMonth: string;
-    fromYear: string;
-    toMonth: string;
-    toYear: string;
-  };
-
-  type SkillRecord = {
-    id: number;
-    skill_id?: number;
-    name: string;
-    level: string;
-  };
-
-  type LanguageRecord = {
-    id: number;
-    language_id?: number;
-    name: string;
-    spoken: string;
-    written: string;
-    reading: string;
-  };
 
   const [workExperiences, setWorkExperiences] = useState<WorkExperienceRecord[]>([]);
   const [teachingExperiences, setTeachingExperiences] = useState<TeachingExperienceRecord[]>([]);

@@ -1,3 +1,37 @@
+/**
+ * HRAvailableJobs Page
+ *
+ * This component allows HR to view, filter, edit, and delete available job postings.
+ * It also provides an AI-powered candidate finder for each job.
+ *
+ * Features:
+ * - Fetches all jobs from the backend and displays them in a table.
+ * - Provides advanced filtering by job title, category, hiring status, type, and date range.
+ * - Allows HR to view job details in a modal.
+ * - Allows HR to edit or delete jobs with confirmation modals.
+ * - Integrates an AI-powered candidate finder for any job title.
+ * - Responsive UI with loading, error, and empty states.
+ *
+ * State:
+ * - jobs: All jobs fetched from backend.
+ * - filteredJobs: Jobs after applying filters.
+ * - selectedCategories, selectedHiringStatuses, selectedJobTypes: Filter states.
+ * - dateFrom, dateTo, searchQuery: Filter states.
+ * - aiSearchQuery, aiResponse, isAnalyzing: AI candidate finder states.
+ * - selectedJob, showJobModal: Job view modal state.
+ * - editingJob, showEditModal, editFormData, isUpdating: Edit modal state.
+ * - showDeleteConfirm, isDeleting: Delete confirmation modal state.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation.
+ * - lucide-react for icons.
+ * - TiptapEditor for rich text editing.
+ * - HRAvailableJobs.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import styles from "./HRAvailableJobs.module.css";
 import { Search, Plus, Edit, Eye } from "lucide-react";

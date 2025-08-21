@@ -1,3 +1,43 @@
+/**
+ * Register Page
+ * 
+ * This component renders the registration page for the EAIM portal.
+ * 
+ * Features:
+ * - Multi-step registration: email verification and user details.
+ * - Sends a verification code to the user's email and verifies it before allowing registration.
+ * - Validates all fields, including strong password requirements.
+ * - Shows loading spinner and disables buttons during requests.
+ * - Displays server messages for success or error.
+ * - Provides links to login and forgot password pages.
+ * - Supports dark mode toggle.
+ * 
+ * Usage:
+ * - Used as a route page: `/register`
+ * - On successful registration, redirects to the login page.
+ * 
+ * State:
+ * - showPassword: Toggles password visibility.
+ * - isLoading: Indicates if a request is in progress.
+ * - serverMessage: Message to display after submitting the form.
+ * - messageType: Type of server message ('success' or 'error').
+ * - step: Current registration step ('email', 'verify', or 'register').
+ * - email: Email address entered by the user.
+ * - code: Verification code entered by the user.
+ * - codeSent: Whether the verification code has been sent.
+ * - darkMode: Tracks the current theme mode.
+ * 
+ * Dependencies:
+ * - react-hook-form for form handling and validation.
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation and links.
+ * - lucide-react for icons.
+ * - AuthStyles.module.css and Register.module.css for styling.
+ * - Countries utility for nationality dropdown.
+ * 
+ * @component
+ */
+
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import authStyles from "../AuthStyles.module.css";
@@ -9,6 +49,7 @@ import { User, Mail, Lock, Globe, Eye, EyeOff, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import countries from "../../../utils/Countries"; 
 
+// Define the type for registration form inputs
 type RegisterFormInputs = {
   username: string;
   password: string;
@@ -18,22 +59,37 @@ type RegisterFormInputs = {
 };
 
 const Register: React.FC = () => {
+  // Initialize react-hook-form for validation and form handling
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormInputs>();
   const navigate = useNavigate();
+
+  // State for showing/hiding password
   const [showPassword, setShowPassword] = useState(false);
+  // State for loading spinner during requests
   const [isLoading, setIsLoading] = useState(false);
+  // State for server response message
   const [serverMessage, setServerMessage] = useState("");
+  // State for message type (success or error)
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
+  // Registration step: "email", "verify", or "register"
   const [step, setStep] = useState<"email" | "verify" | "register">("email");
+  // Email address entered by the user
   const [email, setEmail] = useState("");
+  // Verification code entered by the user
   const [code, setCode] = useState("");
+  // Whether the verification code has been sent
   const [codeSent, setCodeSent] = useState(false);
 
+  // State for dark mode toggle
   const [darkMode, setDarkMode] = useState(() => {
     return document.documentElement.classList.contains('dark');
   });
 
-  // Combined email and code step
+  /**
+   * Handles sending the verification code and verifying it.
+   * If code has not been sent, sends the code to the entered email.
+   * If code has been sent, verifies the code.
+   */
   const handleEmailAndCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -71,6 +127,7 @@ const Register: React.FC = () => {
     }
   };
 
+  // Toggle dark mode and persist preference in localStorage
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
@@ -80,9 +137,8 @@ const Register: React.FC = () => {
 
   return (
     <div className={authStyles.authBackground} style={{ backgroundImage: `url(${background})` }}>
-      
-
       <div className={authStyles.authContainer}>
+        {/* Logo and Title Section */}
         <div className={authStyles.logoSection}>
           <img src={EAIM} className={authStyles.logo} alt="EAIM Logo" />
           <h1 className={authStyles.title}>Create Account</h1>
@@ -101,6 +157,7 @@ const Register: React.FC = () => {
         {/* Step 1: Enter Email and verification code */}
         {step === "email" && (
           <form onSubmit={handleEmailAndCode} className={authStyles.authForm}>
+            {/* Email Input */}
             <div className={authStyles.formGroup}>
               <label htmlFor="email" className={authStyles.label}>
                 <Mail size={18} />
@@ -118,6 +175,7 @@ const Register: React.FC = () => {
                 />
               </div>
             </div>
+            {/* Send Verification Code Button */}
             <button
               type="button"
               className={authStyles.submitButton}
@@ -143,8 +201,7 @@ const Register: React.FC = () => {
             >
               {isLoading ? <div className={authStyles.spinner}></div> : "Send Verification Code"}
             </button>
-
-            {/* Verification Code Field always visible */}
+            {/* Verification Code Field */}
             <div className={authStyles.formGroup}>
               <label htmlFor="code" className={authStyles.label}>
                 <Mail size={18} />
@@ -162,7 +219,7 @@ const Register: React.FC = () => {
                 />
               </div>
             </div>
-
+            {/* Verify Code Button */}
             <button
                 type="button"
                 className={authStyles.submitButton}
@@ -194,12 +251,13 @@ const Register: React.FC = () => {
               >
                 {isLoading ? <div className={authStyles.spinner}></div> : "Verify Code"}
               </button>
-            
+            {/* Server Message */}
             {serverMessage && (
               <p className={`${authStyles.serverMessage} ${messageType === 'success' ? authStyles.success : authStyles.error}`}>
                 {serverMessage}
               </p>
             )}
+            {/* Links to Login and Forgot Password */}
             <div className={authStyles.linksSection}>
               <Link to="/login" className={authStyles.link}>
                 Already have an account? <span>Sign in</span>
@@ -218,6 +276,7 @@ const Register: React.FC = () => {
               setIsLoading(true);
               setServerMessage("");
               try {
+                // Send registration data to backend
                 const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/register`, {
                   email,
                   password: data.password,
@@ -245,10 +304,9 @@ const Register: React.FC = () => {
             })}
             className={authStyles.authForm}
           >
-
-            {/* <form onSubmit={handleSubmit(onSubmit)} className={authStyles.authForm}> */}
             {/* Name Fields Grid */}
             <div className={styles.formGrid}>
+              {/* First Name */}
               <div className={authStyles.formGroup}>
                 <label htmlFor="firstName" className={authStyles.label}>
                   <User size={18} />
@@ -271,7 +329,7 @@ const Register: React.FC = () => {
                 </div>
                 {errors.firstName && <p className={authStyles.errorMessage}>{errors.firstName.message}</p>}
               </div>
-
+              {/* Last Name */}
               <div className={authStyles.formGroup}>
                 <label htmlFor="lastName" className={authStyles.label}>
                   <User size={18} />
@@ -295,8 +353,7 @@ const Register: React.FC = () => {
                 {errors.lastName && <p className={authStyles.errorMessage}>{errors.lastName.message}</p>}
               </div>
             </div>
-
-            {/* Email Field */}
+            {/* Email Field (read-only) */}
             <div className={authStyles.formGroup}>
               <label htmlFor="username" className={authStyles.label}>
                 <Mail size={18} />
@@ -310,11 +367,9 @@ const Register: React.FC = () => {
                   className={authStyles.input}
                 />
               </div>
-
               {errors.username && <p className={authStyles.errorMessage}>{errors.username.message}</p>}
             </div>
-
-           {/* Password Field */}
+            {/* Password Field */}
             <div className={authStyles.formGroup}>
               <label htmlFor="password" className={authStyles.label}>
                 <Lock size={18} />
@@ -333,7 +388,6 @@ const Register: React.FC = () => {
                         const hasLetter = /[a-zA-Z]/.test(value);
                         const hasNumber = /\d/.test(value);
                         const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
-                        
                         if (!hasMinLength || !hasLetter || !hasNumber || !hasSpecialChar) {
                           return "Password must be at least 8 characters long and contain at least one letter, one number, and one special character (!@#$%^&*(),.?\":{}|<>)";
                         }
@@ -344,6 +398,7 @@ const Register: React.FC = () => {
                   className={`${authStyles.input} ${errors.password ? authStyles.inputError : ''}`}
                   style={{ paddingRight: '3rem' }}
                 />
+                {/* Password visibility toggle */}
                 <button
                   type="button"
                   className={styles.passwordToggle}
@@ -354,8 +409,7 @@ const Register: React.FC = () => {
               </div>
               {errors.password && <p className={authStyles.errorMessage}>{errors.password.message}</p>}
             </div>
-
-           {/* Nationality Field */}
+            {/* Nationality Field */}
             <div className={authStyles.formGroup}>
               <label htmlFor="nationality" className={authStyles.label}>
                 <Globe size={18} />
@@ -382,7 +436,6 @@ const Register: React.FC = () => {
               </div>
               {errors.nationality && <p className={authStyles.errorMessage}>{errors.nationality.message}</p>}
             </div>
-
             {/* Submit Button */}
             <button 
               type="submit" 
@@ -395,16 +448,12 @@ const Register: React.FC = () => {
                 'Create Account'
               )}
             </button>
-
             {/* Server Message */}
             {serverMessage && (
               <p className={`${authStyles.serverMessage} ${messageType === 'success' ? authStyles.success : authStyles.error}`}>
                 {serverMessage}
               </p>
             )}
-        
-          
-
             {/* Links */}
             <div className={authStyles.linksSection}>
               <Link to="/login" className={authStyles.link}>
@@ -416,8 +465,6 @@ const Register: React.FC = () => {
             </div>
           </form>
         )}
-
-        {/* Dark Mode Toggle */}
 
         {/* Footer */}
         <div className={authStyles.footer}>

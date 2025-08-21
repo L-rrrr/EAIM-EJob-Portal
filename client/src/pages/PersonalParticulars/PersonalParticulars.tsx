@@ -1,21 +1,274 @@
+/**
+ * PersonalParticulars Page
+ *
+ * This component allows users to manage their personal particulars, Singapore address,
+ * overseas address, and military service details as part of their profile.
+ *
+ * Features:
+ * - Fetches and displays personal, address, and military service data from the backend.
+ * - Allows users to edit and validate all fields.
+ * - Supports saving as draft and final update (with backend sync).
+ * - Collapsible sections for better UX.
+ * - Navigation to the next profile section.
+ *
+ * Usage:
+ * - Used as a route page: `/profile/personal-particulars`
+ *
+ * State:
+ * - personalParticulars: User's personal details.
+ * - sgAddress: Singapore address fields.
+ * - overseasAddress: Overseas address fields.
+ * - militaryService: Military service fields.
+ * - validationErrors: Field-level validation errors.
+ * - Collapsed/expanded state for each section.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation.
+ * - lucide-react for icons.
+ * - PersonalParticulars.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import styles from "./PersonalParticulars.module.css";
-
-
 import axios from "axios";
+
+// -------------------- Type Definitions --------------------
+
+  type PersonalParticularsKeys =
+  | "salutation"
+  | "full_name"
+  | "nric"
+  | "alias"
+  | "email"
+  | "date_of_birth"
+  | "marital_status"
+  | "gender"
+  | "nationality"
+  | "status_in_sg"
+  | "race"
+  | "dialect"
+  | "religion"
+  | "country_of_birth"
+  | "passport_no"
+  | "passport_expiry";
+
+  type SgAddressKeys =
+  | "blk_no"
+  | "street_name"
+  | "unit_no"
+  | "postal_code"
+  | "mobile_no"
+  | "home_no";
+
+type OverseasAddressKeys =
+  | "has_overseas_address"
+  | "blk_or_house_no"
+  | "street_name"
+  | "building_name"
+  | "city"
+  | "state_or_province"
+  | "country"
+  | "postal_code"
+  | "mobile_country_code"
+  | "mobile_number"
+  | "home_country_code"
+  | "home_number";
+
+type MilitaryServiceKeys =
+  | "ns_status"
+  | "service_from_year"
+  | "service_from_month"
+  | "service_to_year"
+  | "service_to_month"
+  | "rank"
+  | "unit"
+  | "vocation"
+  | "next_camp_date"
+  | "is_operationally_ready"
+  | "nsman_unit"
+  | "nsman_vocation"
+  | "ns_exemption_reason";
+
+type SelectField = {
+  label: string;
+  required: boolean;
+  name: PersonalParticularsKeys;
+  type: "select" | "text" | "email" | "tel" | "date";
+  options?: string[];
+};
 
 const PersonalParticulars: React.FC = () => {
   const navigate = useNavigate();
+  const currentYear = new Date().getFullYear();
+
   const [showPersonalParticulars, setShowPersonalParticulars] = useState(true);
   const [showSingaporeAddress, setShowSingaporeAddress] = useState(true);
   const [showOverseasAddress, setShowOverseasAddress] = useState(true);
   const [showMilitaryService, setShowMilitaryService] = useState(true);
+
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const currentYear = new Date().getFullYear();
+  
   const [countryOptions, setCountryOptions] = useState<string[]>([]);
 
+  const [personalParticulars, setPersonalParticulars] = useState<Record<PersonalParticularsKeys, string | Date | null>>({
+    salutation: "",
+    full_name: "",
+    nric: "",
+    alias: "",
+    email: "",
+    date_of_birth: null as Date | null,      // Date type for date picker
+    marital_status: "",
+    gender: "",
+    nationality: "",
+    status_in_sg: "",
+    race: "",
+    dialect: "",
+    religion: "",
+    country_of_birth: "",
+    passport_no: "",
+    passport_expiry: null,    // Date type for date picker
+  });
+
+  const [sgAddress, setSgAddress] = useState<Record<SgAddressKeys, string>>({
+    blk_no: "",
+    street_name: "",
+    unit_no: "",
+    postal_code: "",
+    mobile_no: "",
+    home_no: "",
+  });
+
+  const [overseasAddress, setOverseasAddress] = useState<Record<OverseasAddressKeys, string>>({
+    has_overseas_address: "N", // Default to "N" if not set
+    blk_or_house_no: "",
+    street_name: "",
+    building_name: "",
+    city: "",
+    state_or_province: "",
+    country: "",
+    postal_code: "",
+    mobile_country_code: "",
+    mobile_number: "",
+    home_country_code: "",
+    home_number: "",
+  });
+
+  const [militaryService, setMilitaryService] = useState<Record<MilitaryServiceKeys, string>>({
+    ns_status: "",
+    service_from_year: "",
+    service_from_month: "",
+    service_to_year: "",
+    service_to_month: "",
+    rank: "",
+    unit: "",
+    vocation: "",
+    next_camp_date: "",
+    is_operationally_ready: "",
+    nsman_unit: "",
+    nsman_vocation: "",
+    ns_exemption_reason: "",
+  });
+
+  const personalParticularsFields: SelectField[] = [
+    { label: "Salutation", required: true, name: "salutation", type: "select", options: ["Mr.", "Ms.", "Mrs.", "Miss", "Dr."] },
+    { label: "Full Name (as in NRIC/ Passport)", required: true, name: "full_name", type: "text" },
+    { label: "NRIC", required: true, name: "nric", type: "text" },
+    { label: "Alias", required: false, name: "alias", type: "text" },
+    { label: "Email Address", required: true, name: "email", type: "email" },
+    { label: "Date of Birth (dd-mm-yyyy)", required: true, name: "date_of_birth", type: "date" },
+    { label: "Marital Status", required: true, name: "marital_status", type: "select", options: ["Single", "Married", "Divorced", "Widowed", "Separated"] },
+    { label: "Gender", required: true, name: "gender", type: "select", options: ["Male", "Female"] },
+    { label: "Nationality", required: true, name: "nationality", type: "select", options: countryOptions },
+    {
+    label: "Status in Singapore",
+    required: true,
+    name: "status_in_sg",
+    type: "select",
+    options: [
+      "Foreigner",
+      "Permanent Resident",
+      "Employment Pass",
+      "S Pass",
+      "Work Permit",
+      "Dependent Pass",
+      "Short-Term Visit Pass",
+      "Letter of Consent",
+      "Student Pass"
+    ]
+  },
+    { label: "Race", required: true, name: "race", type: "select", options: ["Chinese", "Malay", "Indian", "Freethinker", "Others"] },
+    { label: "Dialect", required: false, name: "dialect", type: "text" },
+    { label: "Religion", required: true, name: "religion", type: "select", options: ["Buddhism", "Christianity", "Hinduism", "Islam", "Others"] },
+    { label: "Country of Birth", required: true, name: "country_of_birth", type: "select", options: countryOptions },
+    { label: "Passport No.", required: true, name: "passport_no", type: "text" },
+    { label: "Passport Expiry Date (dd-mm-yyyy)", required: true, name: "passport_expiry", type: "date" },
+  ];
+  
+  const sgAddressfields: { label: string; required: boolean; name: SgAddressKeys; type: string }[] = [
+    { label: "Blk/House No.", required: true, name: "blk_no", type: "text" },
+    { label: "Street Name", required: true, name: "street_name", type: "text" },
+    { label: "Unit No. (e.g. 01-23)", required: true, name: "unit_no", type: "text" },
+    { label: "Postal Code", required: true, name: "postal_code", type: "number" },
+    { label: "Mobile No.", required: true, name: "mobile_no", type: "number" },
+    { label: "Home Telephone No.", required: false, name: "home_no", type: "number" },
+  ];
+
+  const overseasAddressFields: {
+    label: string;
+    required: boolean;
+    name: OverseasAddressKeys;
+    type: string;
+  }[] = [
+    { label: "Blk/House No.", required: true, name: "blk_or_house_no", type: "text" },
+    { label: "Street Name", required: true, name: "street_name", type: "text" },
+    { label: "Building Name", required: false, name: "building_name", type: "text" },
+    { label: "City", required: true, name: "city", type: "text" },
+    { label: "State/Province", required: true, name: "state_or_province", type: "text" },
+    { label: "Country", required: true, name: "country", type: "text" },
+    { label: "Postal Code", required: true, name: "postal_code", type: "number" },
+    { label: "Mobile No.", required: true, name: "mobile_number", type: "number" },
+    { label: "Home Telephone No.", required: false, name: "home_number", type: "number" },
+  ];
+
+  const militaryServiceFields: {
+    label: string;
+    required: boolean;
+    name: MilitaryServiceKeys;
+    type: string;
+    options?: string[];
+    placeholder?: string;
+  }[] = [
+    {
+      label: "NS Status",
+      required: true,
+      name: "ns_status",
+      type: "select",
+      options: ["Completed", "Not Completed", "Exempted", "Not Applicable"],
+    },
+    { label: "Service From Year", required: militaryService.ns_status === "Completed", name: "service_from_year", type: "number" },
+    { label: "Service From Month", required: militaryService.ns_status === "Completed", name: "service_from_month", type: "text" },
+    { label: "Service To Year", required: militaryService.ns_status === "Completed", name: "service_to_year", type: "number" },
+    { label: "Service To Month", required: militaryService.ns_status === "Completed", name: "service_to_month", type: "text" },
+    { label: "Rank", required: militaryService.ns_status === "Completed", name: "rank", type: "text", placeholder: "e.g., 3SG" },
+    { label: "Unit", required: militaryService.ns_status === "Completed", name: "unit", type: "text", placeholder: "e.g., 3rd Infantry Battalion" },
+    { label: "Vocation", required: militaryService.ns_status === "Completed", name: "vocation", type: "text", placeholder: "e.g., Combat Engineer" },
+    { label: "Next Camp Date", required: false, name: "next_camp_date", type: "date" },
+    {
+      label: "Operationally Ready",
+      required: militaryService.ns_status === "Completed",
+      name: "is_operationally_ready",
+      type: "select",
+      options: ["Yes", "No"],
+    },
+    { label: "NSman Unit", required: false, name: "nsman_unit", type: "text" },
+    { label: "NSman Vocation", required: false, name: "nsman_vocation", type: "text" },
+    { label: "Exemption Reason", required: militaryService.ns_status !== "Completed", name: "ns_exemption_reason", type: "textarea" },
+  ];
   
   // Generate year options from current year down to 1960
   const generateYearOptions = () => {
@@ -33,6 +286,25 @@ const PersonalParticulars: React.FC = () => {
     // console.log("Singapore time:", sgTime.toISOString());
     return sgTime.toISOString().slice(0, 10);
   };
+
+  // Prepare military service object for save
+  const prepareMilitaryServiceForSave = (militaryService: Record<MilitaryServiceKeys, string>) => {
+    const nsStatus = militaryService.ns_status;
+    let prepared = { ...militaryService };
+  
+    if (nsStatus === "Completed") {
+      // Clear exemption reason if NS is completed
+      prepared.ns_exemption_reason = "";
+    } else {
+      // Only keep ns_status and ns_exemption_reason, clear all others
+      prepared = {
+        ns_status: prepared.ns_status,
+        ns_exemption_reason: prepared.ns_exemption_reason
+      } as Record<MilitaryServiceKeys, string>;
+    }
+    return prepared;
+  };
+
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -70,6 +342,7 @@ const PersonalParticulars: React.FC = () => {
           setSgAddress(addressResponse.data.data);
         }
         
+        // Overseas address
         const overseasAddressResponse = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/get-overseas-address`,
           {
@@ -126,122 +399,6 @@ const PersonalParticulars: React.FC = () => {
     fetchData();
   }, []);
 
-
-
-  const handleUpdate = async () => {
-    const isValid = validateAllFields();
-    
-    if (!isValid) {
-      return;
-    }
-    
-    let overseasAddressToSave = { ...overseasAddress };
-    if (overseasAddress.has_overseas_address === "N") {
-      overseasAddressToSave = {
-        ...overseasAddress,
-        has_overseas_address: "N",
-        blk_or_house_no: "",
-        street_name: "",
-        building_name: "",
-        city: "",
-        state_or_province: "",
-        country: "",
-        postal_code: "",
-        mobile_country_code: "",
-        mobile_number: "",
-        home_country_code: "",
-        home_number: "",
-      };
-      // Update the local state after clearing
-      setOverseasAddress(overseasAddressToSave);
-    }
-
-    try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        alert("Authentication token not found. Please log in again.");
-        return;
-      }
-
-      // Save all data with is_draft: "N"
-      await Promise.all([
-        // Save Personal Particulars
-        axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/save-personal-particulars`,
-          {
-            ...personalParticulars,
-            is_draft: "N", // Set as final submission
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        ),
-
-        // Save Singapore Address
-        axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/save-sg-address`,
-          {
-            ...sgAddress,
-            is_draft: "N", // Set as final submission
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        ),
-
-        // Save Overseas Address
-        axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/save-overseas-address`,
-          {
-            ...overseasAddressToSave,
-            is_draft: "N", // Set as final submission
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        ),
-
-        // Save Military Service
-        axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/save-military-service`,
-          {
-            ...prepareMilitaryServiceForSave(militaryService),
-            is_draft: "N", // Set as final submission
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        ),
-      ]);
-
-      window.dispatchEvent(new Event("profile-completeness-updated"));
-      
-      // Optional: Clear validation errors after successful save
-      setValidationErrors({});
-      
-    } catch (error: any) {
-      console.error("Update error:", error);
-      
-      if (error.response) {
-        alert(`Failed to update: ${error.response.data.message || error.response.statusText}`);
-      } else if (error.request) {
-        alert("Network error: Could not reach server");
-      } else {
-        alert("Error: " + error.message);
-      }
-    }
-  };
-
-// Replace the validateAllFields function with:
   const validateAllFields = (): boolean => {
     const errors: Record<string, string> = {};
 
@@ -401,242 +558,116 @@ const PersonalParticulars: React.FC = () => {
     }
   };
 
-  type PersonalParticularsKeys =
-  | "salutation"
-  | "full_name"
-  | "nric"
-  | "alias"
-  | "email"
-  | "date_of_birth"
-  | "marital_status"
-  | "gender"
-  | "nationality"
-  | "status_in_sg"
-  | "race"
-  | "dialect"
-  | "religion"
-  | "country_of_birth"
-  | "passport_no"
-  | "passport_expiry";
-
-const [personalParticulars, setPersonalParticulars] = useState<Record<PersonalParticularsKeys, string | Date | null>>({
-  salutation: "",
-  full_name: "",
-  nric: "",
-  alias: "",
-  email: "",
-  date_of_birth: null as Date | null,      // Date type for date picker
-  marital_status: "",
-  gender: "",
-  nationality: "",
-  status_in_sg: "",
-  race: "",
-  dialect: "",
-  religion: "",
-  country_of_birth: "",
-  passport_no: "",
-  passport_expiry: null,    // Date type for date picker
-});
-
-type SelectField = {
-  label: string;
-  required: boolean;
-  name: PersonalParticularsKeys;
-  type: "select" | "text" | "email" | "tel" | "date";
-  options?: string[];
-};
-
-
-  const personalParticularsFields: SelectField[] = [
-    { label: "Salutation", required: true, name: "salutation", type: "select", options: ["Mr.", "Ms.", "Mrs.", "Miss", "Dr."] },
-    { label: "Full Name (as in NRIC/ Passport)", required: true, name: "full_name", type: "text" },
-    { label: "NRIC", required: true, name: "nric", type: "text" },
-    { label: "Alias", required: false, name: "alias", type: "text" },
-    { label: "Email Address", required: true, name: "email", type: "email" },
-    { label: "Date of Birth (dd-mm-yyyy)", required: true, name: "date_of_birth", type: "date" },
-    { label: "Marital Status", required: true, name: "marital_status", type: "select", options: ["Single", "Married", "Divorced", "Widowed", "Separated"] },
-    { label: "Gender", required: true, name: "gender", type: "select", options: ["Male", "Female"] },
-    { label: "Nationality", required: true, name: "nationality", type: "select", options: countryOptions },
-    {
-    label: "Status in Singapore",
-    required: true,
-    name: "status_in_sg",
-    type: "select",
-    options: [
-      "Foreigner",
-      "Permanent Resident",
-      "Employment Pass",
-      "S Pass",
-      "Work Permit",
-      "Dependent Pass",
-      "Short-Term Visit Pass",
-      "Letter of Consent",
-      "Student Pass"
-    ]
-  },
-    { label: "Race", required: true, name: "race", type: "select", options: ["Chinese", "Malay", "Indian", "Freethinker", "Others"] },
-    { label: "Dialect", required: false, name: "dialect", type: "text" },
-    { label: "Religion", required: true, name: "religion", type: "select", options: ["Buddhism", "Christianity", "Hinduism", "Islam", "Others"] },
-    { label: "Country of Birth", required: true, name: "country_of_birth", type: "select", options: countryOptions },
-    { label: "Passport No.", required: true, name: "passport_no", type: "text" },
-    { label: "Passport Expiry Date (dd-mm-yyyy)", required: true, name: "passport_expiry", type: "date" },
-  ];
-  
-
-  type SgAddressKeys = "blk_no" | "street_name" | "unit_no" | "postal_code" | "mobile_no" | "home_no";
-
-  const [sgAddress, setSgAddress] = useState<Record<SgAddressKeys, string>>({
-    blk_no: "",
-    street_name: "",
-    unit_no: "",
-    postal_code: "",
-    mobile_no: "",
-    home_no: "",
-  });
-
-  const sgAddressfields: { label: string; required: boolean; name: SgAddressKeys; type: string }[] = [
-    { label: "Blk/House No.", required: true, name: "blk_no", type: "text" },
-    { label: "Street Name", required: true, name: "street_name", type: "text" },
-    { label: "Unit No. (e.g. 01-23)", required: true, name: "unit_no", type: "text" },
-    { label: "Postal Code", required: true, name: "postal_code", type: "number" },
-    { label: "Mobile No.", required: true, name: "mobile_no", type: "number" },
-    { label: "Home Telephone No.", required: false, name: "home_no", type: "number" },
-  ];
-
-
-
-type OverseasAddressKeys =
-  | "has_overseas_address"
-  | "blk_or_house_no"
-  | "street_name"
-  | "building_name"
-  | "city"
-  | "state_or_province"
-  | "country"
-  | "postal_code"
-  | "mobile_country_code"
-  | "mobile_number"
-  | "home_country_code"
-  | "home_number";
-
-
-const [overseasAddress, setOverseasAddress] = useState<Record<OverseasAddressKeys, string>>({
-  has_overseas_address: "N", // Default to "N" if not set
-  blk_or_house_no: "",
-  street_name: "",
-  building_name: "",
-  city: "",
-  state_or_province: "",
-  country: "",
-  postal_code: "",
-  mobile_country_code: "",
-  mobile_number: "",
-  home_country_code: "",
-  home_number: "",
-});
-
-
-const overseasAddressFields: {
-  label: string;
-  required: boolean;
-  name: OverseasAddressKeys;
-  type: string;
-}[] = [
-  { label: "Blk/House No.", required: true, name: "blk_or_house_no", type: "text" },
-  { label: "Street Name", required: true, name: "street_name", type: "text" },
-  { label: "Building Name", required: false, name: "building_name", type: "text" },
-  { label: "City", required: true, name: "city", type: "text" },
-  { label: "State/Province", required: true, name: "state_or_province", type: "text" },
-  { label: "Country", required: true, name: "country", type: "text" },
-  { label: "Postal Code", required: true, name: "postal_code", type: "number" },
-  { label: "Mobile No.", required: true, name: "mobile_number", type: "number" },
-  { label: "Home Telephone No.", required: false, name: "home_number", type: "number" },
-];
-
-type MilitaryServiceKeys =
-  | "ns_status"
-  | "service_from_year"
-  | "service_from_month"
-  | "service_to_year"
-  | "service_to_month"
-  | "rank"
-  | "unit"
-  | "vocation"
-  | "next_camp_date"
-  | "is_operationally_ready"
-  | "nsman_unit"
-  | "nsman_vocation"
-  | "ns_exemption_reason";
-
-  const [militaryService, setMilitaryService] = useState<Record<MilitaryServiceKeys, string>>({
-    ns_status: "",
-    service_from_year: "",
-    service_from_month: "",
-    service_to_year: "",
-    service_to_month: "",
-    rank: "",
-    unit: "",
-    vocation: "",
-    next_camp_date: "",
-    is_operationally_ready: "",
-    nsman_unit: "",
-    nsman_vocation: "",
-    ns_exemption_reason: "",
-  });
-
-  const militaryServiceFields: {
-    label: string;
-    required: boolean;
-    name: MilitaryServiceKeys;
-    type: string;
-    options?: string[];
-    placeholder?: string;
-  }[] = [
-    {
-      label: "NS Status",
-      required: true,
-      name: "ns_status",
-      type: "select",
-      options: ["Completed", "Not Completed", "Exempted", "Not Applicable"],
-    },
-    { label: "Service From Year", required: militaryService.ns_status === "Completed", name: "service_from_year", type: "number" },
-    { label: "Service From Month", required: militaryService.ns_status === "Completed", name: "service_from_month", type: "text" },
-    { label: "Service To Year", required: militaryService.ns_status === "Completed", name: "service_to_year", type: "number" },
-    { label: "Service To Month", required: militaryService.ns_status === "Completed", name: "service_to_month", type: "text" },
-    { label: "Rank", required: militaryService.ns_status === "Completed", name: "rank", type: "text", placeholder: "e.g., 3SG" },
-    { label: "Unit", required: militaryService.ns_status === "Completed", name: "unit", type: "text", placeholder: "e.g., 3rd Infantry Battalion" },
-    { label: "Vocation", required: militaryService.ns_status === "Completed", name: "vocation", type: "text", placeholder: "e.g., Combat Engineer" },
-    { label: "Next Camp Date", required: false, name: "next_camp_date", type: "date" },
-    {
-      label: "Operationally Ready",
-      required: militaryService.ns_status === "Completed",
-      name: "is_operationally_ready",
-      type: "select",
-      options: ["Yes", "No"],
-    },
-    { label: "NSman Unit", required: false, name: "nsman_unit", type: "text" },
-    { label: "NSman Vocation", required: false, name: "nsman_vocation", type: "text" },
-    { label: "Exemption Reason", required: militaryService.ns_status !== "Completed", name: "ns_exemption_reason", type: "textarea" },
-  ];
-
-  const prepareMilitaryServiceForSave = (militaryService: Record<MilitaryServiceKeys, string>) => {
-    const nsStatus = militaryService.ns_status;
-    let prepared = { ...militaryService };
-  
-    if (nsStatus === "Completed") {
-      // Clear exemption reason if NS is completed
-      prepared.ns_exemption_reason = "";
-    } else {
-      // Only keep ns_status and ns_exemption_reason, clear all others
-      prepared = {
-        ns_status: prepared.ns_status,
-        ns_exemption_reason: prepared.ns_exemption_reason
-      } as Record<MilitaryServiceKeys, string>;
+  // Save all data as final update (is_draft: "N")
+  const handleUpdate = async () => {
+    const isValid = validateAllFields();
+    if (!isValid) return;
+    
+    let overseasAddressToSave = { ...overseasAddress };
+    if (overseasAddress.has_overseas_address === "N") {
+      overseasAddressToSave = {
+        ...overseasAddress,
+        has_overseas_address: "N",
+        blk_or_house_no: "",
+        street_name: "",
+        building_name: "",
+        city: "",
+        state_or_province: "",
+        country: "",
+        postal_code: "",
+        mobile_country_code: "",
+        mobile_number: "",
+        home_country_code: "",
+        home_number: "",
+      };
+      // Update the local state after clearing
+      setOverseasAddress(overseasAddressToSave);
     }
-    return prepared;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Authentication token not found. Please log in again.");
+        return;
+      }
+
+      // Save all data with is_draft: "N"
+      await Promise.all([
+        // Save Personal Particulars
+        axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/save-personal-particulars`,
+          {
+            ...personalParticulars,
+            is_draft: "N", // Set as final submission
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        ),
+
+        // Save Singapore Address
+        axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/save-sg-address`,
+          {
+            ...sgAddress,
+            is_draft: "N", // Set as final submission
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        ),
+
+        // Save Overseas Address
+        axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/save-overseas-address`,
+          {
+            ...overseasAddressToSave,
+            is_draft: "N", // Set as final submission
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        ),
+
+        // Save Military Service
+        axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/save-military-service`,
+          {
+            ...prepareMilitaryServiceForSave(militaryService),
+            is_draft: "N", // Set as final submission
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        ),
+      ]);
+
+      window.dispatchEvent(new Event("profile-completeness-updated"));
+      
+      // Optional: Clear validation errors after successful save
+      setValidationErrors({});
+      
+    } catch (error: any) {
+      console.error("Update error:", error);
+      
+      if (error.response) {
+        alert(`Failed to update: ${error.response.data.message || error.response.statusText}`);
+      } else if (error.request) {
+        alert("Network error: Could not reach server");
+      } else {
+        alert("Error: " + error.message);
+      }
+    }
   };
-
-
 
   return (
     <div className={styles.mainPanel}>

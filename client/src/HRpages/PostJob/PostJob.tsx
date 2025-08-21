@@ -1,10 +1,37 @@
+/**
+ * PostJob Page
+ *
+ * This component allows HR to post new jobs and manage job requisitions.
+ *
+ * Features:
+ * - Displays statistics for jobs posted today, pending requisitions, and verified requisitions.
+ * - Provides a form to post a new job with rich text editors for responsibilities and requirements.
+ * - Lists all job requisitions with actions to view, review, and post jobs.
+ * - Modal dialogs for viewing and editing requisition details.
+ * - Handles requisition review, verification, and return for amendment.
+ * - Fetches requisition data from the backend and updates UI accordingly.
+ *
+ * State:
+ * - responsibilities, requirements: Rich text content for job posting.
+ * - jobTitle, jobCategory, hiringStatus, jobType, seekersRequired: Job posting form fields.
+ * - requisitions: List of job requisitions.
+ * - viewReq, reviewReq, reviewForm, reviewRemarks, reviewError: Modal and review state.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - @tiptap/react for rich text editing.
+ * - lucide-react for icons.
+ * - PostJob.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import axios from "axios";
 import styles from "./PostJob.module.css";
-
 import {
   Plus,
   Eye,
@@ -13,6 +40,15 @@ import {
   FileWarning,
   FileUp
 } from "lucide-react";
+
+type Requisition = {
+  job_requisition_id: string | number;
+  requestor_name?: string;
+  user_id?: string;
+  job_title?: string;
+  posting_date?: string;
+  requisition_status?: string;
+};
 
 const TiptapEditor = ({
   content,
@@ -118,16 +154,6 @@ const PostJob: React.FC = () => {
   const [reviewForm, setReviewForm] = useState<any>(null);
   const [reviewRemarks, setReviewRemarks] = useState("");
   const [reviewError, setReviewError] = useState("");
-
-  type Requisition = {
-    job_requisition_id: string | number;
-    requestor_name?: string;
-    user_id?: string;
-    job_title?: string;
-    posting_date?: string;
-    requisition_status?: string;
-  };
-  
 
   const fetchRequisitions = async () => {
     try {

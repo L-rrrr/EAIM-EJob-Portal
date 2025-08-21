@@ -1,3 +1,43 @@
+/**
+ * Applicants Page
+ *
+ * This component displays a list of all job applicants for HR, with advanced filtering, status management,
+ * manager assessment, AI analysis, and PDF export capabilities.
+ *
+ * Features:
+ * - Fetches applicants, managers, and full application details from the backend.
+ * - Provides filters for search, job category, status, and date ranges.
+ * - Allows status updates and manager assignment for each applicant.
+ * - Supports sending emails to applicants.
+ * - Generates a printable PDF of the full application form.
+ * - Integrates AI-powered candidate analysis with selectable analysis levels.
+ * - Displays manager assessment details in a modal overlay.
+ * - Responsive and accessible UI with loading states and error handling.
+ *
+ * State:
+ * - applicantsData: All applicants fetched from backend.
+ * - filteredApplicants: Applicants after applying filters.
+ * - managers: List of managers for assignment.
+ * - selectedCandidate: Applicant selected for AI analysis.
+ * - aiAnalysis: AI-generated analysis text.
+ * - assessmentOverlay: Modal state for manager assessment details.
+ * - showEmailModal, emailSubject, emailMessage, emailTargetUserId, emailStatus, isSendingEmail: Email modal state.
+ * - isLoading: Loading state for applicants table.
+ * - isFilterExpanded: Collapsible filter panel state.
+ * - selectedCategories, selectedStatus, appliedFrom, appliedTo, interviewFrom, interviewTo: Filter states.
+ * - analysisLevel: AI analysis detail level.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - jsPDF for PDF generation.
+ * - lucide-react for icons.
+ * - TiptapEditor for rich text email editing.
+ * - React Router for navigation.
+ * - Applicants.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import styles from "./Applicants.module.css";
 import { Link } from "react-router-dom";
@@ -22,6 +62,15 @@ import {
   referencesFields
 } from "../../utils/FormFields";
 
+type Manager = {
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  display_name: string;
+  emp_no?: number;
+};
+
 const Applicants = () => {
   const [search, setSearch] = useState("");
   const [appliedFrom, setAppliedFrom] = useState("");
@@ -33,15 +82,6 @@ const Applicants = () => {
   const [analysisLevel, setAnalysisLevel] = useState("Basic");
   const [assessmentOverlay, setAssessmentOverlay] = useState<{ open: boolean, assessment: any | null }>({ open: false, assessment: null });
 
-  type Manager = {
-    user_id: number;
-    first_name: string;
-    last_name: string;
-    email: string;
-    display_name: string; // Added to match usage in code
-    emp_no?: number; // Optional, since it's used as key in the select
-    // add other fields if needed
-  };
   const [managers, setManagers] = useState<Manager[]>([]);
 
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -79,6 +119,192 @@ const Applicants = () => {
     { key: "q12", label: "Job Stability", desc: "(Steady employment record, job-hopper)" }
   ];
 
+  // -------------------- Data Fetching --------------------
+
+  // Fetch managers on mount
+  useEffect(() => {
+    const fetchManagers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/managers`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.success) setManagers(res.data.data);
+      } catch (e) {
+        setManagers([]);
+      }
+    };
+    fetchManagers();
+  }, []);
+
+  // Fetch applicants data from database
+  useEffect(() => {
+    const fetchApplicants = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/applicants`,
+          {
+            headers: { 
+              Authorization: `Bearer ${token}` // Add authorization header
+            }
+          }
+        );
+        
+        if (response.data.success) {
+          setApplicantsData(response.data.data);
+          setFilteredApplicants(response.data.data);
+        } else {
+          console.error("Failed to fetch applicants:", response.data.message);
+          setApplicantsData([]);
+          setFilteredApplicants([]);
+        }
+      } catch (error) {
+        console.error("Error fetching applicants:", error);
+        setApplicantsData([]);
+        setFilteredApplicants([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchApplicants();
+  }, []);
+
+  // -------------------- Filtering Logic --------------------
+
+  // Helper function to parse date strings (DD-MM-YYYY format)
+  const parseDate = (dateString: string) => {
+    if (!dateString) return null;
+    const [day, month, year] = dateString.split('-');
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  };
+
+  // Apply filters function
+  const applyFilters = () => {
+    let filtered = [...applicantsData];
+
+    // Search filter
+    if (search.trim()) {
+      filtered = filtered.filter(applicant =>
+        applicant.name.toLowerCase().includes(search.toLowerCase()) ||
+        applicant.job.toLowerCase().includes(search.toLowerCase()) ||
+        applicant.email?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    // Category filter
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(applicant => {
+        const category = applicant.job_category?.toLowerCase();
+        
+        return selectedCategories.some(selectedCategory => {
+          if (selectedCategory === "Operative") {
+            return category === "operative"
+
+          } else if (selectedCategory === "Academic") {
+            return category === "academic"
+          }
+          return false;
+        });
+      });
+    }
+
+    // Status filter
+    if (selectedStatus.length > 0) {
+      filtered = filtered.filter(applicant => {
+        return selectedStatus.some(status => {
+          if (status === "Pending Review") {
+            return applicant.status === "Pending review" || applicant.status === "Pending";
+          } else if (status === "Shortlisted") {
+            return applicant.status.includes("Shortlisted");
+          } else {
+            return applicant.status === status;
+          }
+        });
+      });
+    }
+
+    // Applied date filters
+    if (appliedFrom) {
+      const fromDate = new Date(appliedFrom);
+      fromDate.setHours(0, 0, 0, 0); // Ensure midnight
+      filtered = filtered.filter(applicant => {
+        const appliedDate = parseDate(applicant.applied);
+        if (!appliedDate) return false;
+        appliedDate.setHours(0, 0, 0, 0); // Ensure midnight
+        return appliedDate >= fromDate;
+      });
+    }
+
+    if (appliedTo) {
+      const toDate = new Date(appliedTo);
+      // Add one day to make 'to' inclusive
+      toDate.setDate(toDate.getDate() + 1);
+      filtered = filtered.filter(applicant => {
+        const appliedDate = parseDate(applicant.applied);
+        // Inclusive: < toDate (which is one day after selected date)
+        return appliedDate && appliedDate < toDate;
+      });
+    }
+
+    // Interview date filters
+    if (interviewFrom) {
+      const fromDate = new Date(interviewFrom);
+      filtered = filtered.filter(applicant => {
+        const interviewDate = parseDate(applicant.interview);
+        return interviewDate && interviewDate >= fromDate;
+      });
+    }
+
+    if (interviewTo) {
+      const toDate = new Date(interviewTo);
+      // Add one day to make 'to' inclusive
+      toDate.setDate(toDate.getDate() + 1);
+      filtered = filtered.filter(applicant => {
+        const interviewDate = parseDate(applicant.interview);
+        // Inclusive: < toDate
+        return interviewDate && interviewDate < toDate;
+      });
+    }
+
+    setFilteredApplicants(filtered);
+  };
+
+  // Handle apply filters
+  const handleApplyFilters = () => {
+    applyFilters();
+    const hasActiveFilters = !!(search.trim() ||
+                           selectedCategories.length > 0 ||
+                           selectedStatus.length > 0 ||
+                           appliedFrom ||
+                           appliedTo ||
+                           interviewFrom ||
+                           interviewTo);
+    setFiltersApplied(hasActiveFilters);
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearch("");
+    setAppliedFrom("");
+    setAppliedTo("");
+    setInterviewFrom("");
+    setInterviewTo("");
+    setSelectedCategories([]);
+    setSelectedStatus([]);
+    setFilteredApplicants(applicantsData);
+    setFiltersApplied(false);
+  };
+
+  const toggleSelection = (item: string, list: string[], setList: (val: string[]) => void) => {
+    setList(list.includes(item) ? list.filter(i => i !== item) : [...list, item]);
+  };
+
+  // -------------------- Table Actions --------------------
+
   // Helper to fetch full details for an applicant
   async function fetchFullDetails(applicationId: number) {
     const token = localStorage.getItem("token");
@@ -91,18 +317,6 @@ const Applicants = () => {
     return data.data;
   }
 
-  function checkPageBreak(doc: jsPDF, y: number, minSpace: number = 60) {
-    const topMargin = 40;
-    const bottomMargin = 40; // Set your desired bottom margin here
-    const pageHeight = doc.internal.pageSize.getHeight();
-    if (y + minSpace > pageHeight - bottomMargin) {
-      doc.addPage();
-      return topMargin; // Reset y to top margin for new page
-    }
-    return y;
-  }
-
-  
   async function handlePrintApplicationForm(applicationId: number) {
     try {
       const details = await fetchFullDetails(applicationId);
@@ -1379,58 +1593,16 @@ const Applicants = () => {
     }
   }
 
-  // Fetch managers on mount
-  useEffect(() => {
-    const fetchManagers = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/managers`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (res.data.success) setManagers(res.data.data);
-      } catch (e) {
-        setManagers([]);
-      }
-    };
-    fetchManagers();
-  }, []);
-
-
-  // Fetch applicants data from database
-  useEffect(() => {
-    const fetchApplicants = async () => {
-      try {
-        setIsLoading(true);
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/applicants`,
-          {
-            headers: { 
-              Authorization: `Bearer ${token}` // Add authorization header
-            }
-          }
-        );
-        
-        if (response.data.success) {
-          setApplicantsData(response.data.data);
-          setFilteredApplicants(response.data.data);
-        } else {
-          console.error("Failed to fetch applicants:", response.data.message);
-          setApplicantsData([]);
-          setFilteredApplicants([]);
-        }
-      } catch (error) {
-        console.error("Error fetching applicants:", error);
-        setApplicantsData([]);
-        setFilteredApplicants([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchApplicants();
-  }, []);
+  function checkPageBreak(doc: jsPDF, y: number, minSpace: number = 60) {
+    const topMargin = 40;
+    const bottomMargin = 40; // Set your desired bottom margin here
+    const pageHeight = doc.internal.pageSize.getHeight();
+    if (y + minSpace > pageHeight - bottomMargin) {
+      doc.addPage();
+      return topMargin; // Reset y to top margin for new page
+    }
+    return y;
+  }
 
   const openAnalysisPanel = (applicant: any) => {
     setSelectedCandidate(applicant);
@@ -1471,134 +1643,6 @@ const Applicants = () => {
     } finally {
       setIsAnalyzing(false);
     }
-  };
-
-  const toggleSelection = (item: string, list: string[], setList: (val: string[]) => void) => {
-    setList(list.includes(item) ? list.filter(i => i !== item) : [...list, item]);
-  };
-
-  // Helper function to parse date strings (DD-MM-YYYY format)
-  const parseDate = (dateString: string) => {
-    if (!dateString) return null;
-    const [day, month, year] = dateString.split('-');
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  };
-
-  // Apply filters function
-  const applyFilters = () => {
-    let filtered = [...applicantsData];
-
-    // Search filter
-    if (search.trim()) {
-      filtered = filtered.filter(applicant =>
-        applicant.name.toLowerCase().includes(search.toLowerCase()) ||
-        applicant.job.toLowerCase().includes(search.toLowerCase()) ||
-        applicant.email?.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    // Category filter
-    if (selectedCategories.length > 0) {
-      filtered = filtered.filter(applicant => {
-        const category = applicant.job_category?.toLowerCase();
-        
-        return selectedCategories.some(selectedCategory => {
-          if (selectedCategory === "Operative") {
-            return category === "operative"
-
-          } else if (selectedCategory === "Academic") {
-            return category === "academic"
-          }
-          return false;
-        });
-      });
-    }
-
-    // Status filter
-    if (selectedStatus.length > 0) {
-      filtered = filtered.filter(applicant => {
-        return selectedStatus.some(status => {
-          if (status === "Pending Review") {
-            return applicant.status === "Pending review" || applicant.status === "Pending";
-          } else if (status === "Shortlisted") {
-            return applicant.status.includes("Shortlisted");
-          } else {
-            return applicant.status === status;
-          }
-        });
-      });
-    }
-
-    // Applied date filters
-    if (appliedFrom) {
-      const fromDate = new Date(appliedFrom);
-      fromDate.setHours(0, 0, 0, 0); // Ensure midnight
-      filtered = filtered.filter(applicant => {
-        const appliedDate = parseDate(applicant.applied);
-        if (!appliedDate) return false;
-        appliedDate.setHours(0, 0, 0, 0); // Ensure midnight
-        return appliedDate >= fromDate;
-      });
-    }
-
-    if (appliedTo) {
-      const toDate = new Date(appliedTo);
-      // Add one day to make 'to' inclusive
-      toDate.setDate(toDate.getDate() + 1);
-      filtered = filtered.filter(applicant => {
-        const appliedDate = parseDate(applicant.applied);
-        // Inclusive: < toDate (which is one day after selected date)
-        return appliedDate && appliedDate < toDate;
-      });
-    }
-
-    // Interview date filters
-    if (interviewFrom) {
-      const fromDate = new Date(interviewFrom);
-      filtered = filtered.filter(applicant => {
-        const interviewDate = parseDate(applicant.interview);
-        return interviewDate && interviewDate >= fromDate;
-      });
-    }
-
-    if (interviewTo) {
-      const toDate = new Date(interviewTo);
-      // Add one day to make 'to' inclusive
-      toDate.setDate(toDate.getDate() + 1);
-      filtered = filtered.filter(applicant => {
-        const interviewDate = parseDate(applicant.interview);
-        // Inclusive: < toDate
-        return interviewDate && interviewDate < toDate;
-      });
-    }
-
-    setFilteredApplicants(filtered);
-  };
-
-  // Handle apply filters
-  const handleApplyFilters = () => {
-    applyFilters();
-    const hasActiveFilters = !!(search.trim() ||
-                           selectedCategories.length > 0 ||
-                           selectedStatus.length > 0 ||
-                           appliedFrom ||
-                           appliedTo ||
-                           interviewFrom ||
-                           interviewTo);
-    setFiltersApplied(hasActiveFilters);
-  };
-
-  // Clear all filters
-  const clearAllFilters = () => {
-    setSearch("");
-    setAppliedFrom("");
-    setAppliedTo("");
-    setInterviewFrom("");
-    setInterviewTo("");
-    setSelectedCategories([]);
-    setSelectedStatus([]);
-    setFilteredApplicants(applicantsData);
-    setFiltersApplied(false);
   };
 
   const formatAiResponse = (text: string) => {

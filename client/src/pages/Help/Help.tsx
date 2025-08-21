@@ -1,12 +1,43 @@
+/**
+ * Help Page
+ *
+ * This component provides a searchable and filterable FAQ/help center for users.
+ *
+ * Features:
+ * - Displays a list of frequently asked questions (FAQs) grouped by category.
+ * - Allows users to search FAQs by keyword.
+ * - Allows filtering FAQs by category (jobs, account, general, or all).
+ * - Expands/collapses answers for each FAQ.
+ * - Provides contact information for further support.
+ *
+ * Usage:
+ * - Used as a route page: `/help`
+ *
+ * State:
+ * - expandedIndexes: Set of FAQ indexes currently expanded.
+ * - searchTerm: Current search input value.
+ * - selectedCategory: Currently selected FAQ category filter.
+ *
+ * Dependencies:
+ * - lucide-react for icons.
+ * - Help.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState } from "react";
 import { ChevronDown, ChevronUp, HelpCircle, Search, MessageCircle, Book, Mail, Phone } from "lucide-react";
 import styles from "./Help.module.css";
+
+// -------------------- Type Definitions --------------------
 
 type FAQ = {
   question: string;
   answer: string;
   category: "general" | "jobs" | "account";
 };
+
+// -------------------- FAQ Data --------------------
 
 const faqs: FAQ[] = [
   {
@@ -61,11 +92,19 @@ const faqs: FAQ[] = [
   }
 ];
 
+// -------------------- Main Component --------------------
+
 const Help: React.FC = () => {
+  // State for expanded FAQ indexes
   const [expandedIndexes, setExpandedIndexes] = useState<Set<number>>(new Set());
+  // State for search input
   const [searchTerm, setSearchTerm] = useState("");
+  // State for selected category filter
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
+  /**
+   * Toggle the expanded/collapsed state of an FAQ item.
+   */
   const toggleFAQ = (index: number) => {
     setExpandedIndexes((prev) => {
       const newSet = new Set(prev);
@@ -78,6 +117,9 @@ const Help: React.FC = () => {
     });
   };
 
+  /**
+   * Filter FAQs by search term and selected category.
+   */
   const filteredFAQs = faqs.filter(faq => {
     const matchesSearch = faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
@@ -85,6 +127,9 @@ const Help: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
+  /**
+   * Get the icon for a given FAQ category.
+   */
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case "jobs": return <Book size={16} />;
@@ -94,6 +139,9 @@ const Help: React.FC = () => {
     }
   };
 
+  /**
+   * Get the color class for a given FAQ category.
+   */
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "jobs": return styles.categoryJobs;
@@ -103,8 +151,11 @@ const Help: React.FC = () => {
     }
   };
 
+  // -------------------- JSX Rendering --------------------
+
   return (
     <div className={styles.helpPage}>
+      {/* Header */}
       <div className={styles.helpHeader}>
         <div className={styles.headerTitle}>
           <HelpCircle size={40} />
@@ -113,6 +164,7 @@ const Help: React.FC = () => {
       </div>
 
       <div className={styles.helpContainer}>
+        {/* Search Bar */}
         <div className={styles.searchSection}>
           <div className={styles.searchBar}>
             <Search className={styles.searchIcon} size={20} />
@@ -123,16 +175,16 @@ const Help: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
-          
         </div>
 
+        {/* FAQ Section */}
         <div className={styles.faqSection}>
           <div className={styles.sectionHeader}>
             <h2>Frequently Asked Questions</h2>
             <p>{filteredFAQs.length} questions found</p>
           </div>
 
+          {/* Category Filters */}
           <div className={styles.categoryFilters}>
             <button
               className={`${styles.filterBtn} ${selectedCategory === "all" ? styles.active : ""}`}
@@ -163,6 +215,7 @@ const Help: React.FC = () => {
             </button>
           </div>
 
+          {/* FAQ List */}
           {filteredFAQs.length === 0 ? (
             <div className={styles.noResults}>
               <div className={styles.noResultsIcon}>
@@ -189,7 +242,6 @@ const Help: React.FC = () => {
                         </div>
                         <div className={styles.faqQuestion}>{faq.question}</div>
                       </div>
-                      
                       <div className={styles.expandIcon}>
                         {expandedIndexes.has(originalIndex) ? 
                           <ChevronUp size={20} /> : 
@@ -207,6 +259,7 @@ const Help: React.FC = () => {
           )}
         </div>
 
+        {/* Contact Section */}
         <div className={styles.contactSection}>
           <div className={styles.contactCard}>
             <h3>Still need help?</h3>

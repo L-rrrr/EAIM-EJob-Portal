@@ -1,3 +1,31 @@
+/**
+ * JobRequisition Page
+ *
+ * This component allows managers to submit new job requisitions and view, edit, or review their existing requisitions.
+ *
+ * Features:
+ * - Displays statistics for submitted, amended, and verified requisitions.
+ * - Provides a form to submit or amend a job requisition, with rich text editors for responsibilities and requirements.
+ * - Lists all job requisitions submitted by the manager, with actions to view or edit.
+ * - Modal dialog for viewing requisition details.
+ * - Handles both creation and amendment of requisitions.
+ * - Fetches requisition data from the backend and updates UI accordingly.
+ *
+ * State:
+ * - requisitions: List of job requisitions.
+ * - jobTitle, jobCategory, jobType, seekersRequired, responsibilities, requirements: Form fields.
+ * - selectedReq: Currently viewed requisition in modal.
+ * - editReq: Currently edited requisition.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - @tiptap/react for rich text editing.
+ * - lucide-react for icons.
+ * - JobRequisition.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import styles from "./JobRequisition.module.css";
 import { Plus, Eye, Pencil, ClipboardCheck, FileWarning, FileUp } from "lucide-react";

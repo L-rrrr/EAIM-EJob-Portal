@@ -1,3 +1,30 @@
+/**
+ * HRApply Page
+ *
+ * This component displays a summary of a specific job application for HR review, including job information,
+ * document attachment, and position details.
+ *
+ * Features:
+ * - Fetches application details from the backend using the applicationId from the URL.
+ * - Displays job information, document attachment (with download link), and position details in read-only format.
+ * - Handles loading and not-found states.
+ * - Provides navigation to all applicants and to the next section of the applicant's details.
+ *
+ * Usage:
+ * - Used as a route page: `/hr/apply?applicationId=...`
+ *
+ * State:
+ * - application: Application details object.
+ * - loading: Loading state for data fetch.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation and query params.
+ * - HRApply.module.css for styling.
+ *
+ * @component
+ */
+
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styles from "./HRApply.module.css";

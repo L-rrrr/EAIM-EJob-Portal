@@ -4,7 +4,9 @@ import { ChevronDown, ChevronUp, Upload } from "lucide-react";
 import styles from "./Apply.module.css";
 import axios from "axios";
 
+// Total number of profile sections/tables for completeness calculation
 const TOTAL_SECTIONS = 11;
+// Number of tables per profile section
 const SECTION_TABLES = {
   personal: 4,
   education: 1,
@@ -16,30 +18,39 @@ const SECTION_TABLES = {
 const Apply: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  // Get job data passed from previous page (AvailableJobs)
   const jobData = location.state?.jobData;
+
+  // UI state for collapsible sections
   const [showJobInfo, setShowJobInfo] = useState(true);
   const [showAttachment, setShowAttachment] = useState(true);
   const [showPositionDetails, setShowPositionDetails] = useState(true);
+
+  // Validation error messages for form fields
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // Profile completeness state for each section
   const [personalParticularsCompleted, setPersonalParticularsCompleted] = useState(false);
   const [educationCompleted, setEducationCompleted] = useState(false);
   const [workCompleted, setWorkCompleted] = useState(false);
   const [familyCompleted, setFamilyCompleted] = useState(false);
   const [supportCompleted, setSupportCompleted] = useState(false);
 
+  // Job info (id, type, title)
   const [jobInfo] = useState({
     job_id: jobData?.job_id || null,
     positionType: jobData?.job_type || "Not Specified",
     position: jobData?.title || "Not Specified",
   });
 
-
+  // Attachment state (document type, name, file)
   const [attachment, setAttachment] = useState({
     documentType: "",
     documentName: "",
     uploadedFile: null as File | null
   });
 
+  // Position details state (salary, experience, etc.)
   const [positionDetails, setPositionDetails] = useState({
     currentSalary: "",
     expectedSalary: "",
@@ -49,7 +60,7 @@ const Apply: React.FC = () => {
     relevantWorkExperience: ""
   });
 
-  // File validation
+  // Validate uploaded file (type and size)
   const validateFile = (file: File): string | null => {
     const maxSize = 10 * 1024 * 1024;
     const allowedTypes = [
@@ -76,6 +87,7 @@ const Apply: React.FC = () => {
     return null;
   };
 
+  // Get today's date in Singapore timezone (YYYY-MM-DD)
   const getSingaporeDateString = () => {
     const now = new Date();
     // Singapore is UTC+8, so add 8 hours to UTC time
@@ -83,7 +95,7 @@ const Apply: React.FC = () => {
     return sgTime.toISOString().slice(0, 10);
   };
 
-
+  // Fetch profile completeness for each section on mount and when profile is updated
   useEffect(() => {
     const fetchCompleteness = async () => {
       try {
@@ -116,13 +128,18 @@ const Apply: React.FC = () => {
     };
     fetchCompleteness();
 
-
-
+    // Listen for custom event to refresh completeness
     const handler = () => fetchCompleteness();
     window.addEventListener("profile-completeness-updated", handler);
     return () => window.removeEventListener("profile-completeness-updated", handler);
   }, []);
 
+  // Redirect to available jobs if no job data is present
+  useEffect(() => {
+    if (!jobData) navigate("/available-jobs");
+  }, [jobData, navigate]);
+
+  // Calculate profile completeness percentage
   const completedTables =
     (personalParticularsCompleted ? SECTION_TABLES.personal : 0) +
     (educationCompleted ? SECTION_TABLES.education : 0) +
@@ -132,6 +149,7 @@ const Apply: React.FC = () => {
 
   const profileCompleteness = Math.floor((completedTables / TOTAL_SECTIONS) * 100);
 
+  // Handle file input change and validation
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -153,6 +171,7 @@ const Apply: React.FC = () => {
     }
   };
 
+  // Validate all required fields before submission
   const validateAllFields = (): boolean => {
     const errors: Record<string, string> = {};
 
@@ -197,7 +216,9 @@ const Apply: React.FC = () => {
     return true;
   };
 
+  // Handle application submission
   const handleSubmit = async () => {
+    // Block submission if profile is incomplete
     if (profileCompleteness < 100) {
       alert("Please complete your profile before submitting your application.");
       return;
@@ -213,7 +234,7 @@ const Apply: React.FC = () => {
         return;
       }
 
-      // 1. Fetch all relevant info from backend
+      // 1. Fetch all relevant info from backend for full application details
       const [
         personalParticularsRes,
         sgAddressRes,
@@ -248,14 +269,11 @@ const Apply: React.FC = () => {
         axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-attachments`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
-      // 2. Prepare the data as JSON strings or IDs as needed
+      // 2. Prepare the data as JSON strings or IDs as needed for backend
       const fullDetails = {
         personal_particulars: JSON.stringify(personalParticularsRes.data.data || {}),
-        // singapore_address: sgAddressRes.data.data?.address_id || null,
         singapore_address: JSON.stringify(sgAddressRes.data.data || {}),
-        // overseas_address: overseasAddressRes.data.data?.address_id || null,
         overseas_address: JSON.stringify(overseasAddressRes.data.data || {}),
-        // military_service: militaryServiceRes.data.data?.service_id || null,
         military_service: JSON.stringify(militaryServiceRes.data.data || {}),
         education_background: JSON.stringify(educationBackgroundRes.data.data || []),
         scholarship_awards: JSON.stringify(scholarshipAwardsRes.data.data || []),
@@ -327,6 +345,7 @@ const Apply: React.FC = () => {
     }
   };
 
+  // Options for "Source Obtained From" dropdown
   const sourceOptions = [
     "Agency", "Career Fair", "EASB website", "EASB Staff", "EASB Student",
     "JobsDB", "JobsCentral", "JobStreet", "ST Jobs", "Jobs Bank", "Others"
@@ -385,6 +404,7 @@ const Apply: React.FC = () => {
 
           {showAttachment && (
             <div className={styles.formSection}>
+              {/* Document Type */}
               <div className={styles.inputGroup}>
                 <span className={styles.labelText}>
                   Document Type
@@ -423,6 +443,7 @@ const Apply: React.FC = () => {
                 )}
               </div>
 
+              {/* Document Name */}
               <div className={styles.inputGroup}>
                 <span className={styles.labelText}>
                   Document Name
@@ -455,6 +476,7 @@ const Apply: React.FC = () => {
                 )}
               </div>
 
+              {/* File Upload */}
               <div className={styles.inputGroup}>
                 <span className={styles.labelText}>
                   Upload File
@@ -465,7 +487,7 @@ const Apply: React.FC = () => {
                     type="file"
                     id="fileUpload"
                     className={styles.fileInput}
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt,.xls,.xlsx"
                     onChange={handleFileChange}
                     style={{
                       borderColor: validationErrors.uploadedFile ? "red" : undefined,
@@ -506,6 +528,7 @@ const Apply: React.FC = () => {
 
           {showPositionDetails && (
             <div className={styles.formSection}>
+              {/* Current Salary */}
               <div className={styles.inputGroup}>
                 <span className={styles.labelText}>
                   Current Salary (S$)
@@ -538,6 +561,7 @@ const Apply: React.FC = () => {
                 )}
               </div>
 
+              {/* Expected Salary */}
               <div className={styles.inputGroup}>
                 <span className={styles.labelText}>
                   Expected Salary (S$)
@@ -570,6 +594,7 @@ const Apply: React.FC = () => {
                 )}
               </div>
 
+              {/* Earliest Starting Date */}
               <div className={styles.inputGroup}>
                 <span className={styles.labelText}>
                   Earliest Starting Date
@@ -602,6 +627,7 @@ const Apply: React.FC = () => {
                 )}
               </div>
 
+              {/* Source Obtained From */}
               <div className={styles.inputGroup}>
                 <span className={styles.labelText}>
                   Source Obtained From
@@ -637,6 +663,7 @@ const Apply: React.FC = () => {
                 )}
               </div>
 
+              {/* Total Work Experience */}
               <div className={styles.inputGroup}>
                 <span className={styles.labelText}>
                   Total Work Experience (Years)
@@ -669,6 +696,7 @@ const Apply: React.FC = () => {
                 )}
               </div>
 
+              {/* Relevant Work Experience */}
               <div className={styles.inputGroup}>
                 <span className={styles.labelText}>
                   Relevant Work Experience (Years)

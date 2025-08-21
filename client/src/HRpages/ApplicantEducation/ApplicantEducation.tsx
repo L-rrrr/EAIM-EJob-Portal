@@ -1,16 +1,85 @@
+/**
+ * ApplicantEducation Page
+ *
+ * This component displays the applicant's education background, scholarships/awards,
+ * and other professional qualifications for HR review in a read-only format.
+ *
+ * Features:
+ * - Fetches and displays education, scholarship/award, and other qualification records from the backend
+ *   using the applicationId from the URL.
+ * - Parses JSON fields from the backend response.
+ * - Displays all records in collapsible sections, with all fields disabled (read-only).
+ * - Handles empty states for each section.
+ * - Provides navigation to previous and next sections of the applicant's details.
+ *
+ * Usage:
+ * - Used as a route page: `/hr/applicant-details/education?applicationId=...`
+ *
+ * State:
+ * - educationRecords: List of education background records.
+ * - scholarshipAwards: List of scholarship/award records.
+ * - otherQualifications: List of other professional qualification records.
+ * - Collapsed/expanded state for each section.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation and query params.
+ * - lucide-react for icons.
+ * - Education.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styles from "../../pages/Education/Education.module.css";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import axios from "axios";
 
+type EducationRecord = {
+  id: number;
+  education_id?: number;
+  isHighestQualification: string;
+  levelOfQualification: string;
+  institute: string;
+  qualificationAttained: string;
+  yearFrom: string;
+  yearTo: string;
+};
+
+type ScholarshipRecord = {
+  id: number;
+  scholarship_id?: number;
+  organization: string;
+  description: string;
+  certificate: string;
+  fromMonth: string;
+  fromYear: string;
+  toMonth: string;
+  toYear: string;
+};
+
+type OtherQualificationRecord = {
+  id: number;
+  qualification_id?: number;
+  organization: string;
+  course: string;
+  certificate: string;
+  fromMonth: string;
+  fromYear: string;
+  toMonth: string;
+  toYear: string;
+};
+
 const ApplicantEducation: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const applicationId = searchParams.get('applicationId');
+
   const [showEducationBackground, setShowEducationBackground] = useState(true);
   const [showScholarshipAwards, setShowScholarshipAwards] = useState(true);
   const [showOtherQualifications, setShowOtherQualifications] = useState(true);
+
   const currentYear = new Date().getFullYear();
 
   // Generate year options from current year down to 1960
@@ -22,41 +91,6 @@ const ApplicantEducation: React.FC = () => {
     return years;
   };
   
-  type EducationRecord = {
-    id: number;
-    education_id?: number;
-    isHighestQualification: string;
-    levelOfQualification: string;
-    institute: string;
-    qualificationAttained: string;
-    yearFrom: string;
-    yearTo: string;
-  };
-
-  type ScholarshipRecord = {
-    id: number;
-    scholarship_id?: number;
-    organization: string;
-    description: string;
-    certificate: string;
-    fromMonth: string;
-    fromYear: string;
-    toMonth: string;
-    toYear: string;
-  };
-
-  type OtherQualificationRecord = {
-    id: number;
-    qualification_id?: number;
-    organization: string;
-    course: string;
-    certificate: string;
-    fromMonth: string;
-    fromYear: string;
-    toMonth: string;
-    toYear: string;
-  };
-
   const [educationRecords, setEducationRecords] = useState<EducationRecord[]>([
     {
       id: 1,
@@ -72,6 +106,10 @@ const ApplicantEducation: React.FC = () => {
   const [scholarshipAwards, setScholarshipAwards] = useState<ScholarshipRecord[]>([]);
   const [otherQualifications, setOtherQualifications] = useState<OtherQualificationRecord[]>([]);
 
+  /**
+   * Fetches applicant's education, scholarship/award, and other qualification data from the backend
+   * using the applicationId. Parses JSON fields and updates state.
+   */
   useEffect(() => {
     const fetchApplicantEducationData = async () => {
       try {

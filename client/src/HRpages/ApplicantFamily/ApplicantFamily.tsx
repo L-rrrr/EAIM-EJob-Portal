@@ -1,14 +1,65 @@
+/**
+ * ApplicantFamily Page
+ *
+ * This component displays the applicant's family background and emergency contact information
+ * for HR review in a read-only format.
+ *
+ * Features:
+ * - Fetches and displays family background and emergency contact records from the backend
+ *   using the applicationId from the URL.
+ * - Parses JSON fields from the backend response.
+ * - Displays all records in collapsible sections, with all fields disabled (read-only).
+ * - Handles empty states for each section.
+ * - Provides navigation to previous and next sections of the applicant's details.
+ *
+ * Usage:
+ * - Used as a route page: `/hr/applicant-details/family?applicationId=...`
+ *
+ * State:
+ * - familyRecords: List of family background records.
+ * - emergencyContacts: List of emergency contact records.
+ * - Collapsed/expanded state for each section.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation and query params.
+ * - lucide-react for icons.
+ * - Education.module.css and Family.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronDown, ChevronUp} from "lucide-react";
 import axios from "axios";
-import styles from "../../pages/Education/Education.module.css"; 
+import styles from "../../pages/Education/Education.module.css";
 import familyStyles from "../../pages/Family/Family.module.css";
+
+// Type definitions
+type FamilyRecord = {
+  id: number;
+  record_id?: number;
+  name: string;
+  relationship: string;
+  age: string;
+  occupation: string;
+  contactNo: string;
+};
+
+type EmergencyContactRecord = {
+  id: number;
+  contact_id?: number;
+  name: string;
+  contactNo: string;
+  relationship: string;
+};
 
 const ApplicantFamily: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const applicationId = searchParams.get('applicationId');
+
   const [showFamilyBackground, setShowFamilyBackground] = useState(true);
   const [showEmergencyContact, setShowEmergencyContact] = useState(true);
   
@@ -22,25 +73,6 @@ const ApplicantFamily: React.FC = () => {
     "Son",
     "Daughter"
   ];
-
-  // Type definitions
-  type FamilyRecord = {
-    id: number;
-    record_id?: number;
-    name: string;
-    relationship: string;
-    age: string;
-    occupation: string;
-    contactNo: string;
-  };
-
-  type EmergencyContactRecord = {
-    id: number;
-    contact_id?: number;
-    name: string;
-    contactNo: string;
-    relationship: string;
-  };
 
   // State with first record being compulsory
   const [familyRecords, setFamilyRecords] = useState<FamilyRecord[]>([
@@ -65,7 +97,10 @@ const ApplicantFamily: React.FC = () => {
     }
   ]);
 
-
+  /**
+   * Fetches applicant's family background and emergency contact data from the backend
+   * using the applicationId. Parses JSON fields and updates state.
+   */
   useEffect(() => {
     const fetchApplicantFamilyData = async () => {
       try {

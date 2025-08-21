@@ -1,9 +1,59 @@
+/**
+ * SubmittedFamily Page
+ *
+ * This component displays the applicant's family background and emergency contact information
+ * for a submitted job application in a read-only format.
+ *
+ * Features:
+ * - Fetches and displays family background and emergency contact records from the backend
+ *   using the applicationId from the URL.
+ * - Parses JSON fields from the backend response.
+ * - Displays all records in collapsible sections, with all fields disabled (read-only).
+ * - Handles empty states for each section.
+ * - Provides navigation to previous and next sections of the submitted application.
+ *
+ * Usage:
+ * - Used as a route page: `/submitted-application/family?applicationId=...`
+ *
+ * State:
+ * - familyRecords: List of family background records.
+ * - emergencyContacts: List of emergency contact records.
+ * - Collapsed/expanded state for each section.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation and query params.
+ * - lucide-react for icons.
+ * - Education.module.css and Family.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronDown, ChevronUp} from "lucide-react";
 import axios from "axios";
 import styles from "../../pages/Education/Education.module.css"; 
 import familyStyles from "../../pages/Family/Family.module.css";
+
+// Type definitions
+type FamilyRecord = {
+  id: number;
+  record_id?: number;
+  name: string;
+  relationship: string;
+  age: string;
+  occupation: string;
+  contactNo: string;
+};
+
+type EmergencyContactRecord = {
+  id: number;
+  contact_id?: number;
+  name: string;
+  contactNo: string;
+  relationship: string;
+};
 
 const SubmittedFamily: React.FC = () => {
   const navigate = useNavigate();
@@ -22,25 +72,6 @@ const SubmittedFamily: React.FC = () => {
     "Son",
     "Daughter"
   ];
-
-  // Type definitions
-  type FamilyRecord = {
-    id: number;
-    record_id?: number;
-    name: string;
-    relationship: string;
-    age: string;
-    occupation: string;
-    contactNo: string;
-  };
-
-  type EmergencyContactRecord = {
-    id: number;
-    contact_id?: number;
-    name: string;
-    contactNo: string;
-    relationship: string;
-  };
 
   // State with first record being compulsory
   const [familyRecords, setFamilyRecords] = useState<FamilyRecord[]>([

@@ -1,3 +1,35 @@
+/**
+ * SubmittedEducation Page
+ *
+ * This component displays the education background, scholarships/awards, and other professional
+ * qualifications for a submitted job application in a read-only format.
+ *
+ * Features:
+ * - Fetches applicant's education, scholarship/award, and other qualification records from the backend
+ *   using the applicationId from the URL.
+ * - Displays all records in collapsible sections, with all fields disabled (read-only).
+ * - Handles parsing of JSON fields from the backend response.
+ * - Provides navigation to previous and next sections of the submitted application.
+ * - Handles empty states for each section.
+ *
+ * Usage:
+ * - Used as a route page: `/submitted-application/education?applicationId=...`
+ *
+ * State:
+ * - educationRecords: List of education background records.
+ * - scholarshipAwards: List of scholarship/award records.
+ * - otherQualifications: List of other professional qualification records.
+ * - Collapsed/expanded state for each section.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation and query params.
+ * - lucide-react for icons.
+ * - Education.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styles from "../../pages/Education/Education.module.css";

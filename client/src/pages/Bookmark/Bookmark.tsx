@@ -1,9 +1,40 @@
+/**
+ * Bookmark Page
+ *
+ * This component displays and manages the user's bookmarked jobs.
+ *
+ * Features:
+ * - Fetches and displays all jobs the user has bookmarked.
+ * - Allows users to expand/collapse job details (responsibilities and requirements).
+ * - Allows users to remove a job from their bookmarks.
+ * - Provides an "Apply Now" button for each bookmarked job.
+ * - Shows a friendly message if there are no bookmarked jobs.
+ * - Handles loading state while fetching bookmarks.
+ *
+ * Usage:
+ * - Used as a route page: `/bookmark`
+ *
+ * State:
+ * - bookmarkedJobs: List of jobs the user has bookmarked.
+ * - expandedJobIds: Set of job IDs currently expanded for details.
+ * - loading: Indicates if bookmarks are being fetched.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation.
+ * - lucide-react for icons.
+ * - Bookmark.module.css for styling.
+ *
+ * @component
+ */
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ChevronDown, ChevronUp, Clock, MapPin, Briefcase, Users, BookmarkMinus, Bookmark as BookmarkIcon } from "lucide-react";
 import styles from "./Bookmark.module.css";
 
+// Type definition for a job object
 type Job = {
   job_id: number;
   title: string;
@@ -14,11 +45,15 @@ type Job = {
 };
 
 const Bookmark: React.FC = () => {
+  // State for all bookmarked jobs
   const [bookmarkedJobs, setBookmarkedJobs] = useState<Job[]>([]);
+  // State for expanded job IDs (for showing details)
   const [expandedJobIds, setExpandedJobIds] = useState<Set<string>>(new Set());
+  // State for loading indicator
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Fetch bookmarked jobs on mount
   useEffect(() => {
     const fetchBookmarks = async () => {
       try {
@@ -41,6 +76,7 @@ const Bookmark: React.FC = () => {
     fetchBookmarks();
   }, []);
 
+  // Toggle expand/collapse for a job's details
   const toggleJobDetails = (id: string) => {
     setExpandedJobIds(prev => {
       const newSet = new Set(prev);
@@ -50,6 +86,7 @@ const Bookmark: React.FC = () => {
     });
   };
 
+  // Remove a job from bookmarks
   const removeBookmark = async (job_id: number) => {
     try {
       await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/bookmarks`, {
@@ -59,6 +96,7 @@ const Bookmark: React.FC = () => {
         data: { job_id },
       });
 
+      // Remove job from local state
       setBookmarkedJobs(prev => prev.filter(job => job.job_id !== job_id));
       setExpandedJobIds(prev => {
         const newSet = new Set(prev);
@@ -76,7 +114,7 @@ const Bookmark: React.FC = () => {
       {loading ? (
         // Loading state - only background, no content
         <div className={styles.loadingContainer}>
-          {/* Completely empty - only background visible */}
+          {/* Empty loading container, background only */}
         </div>
       ) : (
         // Content shows only after loading is complete
@@ -86,6 +124,7 @@ const Bookmark: React.FC = () => {
             <p className={styles.pageSubtitle}>Manage your bookmarked job opportunities</p>
           </div>
 
+          {/* Show message if no bookmarked jobs */}
           {bookmarkedJobs.length === 0 ? (
             <div className={styles.noJobsCard}>
               <div className={styles.noJobsIcon}>
@@ -98,6 +137,7 @@ const Bookmark: React.FC = () => {
             <div className={styles.jobsGrid}>
               {bookmarkedJobs.map((job) => (
                 <div key={job.job_id} className={styles.jobCard}>
+                  {/* Job header: click to expand/collapse details */}
                   <div
                     className={styles.jobHeader}
                     onClick={() => toggleJobDetails(job.job_id.toString())}
@@ -127,6 +167,7 @@ const Bookmark: React.FC = () => {
                         </div>
                       </div>
                       
+                      {/* Actions: Remove bookmark and Apply Now */}
                       <div className={styles.jobActions} onClick={(e) => e.stopPropagation()}>
                         <button
                           className={styles.removeBookmarkBtn}
@@ -145,6 +186,7 @@ const Bookmark: React.FC = () => {
                       </div>
                     </div>
                     
+                    {/* Expand/collapse indicator */}
                     <div className={styles.expandIndicator}>
                       {expandedJobIds.has(job.job_id.toString()) ? 
                         <ChevronUp size={20} /> : 
@@ -153,6 +195,7 @@ const Bookmark: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Expanded job details */}
                   {expandedJobIds.has(job.job_id.toString()) && (
                     <div className={styles.jobDetails}>
                       <div className={styles.detailsSection}>

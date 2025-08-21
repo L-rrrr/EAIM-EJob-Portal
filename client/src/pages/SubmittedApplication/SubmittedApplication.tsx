@@ -1,15 +1,48 @@
+/**
+ * SubmittedApplication Page
+ *
+ * This component displays the overview of a submitted job application, including job information,
+ * attached documents, and position details. It allows navigation to view the full application details.
+ *
+ * Features:
+ * - Fetches application details from the backend using the applicationId from the URL.
+ * - Displays job type, job title, document type, document name, and a download link for the uploaded file.
+ * - Shows position details such as current/expected salary, earliest start date, source, and work experience.
+ * - Handles loading and not-found states.
+ * - Provides navigation back to the list of applications and forward to the next section of the application.
+ *
+ * Usage:
+ * - Used as a route page: `/submitted-application/overview?applicationId=...`
+ *
+ * State:
+ * - application: The application data object fetched from the backend.
+ * - loading: Indicates if the application data is being loaded.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation and query params.
+ * - HRApply.module.css for styling.
+ *
+ * @component
+ */
+
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styles from "../../HRpages/HRApply/HRApply.module.css";
 import axios from "axios";
 
 const SubmittedApplication: React.FC = () => {
+  // Get applicationId from URL query params
   const [searchParams] = useSearchParams();
   const applicationId = searchParams.get("applicationId");
+
+  // State for application data and loading
   const [application, setApplication] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
 
+  // Fetch application details on mount or when applicationId changes
   useEffect(() => {
     const fetchApplication = async () => {
       try {
@@ -31,7 +64,7 @@ const SubmittedApplication: React.FC = () => {
   if (loading) return <div className={styles.loading}>Loading...</div>;
   if (!application) return <div className={styles.notFound}>Application not found.</div>;
 
-  // Extract file info
+  // Extract file info for download link
   const fileName = application.file_name;
   const filePath = application.file_path;
   const serverFileName = filePath ? filePath.split(/[/\\]/).pop() : "";
@@ -39,6 +72,7 @@ const SubmittedApplication: React.FC = () => {
   return (
     <div className={styles.mainPanel}>
       <div className={styles.formWrapper}>
+        {/* Job Information Section */}
         <div className={styles.formContainer}>
           <h2 className={styles.sectionTitle}>Job Information</h2>
           <div className={styles.formSection}>
@@ -53,6 +87,7 @@ const SubmittedApplication: React.FC = () => {
           </div>
         </div>
 
+        {/* Document Attachment Section */}
         <div className={styles.formContainer}>
           <h2 className={styles.sectionTitle}>Document Attachment</h2>
           <div className={styles.formSection}>
@@ -81,6 +116,7 @@ const SubmittedApplication: React.FC = () => {
           </div>
         </div>
 
+        {/* Position Details Section */}
         <div className={styles.formContainer}>
           <h2 className={styles.sectionTitle}>Position Details</h2>
           <div className={styles.formSection}>
@@ -111,6 +147,7 @@ const SubmittedApplication: React.FC = () => {
           </div>
         </div>
 
+        {/* Navigation Buttons */}
         <div className={styles.formButtons}>
           <button 
             className={`${styles.btn} ${styles.btnSave}`} 

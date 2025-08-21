@@ -1,41 +1,73 @@
+/**
+ * Support Page
+ *
+ * This component allows users to manage their references and attachments as part of their application.
+ *
+ * Features:
+ * - Fetches and displays references and attachments from the backend.
+ * - Allows adding, editing, and deleting references (minimum 2 required).
+ * - Allows adding, editing, and deleting attachments (minimum 1 resume required).
+ * - Handles file uploads with validation (max 10MB, accepted formats).
+ * - Validates all required fields before update.
+ * - Supports saving as draft and final update (with backend sync).
+ * - Shows validation errors and upload errors.
+ * - Collapsible sections for better UX.
+ *
+ * Usage:
+ * - Used as a route page: `/support`
+ *
+ * State:
+ * - references: List of reference records.
+ * - attachments: List of attachment records.
+ * - referenceValidationErrors, attachmentValidationErrors: Field-level validation errors.
+ * - Collapsed/expanded state for each section.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - lucide-react for icons.
+ * - Education.module.css and Support.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { ChevronUp, ChevronDown, Trash2 } from "lucide-react";
 import axios from "axios";
 import styles from "../Education/Education.module.css"; 
 import supportStyles from "./Support.module.css";
 
+// Type definitions
+type ReferenceRecord = {
+  id: number;
+  reference_id?: number;
+  name: string;
+  occupation: string;
+  contactNo: string;
+  relationship: string;
+};
+
+type AttachmentRecord = {
+  id: number;
+  attachment_id?: number;
+  documentType: string;
+  documentName: string;
+  file: File | null;
+  file_name?: string;
+  file_path?: string;
+  file_size?: number;
+  file_type?: string;
+  server_file_name?: string;
+};
+
+type ValidationErrors = {
+  [recordId: number]: {
+    [field: string]: string; // error message
+  };
+};
+
 const Support: React.FC = () => {
   const [showReferences, setShowReferences] = useState(true);
   const [showAttachments, setShowAttachments] = useState(true);
-
-  // Type definitions
-  type ReferenceRecord = {
-    id: number;
-    reference_id?: number;
-    name: string;
-    occupation: string;
-    contactNo: string;
-    relationship: string;
-  };
-
-  type AttachmentRecord = {
-    id: number;
-    attachment_id?: number;
-    documentType: string;
-    documentName: string;
-    file: File | null;
-    file_name?: string;
-    file_path?: string;
-    file_size?: number;
-    file_type?: string;
-    server_file_name?: string;
-  };
-
-  type ValidationErrors = {
-    [recordId: number]: {
-      [field: string]: string; // error message
-    };
-  };
 
   // State with first 2 records being compulsory
   const [references, setReferences] = useState<ReferenceRecord[]>([
@@ -49,16 +81,6 @@ const Support: React.FC = () => {
 
   const [referenceValidationErrors, setReferenceValidationErrors] = useState<ValidationErrors>({});
   const [attachmentValidationErrors, setAttachmentValidationErrors] = useState<ValidationErrors>({});
-
-  // Mapping function for backend
-  const mapReferenceToBackend = (record: ReferenceRecord) => ({
-    reference_id: record.reference_id,
-    name: record.name,
-    occupation: record.occupation,
-    contact_no: record.contactNo,
-    relationship: record.relationship,
-  });
-
 
   // Fetch references from backend
   const fetchReferences = async () => {
@@ -261,8 +283,16 @@ const Support: React.FC = () => {
     return Object.keys(referenceErrors).length === 0 && Object.keys(attachmentErrors).length === 0;
   };
 
+  // Mapping function for backend
+  const mapReferenceToBackend = (record: ReferenceRecord) => ({
+    reference_id: record.reference_id,
+    name: record.name,
+    occupation: record.occupation,
+    contact_no: record.contactNo,
+    relationship: record.relationship,
+  });
+
   // Save as Draft function
-  // Update handleSaveDraft function
   const handleSaveDraft = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     try {
@@ -290,8 +320,7 @@ const Support: React.FC = () => {
             return;
           }
         }
-
-        // CHANGED: Include ALL attachments, not just those with document_type or document_name
+        
         // For drafts, we want to save even incomplete records
         attachmentsToSave.push({
           attachment_id: attachment.attachment_id,

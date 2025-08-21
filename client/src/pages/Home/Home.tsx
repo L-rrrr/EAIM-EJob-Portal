@@ -1,11 +1,45 @@
+/**
+ * Home Page (Dashboard)
+ *
+ * This component serves as the main dashboard for applicants after login.
+ *
+ * Features:
+ * - Displays overall profile completeness as a percentage.
+ * - Shows the number of jobs applied and available jobs.
+ * - Notifies the user of any upcoming interviews.
+ * - Provides navigation to profile, jobs applied, and available jobs pages.
+ * - Fetches and tracks completion status for all profile sections.
+ * - Fetches available jobs and applied jobs from the backend.
+ * - Responsive and visually organized dashboard cards.
+ *
+ * Usage:
+ * - Used as the landing page after applicant login: `/home`
+ *
+ * State:
+ * - personalParticularsCompleted, educationCompleted, workCompleted, familyCompleted, supportCompleted: Section completion flags.
+ * - availableJobsCount: Number of jobs currently open for application.
+ * - appliedJobs: List of jobs the user has applied for.
+ * - interviewJob: The next scheduled interview (if any).
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation.
+ * - lucide-react for icons.
+ * - Home.module.css for styling.
+ *
+ * @component
+ */
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Briefcase, ArrowRight, Info, Target } from "lucide-react";
 import styles from "./Home.module.css";
 import axios from "axios";
 
+// Number of tables/sections required for profile completeness
 const TOTAL_SECTIONS = 11;
 
+// Mapping of section names to their table counts
 const SECTION_TABLES = {
   personal: 4,
   education: 1,
@@ -14,20 +48,25 @@ const SECTION_TABLES = {
   support: 2,
 };
 
-
-
 const Home: React.FC = () => {
   const navigate = useNavigate();
+
+  // Section completion states
   const [personalParticularsCompleted, setPersonalParticularsCompleted] = useState(false);
   const [educationCompleted, setEducationCompleted] = useState(false);
   const [workCompleted, setWorkCompleted] = useState(false);
   const [familyCompleted, setFamilyCompleted] = useState(false);
   const [supportCompleted, setSupportCompleted] = useState(false);
 
+  // Jobs and interview states
   const [availableJobsCount, setAvailableJobsCount] = useState<number>(0);
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
   const [interviewJob, setInterviewJob] = useState<{ job: string; interview_date: string } | null>(null);
 
+  /**
+   * Fetch profile completeness for all sections.
+   * Updates section completion states.
+   */
   useEffect(() => {
     const fetchCompleteness = async () => {
       try {
@@ -60,12 +99,15 @@ const Home: React.FC = () => {
     };
     fetchCompleteness();
 
+    // Listen for profile completeness updates
     const handler = () => fetchCompleteness();
     window.addEventListener("profile-completeness-updated", handler);
     return () => window.removeEventListener("profile-completeness-updated", handler);
   }, []);
 
-  // Fetch available jobs count
+  /**
+   * Fetch the number of available jobs (with "Hiring" status).
+   */
   useEffect(() => {
     const fetchJobs = async () => {
       try {
@@ -84,7 +126,9 @@ const Home: React.FC = () => {
     fetchJobs();
   }, []);
 
-  // Fetch applied jobs and check for interview scheduled
+  /**
+   * Fetch applied jobs and check for any scheduled interviews.
+   */
   useEffect(() => {
     const fetchAppliedJobs = async () => {
       try {
@@ -113,6 +157,7 @@ const Home: React.FC = () => {
     fetchAppliedJobs();
   }, []);
 
+  // Calculate completed tables for profile completeness
   const completedTables =
     (personalParticularsCompleted ? SECTION_TABLES.personal : 0) +
     (educationCompleted ? SECTION_TABLES.education : 0) +
@@ -120,6 +165,7 @@ const Home: React.FC = () => {
     (familyCompleted ? SECTION_TABLES.family : 0) +
     (supportCompleted ? SECTION_TABLES.support : 0);
 
+  // Calculate overall profile completeness percentage
   const progressPercent = Math.floor((completedTables / TOTAL_SECTIONS) * 100);
 
   return (
@@ -128,7 +174,11 @@ const Home: React.FC = () => {
 
         {/* Dashboard Cards Grid */}
         <div className={styles.dashboardGrid}>
-          <div className={`${styles.dashboardCard} ${styles.profileCard}`} onClick={() => navigate("/profile/personal-particulars")}>
+          {/* Profile Status Card */}
+          <div
+            className={`${styles.dashboardCard} ${styles.profileCard}`}
+            onClick={() => navigate("/profile/personal-particulars")}
+          >
             <div className={styles.cardHeader}>
               <div className={styles.cardIcon}>
                 <User size={24} />
@@ -149,15 +199,19 @@ const Home: React.FC = () => {
                 <span className={styles.metricLabel}>Overall completeness</span>
               </div>
               <div className={styles.progressBar}>
-                <div 
-                  className={styles.progressFill} 
+                <div
+                  className={styles.progressFill}
                   style={{ width: `${progressPercent}%` }}>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className={`${styles.dashboardCard} ${styles.jobsCard}`} onClick={() => navigate("/jobs-applied")}>
+          {/* Jobs Applied Card */}
+          <div
+            className={`${styles.dashboardCard} ${styles.jobsCard}`}
+            onClick={() => navigate("/jobs-applied")}
+          >
             <div className={styles.cardHeader}>
               <div className={styles.cardIcon}>
                 <Briefcase size={24} />
@@ -191,6 +245,7 @@ const Home: React.FC = () => {
               <h3 className={styles.infoTitle}>Important Information</h3>
             </div>
             <div className={styles.infoContent}>
+              {/* Profile completeness info */}
               <div className={styles.infoItem}>
                 <div className={styles.infoNumber}>1</div>
                 <p>
@@ -199,12 +254,14 @@ const Home: React.FC = () => {
                     : "Your Profile Status is incomplete. Please complete your profile before you apply for any job."}
                 </p>
               </div>
+              {/* Available jobs info */}
               <div className={styles.infoItem}>
                 <div className={styles.infoNumber}>2</div>
                 <p>
                   There are <strong>{availableJobsCount} jobs</strong> available now.
                 </p>
               </div>
+              {/* Interview info */}
               <div className={styles.infoItem}>
                 <div className={styles.infoNumber}>3</div>
                 <p>
@@ -223,13 +280,16 @@ const Home: React.FC = () => {
 
         {/* Call to Action */}
         <div className={styles.ctaSection}>
-          <button className={styles.applyNowButton} onClick={() => navigate("/available-jobs")}>
+          <button
+            className={styles.applyNowButton}
+            onClick={() => navigate("/available-jobs")}
+          >
             <Briefcase size={20} />
             Apply Now
             <ArrowRight size={20} />
           </button>
         </div>
-        
+
       </div>
     </div>
   );

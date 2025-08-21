@@ -1,8 +1,98 @@
+/**
+ * ApplicantPersonalParticulars Page
+ *
+ * This component displays the applicant's personal particulars, Singapore address,
+ * overseas address, and military service details for HR review in a read-only format.
+ *
+ * Features:
+ * - Fetches and displays all personal, address, and military service data from the backend
+ *   using the applicationId from the URL.
+ * - Parses JSON fields from the backend response.
+ * - Displays all fields in collapsible sections, with all fields disabled (read-only).
+ * - Handles empty and default states for each section.
+ * - Provides navigation to previous and next sections of the applicant's details.
+ *
+ * Usage:
+ * - Used as a route page: `/hr/applicant-details/personal-particulars?applicationId=...`
+ *
+ * State:
+ * - personalParticulars: Applicant's personal details.
+ * - sgAddress: Singapore address fields.
+ * - overseasAddress: Overseas address fields.
+ * - militaryService: Military service fields.
+ * - Collapsed/expanded state for each section.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation and query params.
+ * - lucide-react for icons.
+ * - PersonalParticulars.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import styles from "../../pages/PersonalParticulars/PersonalParticulars.module.css";
 import axios from "axios";
+
+type PersonalParticularsKeys =
+| "salutation"
+| "full_name"
+| "nric"
+| "alias"
+| "email"
+| "date_of_birth"
+| "marital_status"
+| "gender"
+| "nationality"
+| "status_in_sg"
+| "race"
+| "dialect"
+| "religion"
+| "country_of_birth"
+| "passport_no"
+| "passport_expiry";
+
+type SgAddressKeys = "blk_no" | "street_name" | "unit_no" | "postal_code" | "mobile_no" | "home_no";
+
+type OverseasAddressKeys =
+| "has_overseas_address"
+| "blk_or_house_no"
+| "street_name"
+| "building_name"
+| "city"
+| "state_or_province"
+| "country"
+| "postal_code"
+| "mobile_country_code"
+| "mobile_number"
+| "home_country_code"
+| "home_number";
+
+type MilitaryServiceKeys =
+| "ns_status"
+| "service_from_year"
+| "service_from_month"
+| "service_to_year"
+| "service_to_month"
+| "rank"
+| "unit"
+| "vocation"
+| "next_camp_date"
+| "is_operationally_ready"
+| "nsman_unit"
+| "nsman_vocation"
+| "ns_exemption_reason";
+
+type SelectField = {
+  label: string;
+  required: boolean;
+  name: PersonalParticularsKeys;
+  type: "select" | "text" | "email" | "tel" | "date";
+  options?: string[];
+};
 
 const ApplicantPersonalParticulars: React.FC = () => {
   const navigate = useNavigate();
@@ -76,7 +166,6 @@ const ApplicantPersonalParticulars: React.FC = () => {
             });
           }
 
-          
           // Parse and set Singapore address
           if (data.singapore_address) {
             let sgAddr: any = {};
@@ -152,24 +241,6 @@ const ApplicantPersonalParticulars: React.FC = () => {
     fetchApplicantData();
   }, [applicationId]);
 
-  type PersonalParticularsKeys =
-  | "salutation"
-  | "full_name"
-  | "nric"
-  | "alias"
-  | "email"
-  | "date_of_birth"
-  | "marital_status"
-  | "gender"
-  | "nationality"
-  | "status_in_sg"
-  | "race"
-  | "dialect"
-  | "religion"
-  | "country_of_birth"
-  | "passport_no"
-  | "passport_expiry";
-
   const [personalParticulars, setPersonalParticulars] = useState<Record<PersonalParticularsKeys, string | Date | null>>({
     salutation: "",
     full_name: "",
@@ -188,14 +259,6 @@ const ApplicantPersonalParticulars: React.FC = () => {
     passport_no: "",
     passport_expiry: null,
   });
-
-  type SelectField = {
-    label: string;
-    required: boolean;
-    name: PersonalParticularsKeys;
-    type: "select" | "text" | "email" | "tel" | "date";
-    options?: string[];
-  };
 
   const personalParticularsFields: SelectField[] = [
     { label: "Salutation", required: true, name: "salutation", type: "select", options: ["Mr.", "Ms.", "Mrs.", "Miss", "Dr."] },
@@ -220,8 +283,6 @@ const ApplicantPersonalParticulars: React.FC = () => {
     { label: "Passport Expiry Date", required: true, name: "passport_expiry", type: "date" },
   ];
 
-  type SgAddressKeys = "blk_no" | "street_name" | "unit_no" | "postal_code" | "mobile_no" | "home_no";
-
   const [sgAddress, setSgAddress] = useState<Record<SgAddressKeys, string>>({
     blk_no: "",
     street_name: "",
@@ -239,20 +300,6 @@ const ApplicantPersonalParticulars: React.FC = () => {
     { label: "Mobile No.", required: true, name: "mobile_no", type: "tel" },
     { label: "Home Telephone No.", required: false, name: "home_no", type: "tel" },
   ];
-
-  type OverseasAddressKeys =
-  | "has_overseas_address"
-  | "blk_or_house_no"
-  | "street_name"
-  | "building_name"
-  | "city"
-  | "state_or_province"
-  | "country"
-  | "postal_code"
-  | "mobile_country_code"
-  | "mobile_number"
-  | "home_country_code"
-  | "home_number";
 
   const [overseasAddress, setOverseasAddress] = useState<Record<OverseasAddressKeys, string>>({
     has_overseas_address: "N",
@@ -286,21 +333,6 @@ const ApplicantPersonalParticulars: React.FC = () => {
     { label: "Home Telephone No.", required: false, name: "home_number", type: "tel" },
   ];
 
-  type MilitaryServiceKeys =
-  | "ns_status"
-  | "service_from_year"
-  | "service_from_month"
-  | "service_to_year"
-  | "service_to_month"
-  | "rank"
-  | "unit"
-  | "vocation"
-  | "next_camp_date"
-  | "is_operationally_ready"
-  | "nsman_unit"
-  | "nsman_vocation"
-  | "ns_exemption_reason";
-
   const [militaryService, setMilitaryService] = useState<Record<MilitaryServiceKeys, string>>({
     ns_status: "",
     service_from_year: "",
@@ -316,41 +348,6 @@ const ApplicantPersonalParticulars: React.FC = () => {
     nsman_vocation: "",
     ns_exemption_reason: "",
   });
-
-  // const militaryServiceFields: {
-  //   label: string;
-  //   required: boolean;
-  //   name: MilitaryServiceKeys;
-  //   type: string;
-  //   options?: string[];
-  //   placeholder?: string;
-  // }[] = [
-  //   {
-  //     label: "NS Status",
-  //     required: true,
-  //     name: "ns_status",
-  //     type: "select",
-  //     options: ["Completed", "Not Completed", "Exempted", "Not Applicable"],
-  //   },
-  //   { label: "Service From Year", required: militaryService.ns_status === "Completed", name: "service_from_year", type: "number" },
-  //   { label: "Service From Month", required: militaryService.ns_status === "Completed", name: "service_from_month", type: "text" },
-  //   { label: "Service To Year", required: militaryService.ns_status === "Completed", name: "service_to_year", type: "number" },
-  //   { label: "Service To Month", required: militaryService.ns_status === "Completed", name: "service_to_month", type: "text" },
-  //   { label: "Rank", required: militaryService.ns_status === "Completed", name: "rank", type: "text", placeholder: "e.g., 3SG" },
-  //   { label: "Unit", required: militaryService.ns_status === "Completed", name: "unit", type: "text", placeholder: "e.g., 3rd Infantry Battalion" },
-  //   { label: "Vocation", required: militaryService.ns_status === "Completed", name: "vocation", type: "text", placeholder: "e.g., Combat Engineer" },
-  //   { label: "Next Camp Date", required: false, name: "next_camp_date", type: "date" },
-  //   {
-  //     label: "Operationally Ready",
-  //     required: militaryService.ns_status === "Completed",
-  //     name: "is_operationally_ready",
-  //     type: "select",
-  //     options: ["Yes", "No"],
-  //   },
-  //   { label: "NSman Unit", required: false, name: "nsman_unit", type: "text" },
-  //   { label: "NSman Vocation", required: false, name: "nsman_vocation", type: "text" },
-  //   { label: "Exemption Reason", required: militaryService.ns_status !== "Completed", name: "ns_exemption_reason", type: "textarea" },
-  // ];
 
   return (
     <div className={styles.mainPanel}>

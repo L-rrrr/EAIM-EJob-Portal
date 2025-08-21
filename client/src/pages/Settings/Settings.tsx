@@ -1,3 +1,38 @@
+/**
+ * Settings Page
+ *
+ * This component allows users to manage their account settings, including profile information,
+ * password changes, and notification preferences.
+ *
+ * Features:
+ * - Edit and update profile information (first name, last name, email, nationality).
+ * - Change password with validation and visibility toggles.
+ * - Email verification workflow for email changes.
+ * - (Optional) Manage notification preferences.
+ * - Shows success/error messages for all actions.
+ * - Responsive tab navigation for Profile and Security.
+ *
+ * Usage:
+ * - Used as a route page: `/settings`
+ *
+ * State:
+ * - activeTab: Current tab ("profile" or "security").
+ * - isLoading: Loading state for form submissions.
+ * - message/messageType: Feedback messages for user actions.
+ * - showCurrentPassword, showNewPassword, showConfirmPassword: Password visibility toggles.
+ * - notifications: Notification preferences (future use).
+ * - Email verification: pendingEmail, showEmailVerify, emailVerifyCode, etc.
+ *
+ * Dependencies:
+ * - react-hook-form for form handling and validation.
+ * - axios for HTTP requests.
+ * - lucide-react for icons.
+ * - Settings.module.css for styling.
+ * - Countries utility for nationality dropdown.
+ *
+ * @component
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
@@ -6,8 +41,7 @@ import {
   Mail, 
   Eye, 
   EyeOff, 
-  User, 
-  Bell, 
+  User,
   Save,
   Shield,
   Globe
@@ -197,30 +231,6 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleNotificationChange = (key: string, value: boolean) => {
-    setNotifications(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  const saveNotificationSettings = async () => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/notification-settings`, notifications, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setMessage('Notification settings saved!');
-      setMessageType('success');
-    } catch (error) {
-      setMessage('Failed to save notification settings');
-      setMessageType('error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className={styles.settingsContainer}>
       <div className={styles.settingsHeader}>
@@ -245,13 +255,6 @@ const Settings: React.FC = () => {
             <Shield size={18} />
             Password
           </button>
-          {/* <button 
-            className={`${styles.tabButton} ${activeTab === 'notifications' ? styles.active : ''}`}
-            onClick={() => setActiveTab('notifications')}
-          >
-            <Bell size={18} />
-            Notifications
-          </button> */}
         </div>
 
         {/* Tab Content */}
@@ -508,70 +511,6 @@ const Settings: React.FC = () => {
               </form>
             </div>
           )}
-
-          {/* Notifications Tab */}
-          {/* {activeTab === 'notifications' && (
-            <div className={styles.tabPanel}>
-              <h2 className={styles.sectionTitle}>Notification Preferences</h2>
-              <div className={styles.notificationSettings}>
-                <div className={styles.notificationItem}>
-                  <div className={styles.notificationInfo}>
-                    <h3>Email Notifications</h3>
-                    <p>Receive general email notifications</p>
-                  </div>
-                  <label className={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={notifications.emailNotifications}
-                      onChange={(e) => handleNotificationChange('emailNotifications', e.target.checked)}
-                    />
-                    <span className={styles.slider}></span>
-                  </label>
-                </div>
-
-                <div className={styles.notificationItem}>
-                  <div className={styles.notificationInfo}>
-                    <h3>Job Alerts</h3>
-                    <p>Get notified about new job postings</p>
-                  </div>
-                  <label className={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={notifications.jobAlerts}
-                      onChange={(e) => handleNotificationChange('jobAlerts', e.target.checked)}
-                    />
-                    <span className={styles.slider}></span>
-                  </label>
-                </div>
-
-                <div className={styles.notificationItem}>
-                  <div className={styles.notificationInfo}>
-                    <h3>Application Updates</h3>
-                    <p>Receive updates on your job applications</p>
-                  </div>
-                  <label className={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={notifications.applicationUpdates}
-                      onChange={(e) => handleNotificationChange('applicationUpdates', e.target.checked)}
-                    />
-                    <span className={styles.slider}></span>
-                  </label>
-                </div>
-
-
-
-                <button 
-                  onClick={saveNotificationSettings}
-                  className={`${styles.submitButton} ${isLoading ? styles.loading : ''}`}
-                  disabled={isLoading}
-                >
-                  <Save size={18} />
-                  Save Notification Settings
-                </button>
-              </div>
-            </div>
-          )} */}
           
         </div>
       </div>

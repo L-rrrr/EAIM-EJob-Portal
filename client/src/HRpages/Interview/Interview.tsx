@@ -1,3 +1,34 @@
+/**
+ * Interview Page
+ *
+ * This component provides an HR interface for managing and scheduling interviews with applicants.
+ *
+ * Features:
+ * - Displays interview statistics (today's, upcoming, pending applicants).
+ * - Interactive calendar view for all scheduled interviews.
+ * - Sidebar with upcoming interviews and pending applicants.
+ * - Add, edit, and delete interviews with a modal form.
+ * - Integration with Microsoft Calendar for scheduling.
+ * - Fetches interview, applicant, and job data from the backend.
+ * - Responsive and accessible UI with error handling.
+ *
+ * State:
+ * - events: List of all interview events.
+ * - pendingApplicants: Applicants awaiting interview scheduling.
+ * - applicantList, jobList: Dropdown data for scheduling.
+ * - selectedEvent, showForm, formMode, formData: Modal form state.
+ * - currentDate: Controls calendar month/year.
+ * - fieldErrors: Validation errors for form fields.
+ * - isLoading: Loading state for pending applicants.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - lucide-react for icons.
+ * - Interview.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from 'react';
 import styles from './Interview.module.css';
 import { Calendar as CalendarIcon, Clock, Trash2, Edit, Plus, CalendarArrowUp} from 'lucide-react';
@@ -21,8 +52,6 @@ type InterviewEvent = {
 
 const Interview: React.FC = () => {
   const [events, setEvents] = useState<InterviewEvent[]>([]);
-
-  
 
   useEffect(() => {
     fetchPendingApplicants();

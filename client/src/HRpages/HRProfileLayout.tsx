@@ -1,3 +1,21 @@
+/**
+ * HRProfileLayout Component
+ *
+ * This layout component provides a sidebar and content area for HR profile-related pages.
+ * It fetches and displays the applicant's name in the sidebar and renders the current route's content.
+ *
+ * Features:
+ * - Fetches applicant's full name from the backend using userId from the URL.
+ * - Displays the HRSidebar with the applicant's name.
+ * - Uses React Router's <Outlet> to render nested profile routes.
+ * - Responsive flex layout for sidebar and content.
+ *
+ * Usage:
+ * - Used as a parent layout for all HR profile-related routes.
+ *
+ * @component
+ */
+
 import { Outlet, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import HRSidebar from "../components/HRSidebar/HRSidebar";

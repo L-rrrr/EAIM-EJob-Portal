@@ -1,14 +1,81 @@
+/**
+ * Family Page
+ *
+ * This component allows users to manage their family background and emergency contact information
+ * as part of their profile.
+ *
+ * Features:
+ * - Fetches and displays family background and emergency contact records from the backend.
+ * - Allows users to add, edit, and delete records for each section (first record is compulsory).
+ * - Validates required fields for all records before saving or updating.
+ * - Supports saving as draft and final update (with backend sync).
+ * - Handles backend ID mapping for new and existing records.
+ * - Notifies the system to update profile completeness after save/update.
+ * - Collapsible sections for better UX.
+ * - Navigation to the next profile section.
+ *
+ * Usage:
+ * - Used as a route page: `/profile/family`
+ *
+ * State:
+ * - familyRecords: List of family background records.
+ * - emergencyContacts: List of emergency contact records.
+ * - Validation errors for each section.
+ * - Collapsed/expanded state for each section.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation.
+ * - lucide-react for icons.
+ * - Education.module.css and Family.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import axios from "axios";
 import styles from "../Education/Education.module.css"; 
-import familyStyles from "./Family.module.css"; // Assuming you want to use the same styles as Education
+import familyStyles from "./Family.module.css";
+
+// -------------------- Type Definitions --------------------
+
+// Type definitions
+type FamilyRecord = {
+  id: number;
+  record_id?: number; // if existing record from backend
+  name: string;
+  relationship: string;
+  age: string;
+  occupation: string;
+  contactNo: string;
+};
+
+type EmergencyContactRecord = {
+  id: number;
+  contact_id?: number;
+  name: string;
+  contactNo: string;
+  relationship: string;
+};
+
+type ValidationErrors = {
+  [recordId: number]: {
+    [field: string]: string; // error message
+  };
+};
+
+// -------------------- Main Component --------------------
 
 const Family: React.FC = () => {
+  // Collapsible section states
   const [showFamilyBackground, setShowFamilyBackground] = useState(true);
   const [showEmergencyContact, setShowEmergencyContact] = useState(true);
+
   const navigate = useNavigate();
+  
+  // Relationship options for dropdowns
   const relationshipOptions = [
     "Father",
     "Mother",
@@ -20,33 +87,9 @@ const Family: React.FC = () => {
     "Daughter"
   ];
 
-  // Type definitions
-  type FamilyRecord = {
-    id: number;
-    record_id?: number; // if existing record from backend
-    name: string;
-    relationship: string;
-    age: string;
-    occupation: string;
-    contactNo: string;
-  };
+  // -------------------- State --------------------
 
-  type ValidationErrors = {
-    [recordId: number]: {
-      [field: string]: string; // error message
-    };
-  };
-
-  // Add type definition for Emergency Contact
-  type EmergencyContactRecord = {
-    id: number;
-    contact_id?: number; // if existing record from backend
-    name: string;
-    contactNo: string;
-    relationship: string;
-  };
-
-  // State with first record being compulsory
+  // Family background records (first record is compulsory)
   const [familyRecords, setFamilyRecords] = useState<FamilyRecord[]>([
     { 
       id: 1, 
@@ -59,7 +102,7 @@ const Family: React.FC = () => {
     }
   ]);
 
-  // Update the state with proper typing and first record as compulsory
+  // Emergency contact records (first record is compulsory)
   const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContactRecord[]>([
     { 
       id: 1,
@@ -70,10 +113,13 @@ const Family: React.FC = () => {
     }
   ]);
 
+  // Validation error states
   const [familyValidationErrors, setFamilyValidationErrors] = useState<ValidationErrors>({});
   const [emergencyValidationErrors, setEmergencyValidationErrors] = useState<ValidationErrors>({});
 
-  // Mapping function for backend
+  // -------------------- Utility Functions --------------------
+
+  // Map frontend family record to backend format
   const mapFamilyToBackend = (record: FamilyRecord) => ({
     record_id: record.record_id,
     name: record.name,
@@ -83,13 +129,21 @@ const Family: React.FC = () => {
     contact_no: record.contactNo,
   });
 
-  // Add mapping function for Emergency Contact backend
+  // Map frontend emergency contact record to backend format
   const mapEmergencyToBackend = (record: EmergencyContactRecord) => ({
     contact_id: record.contact_id,
     name: record.name,
     contact_no: record.contactNo,
     relationship: record.relationship,
   });
+
+  // -------------------- Fetch Data --------------------
+
+  // Fetch all records on mount
+  useEffect(() => {
+    fetchFamilyRecords();
+    fetchEmergencyContacts();
+  }, []);
 
   // Fetch family records from backend
   const fetchFamilyRecords = async () => {
@@ -115,7 +169,7 @@ const Family: React.FC = () => {
     }
   };
 
-  // Add fetch function for Emergency Contact
+  // Fetch emergency contact records from backend
   const fetchEmergencyContacts = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -137,12 +191,12 @@ const Family: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchFamilyRecords();
-    fetchEmergencyContacts();
-  }, []);
+  // -------------------- Validation --------------------
 
-  // Validation function
+  /**
+   * Validate all records before update.
+   * Returns true if all records are valid, false otherwise.
+   */
   const validateRecords = (): boolean => {
     const familyErrors: ValidationErrors = {};
     const emergencyErrors: ValidationErrors = {};
@@ -198,7 +252,12 @@ const Family: React.FC = () => {
           Object.keys(emergencyErrors).length === 0;
   };
 
-  // Save as Draft function (like Education.tsx)
+  // -------------------- Save/Update Handlers --------------------
+
+  /**
+   * Save all records as draft (is_draft: "Y").
+   * Updates backend IDs on success.
+   */
   const handleSaveDraft = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     try {
@@ -253,7 +312,10 @@ const Family: React.FC = () => {
     }
   };
 
-  // Update function (like Education.tsx)
+  /**
+   * Update all records (is_draft: "N") after validation.
+   * Updates backend IDs on success.
+   */
   const handleUpdate = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
 
@@ -315,7 +377,9 @@ const Family: React.FC = () => {
     }
   };
 
-  // Add family record function (like Education.tsx addScholarshipAward)
+  // -------------------- Record Add/Update/Delete Handlers --------------------
+
+  // Add a new family record (ID is auto-incremented)
   const addFamilyRecord = () => {
     // Generate ID based on existing records or start from 1
     const newId = familyRecords.length > 0 ? Math.max(...familyRecords.map(r => r.id)) + 1 : 1;
@@ -333,7 +397,7 @@ const Family: React.FC = () => {
     ]);
   };
 
-  // Update addEmergencyContact function (like addFamilyRecord)
+  // Add a new emergency contact (ID is auto-incremented)
   const addEmergencyContact = () => {
     // Generate ID based on existing records or start from 1
     const newId = emergencyContacts.length > 0 ? Math.max(...emergencyContacts.map(r => r.id)) + 1 : 1;
@@ -349,7 +413,7 @@ const Family: React.FC = () => {
     ]);
   };
 
-  // Delete family record function (like Education.tsx deleteScholarshipAward)
+  // Delete a family record (cannot delete the first/compulsory record)
   const deleteFamilyRecord = async (id: number) => {
     const recordToDelete = familyRecords.find(record => record.id === id);
     
@@ -415,52 +479,7 @@ const Family: React.FC = () => {
     }
   };
 
-  // Update function (like Education.tsx updateScholarshipAward)
-  const updateFamilyRecord = (id: number, field: string, value: string) => {
-    setFamilyRecords(familyRecords.map(record =>
-      record.id === id ? { ...record, [field]: value } : record
-    ));
-
-    // Clear validation error when user starts typing
-    if (familyValidationErrors[id]?.[field] && value.trim() !== "") {
-      setFamilyValidationErrors((prev) => {
-        const updated = { ...prev };
-        if (updated[id]) {
-          delete updated[id][field];
-          // If no more errors for this record, remove the record key entirely
-          if (Object.keys(updated[id]).length === 0) {
-            delete updated[id];
-          }
-        }
-        return updated;
-      });
-    }
-  };
-
-  // Update updateEmergencyContact function (like updateFamilyRecord)
-  const updateEmergencyContact = (id: number, field: string, value: string) => {
-    setEmergencyContacts(emergencyContacts.map(contact =>
-      contact.id === id ? { ...contact, [field]: value } : contact
-    ));
-
-    // Clear validation error when user starts typing (using unique ID range)
-    const validationId = id;
-    if (emergencyValidationErrors[validationId]?.[field] && value.trim() !== "") {
-      setEmergencyValidationErrors((prev) => {
-        const updated = { ...prev };
-        if (updated[validationId]) {
-          delete updated[validationId][field];
-          // If no more errors for this record, remove the record key entirely
-          if (Object.keys(updated[validationId]).length === 0) {
-            delete updated[validationId];
-          }
-        }
-        return updated;
-      });
-    }
-  };
-
-  // Keep existing emergency contact functions unchanged
+  // Delete an emergency contact (cannot delete the first/compulsory record)
   const deleteEmergencyContact = async (id: number) => {
     const contactToDelete = emergencyContacts.find(contact => contact.id === id);
     
@@ -528,11 +547,52 @@ const Family: React.FC = () => {
     }
   };
 
+  // Update a family record field
+  const updateFamilyRecord = (id: number, field: string, value: string) => {
+    setFamilyRecords(familyRecords.map(record =>
+      record.id === id ? { ...record, [field]: value } : record
+    ));
+
+    // Clear validation error when user starts typing
+    if (familyValidationErrors[id]?.[field] && value.trim() !== "") {
+      setFamilyValidationErrors((prev) => {
+        const updated = { ...prev };
+        if (updated[id]) {
+          delete updated[id][field];
+          // If no more errors for this record, remove the record key entirely
+          if (Object.keys(updated[id]).length === 0) {
+            delete updated[id];
+          }
+        }
+        return updated;
+      });
+    }
+  };
+
+  // Update an emergency contact field
+  const updateEmergencyContact = (id: number, field: string, value: string) => {
+    setEmergencyContacts(emergencyContacts.map(contact =>
+      contact.id === id ? { ...contact, [field]: value } : contact
+    ));
+    if (emergencyValidationErrors[id]?.[field] && value.trim() !== "") {
+      setEmergencyValidationErrors((prev) => {
+        const updated = { ...prev };
+        if (updated[id]) {
+          delete updated[id][field];
+          if (Object.keys(updated[id]).length === 0) {
+            delete updated[id];
+          }
+        }
+        return updated;
+      });
+    }
+  };
+
   return (
     <div className={styles.mainPanel}>
       <div className={styles.formWrapper}>
 
-        {/* Family Background */}
+        {/* Family Background Section*/}
         <div className={styles.formContainer}>
           <h2
             className={familyStyles.sectionTitle}
@@ -555,6 +615,7 @@ const Family: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Name */}
                   <div className={styles.inputGroup}>
                     <span className={styles.labelText}>
                       Name<span className={styles.requiredAsterisk}>*</span>
@@ -575,6 +636,7 @@ const Family: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Relationship */}
                   <div className={styles.inputGroup}>
                     <span className={styles.labelText}>
                       Relationship<span className={styles.requiredAsterisk}>*</span>
@@ -599,6 +661,7 @@ const Family: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Age */}
                   <div className={styles.inputGroup}>
                     <span className={styles.labelText}>
                       Age<span className={styles.requiredAsterisk}>*</span>
@@ -620,6 +683,7 @@ const Family: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Occupation */}
                   <div className={styles.inputGroup}>
                     <span className={styles.labelText}>
                       Occupation<span className={styles.requiredAsterisk}>*</span>
@@ -640,6 +704,7 @@ const Family: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Contact No. */}
                   <div className={styles.inputGroup}>
                     <span className={styles.labelText}>
                       Contact No.<span className={styles.requiredAsterisk}>*</span>
@@ -671,7 +736,7 @@ const Family: React.FC = () => {
           )}
         </div>
 
-        {/* Emergency Contact */}
+        {/* Emergency Contact Section */}
         <div className={styles.formContainer}>
           <h2
             className={familyStyles.sectionTitle}
@@ -693,7 +758,7 @@ const Family: React.FC = () => {
                       <Trash2 size={16} />
                     </div>
                   )}
-
+                  {/* Name */}
                   <div className={styles.inputGroup}>
                     <span className={styles.labelText}>
                       Name<span className={styles.requiredAsterisk}>*</span>
@@ -713,7 +778,7 @@ const Family: React.FC = () => {
                       </div>
                     )}
                   </div>
-
+                  {/* Contact No. */}
                   <div className={styles.inputGroup}>
                     <span className={styles.labelText}>
                       Contact No.<span className={styles.requiredAsterisk}>*</span>
@@ -733,7 +798,7 @@ const Family: React.FC = () => {
                       </div>
                     )}
                   </div>
-
+                  {/* Relationship */}
                   <div className={styles.inputGroup}>
                     <span className={styles.labelText}>
                       Relationship<span className={styles.requiredAsterisk}>*</span>
@@ -768,7 +833,7 @@ const Family: React.FC = () => {
             </div>
           )}
         </div>
-
+        {/* Form Buttons */}
         <div className={styles.formButtons}>
           <button className={`${styles.btn} ${styles.save}`} onClick={handleSaveDraft}>Save as draft</button>
           <button className={`${styles.btn} ${styles.save}`} onClick={handleUpdate}>Update</button>

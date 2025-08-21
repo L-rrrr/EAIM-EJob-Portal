@@ -1,3 +1,36 @@
+/**
+ * JobsApplied Page
+ *
+ * This component displays all jobs the user has applied for, their statuses, and interview schedules.
+ *
+ * Features:
+ * - Fetches and displays all applied jobs from the backend.
+ * - Expands/collapses job details (responsibilities and requirements).
+ * - Shows application status with icons and color coding.
+ * - Displays interview date if scheduled.
+ * - Allows user to view submitted application details.
+ * - Allows user to accept or decline job offers.
+ * - Shows a message if no applications exist.
+ * - Handles loading and error states.
+ *
+ * Usage:
+ * - Used as a route page: `/jobs-applied`
+ *
+ * State:
+ * - appliedJobs: List of jobs the user has applied for.
+ * - expandedJobIds: Set of application IDs currently expanded for details.
+ * - loading: Indicates if jobs are being fetched.
+ * - error: Error message if fetching fails.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation.
+ * - lucide-react for icons.
+ * - JobsApplied.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, Calendar, Clock, MapPin, Briefcase, Users, CheckCircle, AlertCircle, BellRing } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -72,6 +105,7 @@ const JobsApplied: React.FC = () => {
     });
   };
 
+  // Get the status icon based on application status
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "Pending":
@@ -94,6 +128,7 @@ const JobsApplied: React.FC = () => {
     }
   };
 
+  // Get the color class based on application status
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Pending":

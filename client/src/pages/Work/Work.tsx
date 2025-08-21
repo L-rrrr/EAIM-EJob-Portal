@@ -1,3 +1,37 @@
+/**
+ * Work Page
+ *
+ * This component allows users to manage their work experience, teaching experience, skills, and languages
+ * as part of their application profile.
+ *
+ * Features:
+ * - Add, edit, and delete work and teaching experience records.
+ * - Add, edit, and delete skills and language records.
+ * - Validates all required fields before update.
+ * - Supports saving as draft and final update (with backend sync).
+ * - Fetches and displays existing records from the backend.
+ * - Collapsible sections for better UX.
+ * - Shows validation errors for each record and field.
+ *
+ * Usage:
+ * - Used as a route page: `/profile/work`
+ *
+ * State:
+ * - workExperiences: List of work experience records.
+ * - teachingExperiences: List of teaching experience records.
+ * - skills: List of skill records (at least one required).
+ * - languages: List of language records (at least one required).
+ * - workValidationErrors, teachingValidationErrors, skillValidationErrors, languageValidationErrors: Field-level validation errors.
+ * - Collapsed/expanded state for each section.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - lucide-react for icons.
+ * - Education.module.css and Work.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
@@ -13,34 +47,89 @@ const months = [
 const proficiencyLevels = ["Advanced", "Intermediate", "Beginner"];
 const languageOptions = ["English", "Mandarin", "Malay", "Tamil", "Hindi", "French", "German", "Japanese"];
 const languageProficiencies = ["Excellent", "Good", "Fair", "Not Applicable"];
+const skillOptions = [
+  "React", "Angular", "Vue.js", "Node.js", "Express.js", 
+  "Python", "Java", "C#", ".NET", "Spring Boot",
+  "JavaScript", "TypeScript", "HTML/CSS", "PHP", "Laravel",
+  "MySQL", "PostgreSQL", "MongoDB", "Redis",
+  "AWS", "Azure", "Google Cloud", "Docker", "Kubernetes",
+  "Git", "Jenkins", "Linux", "Figma"
+];
+
+type WorkExperienceRecord = {
+  id: number;
+  work_id?: number;
+  company: string;
+  role: string;
+  salary: string;
+  description: string;
+  reason: string;
+  fromMonth: string;
+  fromYear: string;
+  toMonth: string;
+  toYear: string;
+};
+
+type TeachingExperienceRecord = {
+  id: number;
+  teaching_id?: number;
+  institution: string;
+  position: string;
+  salary: string;
+  subject: string;
+  reason: string;
+  fromMonth: string;
+  fromYear: string;
+  toMonth: string;
+  toYear: string;
+};
+
+type SkillRecord = {
+  id: number;
+  skill_id?: number;
+  name: string;
+  level: string;
+};
+
+type LanguageRecord = {
+  id: number;
+  language_id?: number;
+  name: string;
+  spoken: string;
+  written: string;
+  reading: string;
+};
+
+type ValidationErrors = {
+  [recordId: number]: {
+    [field: string]: string; // error message
+  };
+};
 
 const Experience: React.FC = () => {
+  //Collapsible section states
   const [showWork, setShowWork] = useState(true);
   const [showTeaching, setShowTeaching] = useState(true);
   const [showSkills, setShowSkills] = useState(true);
   const [showLanguages, setShowLanguages] = useState(true);
+
   const navigate = useNavigate();
-  const skillOptions = [
-    "React", "Angular", "Vue.js", "Node.js", "Express.js", 
-    "Python", "Java", "C#", ".NET", "Spring Boot",
-    "JavaScript", "TypeScript", "HTML/CSS", "PHP", "Laravel",
-    "MySQL", "PostgreSQL", "MongoDB", "Redis",
-    "AWS", "Azure", "Google Cloud", "Docker", "Kubernetes",
-    "Git", "Jenkins", "Linux", "Figma"
-  ];
 
+  // State for all records
   const [workExperiences, setWorkExperiences] = useState<WorkExperienceRecord[]>([]);
-
   const [teachingExperiences, setTeachingExperiences] = useState<TeachingExperienceRecord[]>([]);
-
   const [skills, setSkills] = useState<SkillRecord[]>([{
     id: 1,
     name: "",
     level: ""
   }]);
-  
   const [languages, setLanguages] = useState<LanguageRecord[]>([{ id: 1, name: "", spoken: "", written: "", reading: "" }]);
 
+  // Validation error states
+  const [workValidationErrors, setWorkValidationErrors] = useState<ValidationErrors>({});
+  const [teachingValidationErrors, setTeachingValidationErrors] = useState<ValidationErrors>({});
+  const [skillValidationErrors, setSkillValidationErrors] = useState<ValidationErrors>({});
+  const [languageValidationErrors, setLanguageValidationErrors] = useState<ValidationErrors>({});
 
   const addWorkExperience = () => {
     // Generate ID based on existing records or start from 1
@@ -126,243 +215,243 @@ const Experience: React.FC = () => {
   };
 
 
-const deleteWorkExperience = async (id: number) => {
-  const recordToDelete = workExperiences.find(record => record.id === id);
-  
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this work experience record? This action cannot be undone."
-  );
-  
-  if (!confirmDelete) {
-    return;
-  }
+  const deleteWorkExperience = async (id: number) => {
+    const recordToDelete = workExperiences.find(record => record.id === id);
+    
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this work experience record? This action cannot be undone."
+    );
+    
+    if (!confirmDelete) {
+      return;
+    }
 
-  try {
-    // If the record has a work_id (exists in database), delete from backend
-    if (recordToDelete?.work_id) {
-      const token = localStorage.getItem("token");
-      
-      const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/delete-work-experience`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          data: { work_id: recordToDelete.work_id }
+    try {
+      // If the record has a work_id (exists in database), delete from backend
+      if (recordToDelete?.work_id) {
+        const token = localStorage.getItem("token");
+        
+        const response = await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL}/delete-work-experience`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            data: { work_id: recordToDelete.work_id }
+          }
+        );
+
+        if (response.data.success) {
+          console.log("Work experience record deleted from database successfully");
         }
-      );
-
-      if (response.data.success) {
-        console.log("Work experience record deleted from database successfully");
+      }
+      
+      // Remove from frontend state
+      setWorkExperiences(workExperiences.filter(record => record.id !== id));
+      
+      // Clear any validation errors for this record
+      if (workValidationErrors[id]) {
+        setWorkValidationErrors((prev) => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
+      }
+      
+      
+    } catch (error) {
+      console.error("Failed to delete work experience record:", error);
+      alert("Failed to delete record from database, but removed from form.");
+      
+      // Still remove from frontend even if backend delete fails
+      setWorkExperiences(workExperiences.filter(record => record.id !== id));
+      
+      // Clear validation errors
+      if (workValidationErrors[id]) {
+        setWorkValidationErrors((prev) => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
       }
     }
-    
-    // Remove from frontend state
-    setWorkExperiences(workExperiences.filter(record => record.id !== id));
-    
-    // Clear any validation errors for this record
-    if (workValidationErrors[id]) {
-      setWorkValidationErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
-      });
-    }
-    
-    
-  } catch (error) {
-    console.error("Failed to delete work experience record:", error);
-    alert("Failed to delete record from database, but removed from form.");
-    
-    // Still remove from frontend even if backend delete fails
-    setWorkExperiences(workExperiences.filter(record => record.id !== id));
-    
-    // Clear validation errors
-    if (workValidationErrors[id]) {
-      setWorkValidationErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
-      });
-    }
-  }
-};
+  };
 
-const deleteTeachingExperience = async (id: number) => {
-  const recordToDelete = teachingExperiences.find(record => record.id === id);
-  
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this teaching experience record? This action cannot be undone."
-  );
-  
-  if (!confirmDelete) {
-    return;
-  }
+  const deleteTeachingExperience = async (id: number) => {
+    const recordToDelete = teachingExperiences.find(record => record.id === id);
+    
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this teaching experience record? This action cannot be undone."
+    );
+    
+    if (!confirmDelete) {
+      return;
+    }
 
-  try {
-    // If the record has a teaching_id (exists in database), delete from backend
-    if (recordToDelete?.teaching_id) {
-      const token = localStorage.getItem("token");
-      
-      const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/delete-teaching-experience`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          data: { teaching_id: recordToDelete.teaching_id }
+    try {
+      // If the record has a teaching_id (exists in database), delete from backend
+      if (recordToDelete?.teaching_id) {
+        const token = localStorage.getItem("token");
+        
+        const response = await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL}/delete-teaching-experience`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            data: { teaching_id: recordToDelete.teaching_id }
+          }
+        );
+
+        if (response.data.success) {
+          console.log("Teaching experience record deleted from database successfully");
         }
-      );
-
-      if (response.data.success) {
-        console.log("Teaching experience record deleted from database successfully");
+      }
+      
+      // Remove from frontend state
+      setTeachingExperiences(teachingExperiences.filter(record => record.id !== id));
+      
+      // Clear any validation errors for this record
+      if (teachingValidationErrors[id]) {
+        setTeachingValidationErrors((prev) => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
+      }
+      
+      
+    } catch (error) {
+      console.error("Failed to delete teaching experience record:", error);
+      alert("Failed to delete record from database, but removed from form.");
+      
+      // Still remove from frontend even if backend delete fails
+      setTeachingExperiences(teachingExperiences.filter(record => record.id !== id));
+      
+      // Clear validation errors
+      if (teachingValidationErrors[id]) {
+        setTeachingValidationErrors((prev) => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
       }
     }
-    
-    // Remove from frontend state
-    setTeachingExperiences(teachingExperiences.filter(record => record.id !== id));
-    
-    // Clear any validation errors for this record
-    if (teachingValidationErrors[id]) {
-      setTeachingValidationErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
-      });
-    }
-    
-    
-  } catch (error) {
-    console.error("Failed to delete teaching experience record:", error);
-    alert("Failed to delete record from database, but removed from form.");
-    
-    // Still remove from frontend even if backend delete fails
-    setTeachingExperiences(teachingExperiences.filter(record => record.id !== id));
-    
-    // Clear validation errors
-    if (teachingValidationErrors[id]) {
-      setTeachingValidationErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
-      });
-    }
-  }
-};
+  };
 
-const deleteSkill = async (id: number) => {
-  const recordToDelete = skills.find(record => record.id === id);
-  
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this skill record? This action cannot be undone."
-  );
-  
-  if (!confirmDelete) {
-    return;
-  }
+  const deleteSkill = async (id: number) => {
+    const recordToDelete = skills.find(record => record.id === id);
+    
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this skill record? This action cannot be undone."
+    );
+    
+    if (!confirmDelete) {
+      return;
+    }
 
-  try {
-    // If the record has a skill_id (exists in database), delete from backend
-    if (recordToDelete?.skill_id) {
-      const token = localStorage.getItem("token");
-      
-      const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/delete-skills`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          data: { skill_id: recordToDelete.skill_id }
+    try {
+      // If the record has a skill_id (exists in database), delete from backend
+      if (recordToDelete?.skill_id) {
+        const token = localStorage.getItem("token");
+        
+        const response = await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL}/delete-skills`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            data: { skill_id: recordToDelete.skill_id }
+          }
+        );
+
+        if (response.data.success) {
+          console.log("Skill record deleted from database successfully");
         }
-      );
-
-      if (response.data.success) {
-        console.log("Skill record deleted from database successfully");
+      }
+      
+      // Remove from frontend state
+      setSkills(skills.filter(record => record.id !== id));
+      
+      // Clear any validation errors for this record
+      if (skillValidationErrors[id]) {
+        setSkillValidationErrors((prev) => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
+      }
+      
+    } catch (error) {
+      console.error("Failed to delete skill record:", error);
+      alert("Failed to delete record from database, but removed from form.");
+      
+      // Still remove from frontend even if backend delete fails
+      setSkills(skills.filter(record => record.id !== id));
+      
+      // Clear validation errors
+      if (skillValidationErrors[id]) {
+        setSkillValidationErrors((prev) => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
       }
     }
-    
-    // Remove from frontend state
-    setSkills(skills.filter(record => record.id !== id));
-    
-    // Clear any validation errors for this record
-    if (skillValidationErrors[id]) {
-      setSkillValidationErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
-      });
-    }
-    
-  } catch (error) {
-    console.error("Failed to delete skill record:", error);
-    alert("Failed to delete record from database, but removed from form.");
-    
-    // Still remove from frontend even if backend delete fails
-    setSkills(skills.filter(record => record.id !== id));
-    
-    // Clear validation errors
-    if (skillValidationErrors[id]) {
-      setSkillValidationErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
-      });
-    }
-  }
-};
+  };
 
-const deleteLanguage = async (id: number) => {
-  const recordToDelete = languages.find(record => record.id === id);
-  
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this language record? This action cannot be undone."
-  );
-  
-  if (!confirmDelete) {
-    return;
-  }
+  const deleteLanguage = async (id: number) => {
+    const recordToDelete = languages.find(record => record.id === id);
+    
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this language record? This action cannot be undone."
+    );
+    
+    if (!confirmDelete) {
+      return;
+    }
 
-  try {
-    // If the record has a language_id (exists in database), delete from backend
-    if (recordToDelete?.language_id) {
-      const token = localStorage.getItem("token");
-      
-      const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/delete-languages`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          data: { language_id: recordToDelete.language_id }
+    try {
+      // If the record has a language_id (exists in database), delete from backend
+      if (recordToDelete?.language_id) {
+        const token = localStorage.getItem("token");
+        
+        const response = await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL}/delete-languages`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            data: { language_id: recordToDelete.language_id }
+          }
+        );
+
+        if (response.data.success) {
+          console.log("Language record deleted from database successfully");
         }
-      );
-
-      if (response.data.success) {
-        console.log("Language record deleted from database successfully");
+      }
+      
+      // Remove from frontend state
+      setLanguages(languages.filter(record => record.id !== id));
+      
+      // Clear any validation errors for this record
+      if (languageValidationErrors[id]) {
+        setLanguageValidationErrors((prev) => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
+      }
+      
+    } catch (error) {
+      console.error("Failed to delete language record:", error);
+      alert("Failed to delete record from database, but removed from form.");
+      
+      // Still remove from frontend even if backend delete fails
+      setLanguages(languages.filter(record => record.id !== id));
+      
+      // Clear validation errors
+      if (languageValidationErrors[id]) {
+        setLanguageValidationErrors((prev) => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
       }
     }
-    
-    // Remove from frontend state
-    setLanguages(languages.filter(record => record.id !== id));
-    
-    // Clear any validation errors for this record
-    if (languageValidationErrors[id]) {
-      setLanguageValidationErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
-      });
-    }
-    
-  } catch (error) {
-    console.error("Failed to delete language record:", error);
-    alert("Failed to delete record from database, but removed from form.");
-    
-    // Still remove from frontend even if backend delete fails
-    setLanguages(languages.filter(record => record.id !== id));
-    
-    // Clear validation errors
-    if (languageValidationErrors[id]) {
-      setLanguageValidationErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
-      });
-    }
-  }
-};
+  };
 
   const updateWorkExperience = (id: number, field: string, value: string) => {
     setWorkExperiences(workExperiences.map(record =>
@@ -447,49 +536,8 @@ const deleteLanguage = async (id: number) => {
       });
     }
   };
-  type WorkExperienceRecord = {
-    id: number;
-    work_id?: number;
-    company: string;
-    role: string;
-    salary: string;
-    description: string;
-    reason: string;
-    fromMonth: string;
-    fromYear: string;
-    toMonth: string;
-    toYear: string;
-  };
 
-  type TeachingExperienceRecord = {
-    id: number;
-    teaching_id?: number;
-    institution: string;
-    position: string;
-    salary: string;
-    subject: string;
-    reason: string;
-    fromMonth: string;
-    fromYear: string;
-    toMonth: string;
-    toYear: string;
-  };
-
-  type SkillRecord = {
-    id: number;
-    skill_id?: number;
-    name: string;
-    level: string;
-  };
-
-  type LanguageRecord = {
-    id: number;
-    language_id?: number;
-    name: string;
-    spoken: string;
-    written: string;
-    reading: string;
-  };
+  
 
   // Add these handler functions
 const handleSaveDraft = async (e?: React.MouseEvent) => {
@@ -698,19 +746,8 @@ const handleUpdate = async (e?: React.MouseEvent) => {
     alert("Failed to update work experience.");
   }
 };
-  
-  // Add this type definition near the top with other types
-  type ValidationErrors = {
-    [recordId: number]: {
-      [field: string]: string; // error message
-    };
-  };
 
-  // Add validation state
-  const [workValidationErrors, setWorkValidationErrors] = useState<ValidationErrors>({});
-  const [teachingValidationErrors, setTeachingValidationErrors] = useState<ValidationErrors>({});
-  const [skillValidationErrors, setSkillValidationErrors] = useState<ValidationErrors>({});
-  const [languageValidationErrors, setLanguageValidationErrors] = useState<ValidationErrors>({});
+
 
   const validateRecords = (): boolean => {
     const workErrors: ValidationErrors = {};

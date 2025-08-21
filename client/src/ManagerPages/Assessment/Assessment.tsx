@@ -1,3 +1,34 @@
+/**
+ * Assessment Page
+ *
+ * This component allows managers to assess job applicants by filling out a detailed interview assessment form.
+ * It also displays lists of pending and completed assessments, and allows viewing completed assessment details.
+ *
+ * Features:
+ * - Fetches pending and completed applications for review from the backend.
+ * - Allows managers to select a pending application and submit a multi-question assessment.
+ * - Displays completed assessments in read-only mode.
+ * - Calculates candidate age from date of birth.
+ * - Handles form state, submission, and validation.
+ * - Responsive UI with loading states and stats cards.
+ *
+ * State:
+ * - form: Holds all assessment form field values.
+ * - loadingReviewApps: Loading state for fetching applications.
+ * - selectedApp: The application currently being assessed.
+ * - pendingApps: List of applications awaiting assessment.
+ * - completedApps: List of applications with completed assessments.
+ * - selectedCompletedApp: The completed assessment currently being viewed.
+ *
+ * Dependencies:
+ * - fetch API for HTTP requests.
+ * - React useState, useEffect for state and lifecycle.
+ * - lucide-react for icons.
+ * - Assessment.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import styles from "./Assessment.module.css";
 import { Plus, Users, ClipboardList } from "lucide-react";

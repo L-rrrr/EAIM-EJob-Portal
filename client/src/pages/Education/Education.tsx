@@ -1,15 +1,121 @@
+/**
+ * Education Page
+ *
+ * This component allows users to manage their education background, scholarships/awards,
+ * and other professional qualifications as part of their profile.
+ *
+ * Features:
+ * - Fetches and displays education, scholarship/award, and other qualification records from the backend.
+ * - Allows users to add, edit, and delete records for each section.
+ * - Validates required fields for all records before saving or updating.
+ * - Supports saving as draft and final update (with backend sync).
+ * - Handles backend ID mapping for new and existing records.
+ * - Notifies the system to update profile completeness after save/update.
+ * - Collapsible sections for better UX.
+ * - Navigation to the next profile section.
+ *
+ * Usage:
+ * - Used as a route page: `/profile/education`
+ *
+ * State:
+ * - educationRecords: List of education background records.
+ * - scholarshipAwards: List of scholarship/award records.
+ * - otherQualifications: List of other professional qualification records.
+ * - Validation errors for each section.
+ * - Collapsed/expanded state for each section.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation.
+ * - lucide-react for icons.
+ * - Education.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Education.module.css";
 import {Trash2, ChevronUp, ChevronDown} from "lucide-react";
 import axios from "axios";
 
+// -------------------- Type Definitions --------------------
+
+type EducationRecord = {
+  id: number;
+  education_id?: number;
+  isHighestQualification: string;
+  levelOfQualification: string;
+  institute: string;
+  qualificationAttained: string;
+  yearFrom: string;
+  yearTo: string;
+};
+
+type ScholarshipRecord = {
+  id: number;
+  scholarship_id?: number;
+  organization: string;
+  description: string;
+  certificate: string;
+  fromMonth: string;
+  fromYear: string;
+  toMonth: string;
+  toYear: string;
+};
+
+type OtherQualificationRecord = {
+  id: number;
+  qualification_id?: number;
+  organization: string;
+  course: string;
+  certificate: string;
+  fromMonth: string;
+  fromYear: string;
+  toMonth: string;
+  toYear: string;
+};
+
+type ValidationErrors = {
+  [recordId: number]: {
+    [field: string]: string;
+  };
+};
+
 const Education: React.FC = () => {
+  // Collapsible section states
   const [showEducationBackground, setShowEducationBackground] = useState(true);
   const [showScholarshipAwards, setShowScholarshipAwards] = useState(true);
   const [showOtherQualifications, setShowOtherQualifications] = useState(true);
+
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
+
+  // -------------------- State --------------------
+
+  const [educationRecords, setEducationRecords] = useState<EducationRecord[]>([
+    {
+      id: 1,
+      isHighestQualification: "",
+      levelOfQualification: "",
+      institute: "",
+      qualificationAttained: "",
+      yearFrom: "",
+      yearTo: "",
+    },
+  ]);
+
+  // Scholarship/award records
+  const [scholarshipAwards, setScholarshipAwards] = useState<ScholarshipRecord[]>([]);
+  // Other qualification records
+  const [otherQualifications, setOtherQualifications] = useState<OtherQualificationRecord[]>([]);
+
+  //Validation error states
+  const [educationValidationErrors, setEducationValidationErrors] = useState<ValidationErrors>({});
+  const [scholarshipValidationErrors, setScholarshipValidationErrors] = useState<ValidationErrors>({});
+  const [qualificationValidationErrors, setQualificationValidationErrors] = useState<ValidationErrors>({});
+
+  // -------------------- Utility Functions --------------------
 
   // Generate year options from current year down to 1960
   const generateYearOptions = () => {
@@ -19,343 +125,407 @@ const Education: React.FC = () => {
     }
     return years;
   };
-  
-  type EducationRecord = {
-  id: number;
-  education_id?: number; // if existing record from backend
-  isHighestQualification: string;
-  levelOfQualification: string;
-  institute: string;
-  qualificationAttained: string;
-  yearFrom: string;
-  yearTo: string;
-};
 
-type ValidationErrors = {
-  [recordId: number]: {
-    [field: string]: string; // error message
+  // Map frontend education record to backend format
+  const mapToBackend = (record: EducationRecord) => ({
+    education_id: record.education_id,
+    is_highest_qualification: record.isHighestQualification,
+    level_of_qualification: record.levelOfQualification,
+    institute: record.institute,
+    qualification_attained: record.qualificationAttained,
+    year_from: record.yearFrom,
+    year_to: record.yearTo,
+  });
+
+  // Map frontend scholarship record to backend format
+  const mapScholarshipToBackend = (record: ScholarshipRecord) => ({
+    scholarship_id: record.scholarship_id,
+    organization: record.organization,
+    description: record.description,
+    certificate: record.certificate,
+    from_month: record.fromMonth,
+    from_year: record.fromYear,
+    to_month: record.toMonth,
+    to_year: record.toYear,
+  });
+
+  // Map frontend other qualification record to backend format
+  const mapOtherQualificationToBackend = (record: OtherQualificationRecord) => ({
+    qualification_id: record.qualification_id,
+    organization: record.organization,
+    course: record.course,
+    certificate: record.certificate,
+    from_month: record.fromMonth,
+    from_year: record.fromYear,
+    to_month: record.toMonth,
+    to_year: record.toYear,
+  });
+
+  // -------------------- Fetch Data --------------------
+
+  //Fetch all records on mount
+  useEffect(() => {
+    fetchEducationRecords();
+    fetchScholarshipAwards();
+    fetchOtherQualifications();
+  }, []);
+
+  // Fetch education records from backend
+  const fetchEducationRecords = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-education`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        const records = res.data.data.map((rec: any) => ({
+          id: rec.education_id,
+          education_id: rec.education_id,
+          isHighestQualification: rec.is_highest_qualification || "",
+          levelOfQualification: rec.level_of_qualification || "",
+          institute: rec.institute || "",
+          qualificationAttained: rec.qualification_attained || "",
+          yearFrom: rec.year_from ? String(rec.year_from) : "",
+          yearTo: rec.year_to ? String(rec.year_to) : "",
+        }));
+        setEducationRecords(records);
+      }
+    } catch (error) {
+      console.error("Failed to fetch education backgrounds", error);
+    }
   };
-};
 
-const [educationRecords, setEducationRecords] = useState<EducationRecord[]>([
-  {
-    id: 1,
-    isHighestQualification: "",
-    levelOfQualification: "",
-    institute: "",
-    qualificationAttained: "",
-    yearFrom: "",
-    yearTo: "",
-  },
-]);
+  // Fetch scholarship/award records from backend
+  const fetchScholarshipAwards = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-scholarship-awards`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        const records = res.data.data.map((rec: any) => ({
+          id: rec.scholarship_id,
+          scholarship_id: rec.scholarship_id,
+          organization: rec.organization || "",
+          description: rec.description || "",
+          certificate: rec.certificate || "",
+          fromMonth: rec.from_month || "",
+          fromYear: rec.from_year || "",
+          toMonth: rec.to_month || "",
+          toYear: rec.to_year || "",
+        }));
+        setScholarshipAwards(records);
+      }
+    } catch (error) {
+      console.error("Failed to fetch scholarship awards", error);
+    }
+  };
 
-const mapToBackend = (record: EducationRecord) => ({
-  education_id: record.education_id,
-  is_highest_qualification: record.isHighestQualification,
-  level_of_qualification: record.levelOfQualification,
-  institute: record.institute,
-  qualification_attained: record.qualificationAttained,
-  year_from: record.yearFrom,
-  year_to: record.yearTo,
-});
+  // Fetch other qualifications from backend
+  const fetchOtherQualifications = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-other-qualifications`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        const records = res.data.data.map((rec: any) => ({
+          id: rec.qualification_id,
+          qualification_id: rec.qualification_id,
+          organization: rec.organization || "",
+          course: rec.course || "",
+          certificate: rec.certificate || "",
+          fromMonth: rec.from_month || "",
+          fromYear: rec.from_year || "",
+          toMonth: rec.to_month || "",
+          toYear: rec.to_year || "",
+        }));
+        setOtherQualifications(records);
+      }
+    } catch (error) {
+      console.error("Failed to fetch other qualifications", error);
+    }
+  };
 
-const [educationValidationErrors, setEducationValidationErrors] = useState<ValidationErrors>({});
-const [scholarshipValidationErrors, setScholarshipValidationErrors] = useState<ValidationErrors>({});
-const [qualificationValidationErrors, setQualificationValidationErrors] = useState<ValidationErrors>({});
 
+  // -------------------- Validation --------------------
 
-const fetchEducationRecords = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-education`, {
-      headers: { Authorization: `Bearer ${token}` },
+  /**
+   * Validate all records before update.
+   * Returns true if all records are valid, false otherwise.
+   */
+
+  const validateRecords = (): boolean => {
+    const educationErrors: ValidationErrors = {};
+    const scholarshipErrors: ValidationErrors = {};
+    const qualificationErrors: ValidationErrors = {};
+
+    // Validate Education Records
+    educationRecords.forEach((record) => {
+      const recordErrors: { [field: string]: string } = {};
+
+      if (!record.isHighestQualification) {
+        recordErrors.isHighestQualification = "Required";
+      }
+      if (!record.levelOfQualification) {
+        recordErrors.levelOfQualification = "Required";
+      }
+      if (!record.institute.trim()) {
+        recordErrors.institute = "Required";
+      }
+      if (!record.qualificationAttained.trim()) {
+        recordErrors.qualificationAttained = "Required";
+      }
+      if (!record.yearFrom || isNaN(Number(record.yearFrom))) {
+        recordErrors.yearFrom = "Required and must be a valid year";
+      }
+      if (!record.yearTo || isNaN(Number(record.yearTo))) {
+        recordErrors.yearTo = "Required and must be a valid year";
+      }
+
+      if (Object.keys(recordErrors).length > 0) {
+        educationErrors[record.id] = recordErrors;
+      }
     });
-    if (res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
-      const records = res.data.data.map((rec: any) => ({
-        id: rec.education_id,
-        education_id: rec.education_id,
-        isHighestQualification: rec.is_highest_qualification || "",
-        levelOfQualification: rec.level_of_qualification || "",
-        institute: rec.institute || "",
-        qualificationAttained: rec.qualification_attained || "",
-        yearFrom: rec.year_from ? String(rec.year_from) : "",
-        yearTo: rec.year_to ? String(rec.year_to) : "",
-      }));
-      setEducationRecords(records);
-    }
-  } catch (error) {
-    console.error("Failed to fetch education backgrounds", error);
-  }
-};
 
-useEffect(() => {
-  fetchEducationRecords();
-  fetchScholarshipAwards();
-  fetchOtherQualifications();
-}, []);
+    // **ADD: Validate Scholarship Awards (only if records exist)**
+    scholarshipAwards.forEach((record) => {
+      const recordErrors: { [field: string]: string } = {};
 
-const handleSaveDraft = async (e?: React.MouseEvent) => {
-  if (e) e.preventDefault();
-  try {
-    const token = localStorage.getItem("token");
-    
-    console.log("Before save - education records:", educationRecords);
-    console.log("Before save - scholarship awards:", scholarshipAwards);
-    console.log("Before save - other qualifications:", otherQualifications);
-    // Create promises array - only include scholarship awards if they exist
-    const promises = [
-      axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/save-education`,
-        { educationRecords: educationRecords.map(mapToBackend), is_draft: "Y" },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-    ];
+      if (!record.organization.trim()) {
+        recordErrors.organization = "Required";
+      }
+      if (!record.description.trim()) {
+        recordErrors.description = "Required";
+      }
+      if (!record.certificate.trim()) {
+        recordErrors.certificate = "Required";
+      }
+      if (!record.fromMonth) {
+        recordErrors.fromMonth = "Required";
+      }
+      if (!record.fromYear || isNaN(Number(record.fromYear))) {
+        recordErrors.fromYear = "Required and must be a valid year";
+      }
+      if (!record.toMonth) {
+        recordErrors.toMonth = "Required";
+      }
+      if (!record.toYear || isNaN(Number(record.toYear))) {
+        recordErrors.toYear = "Required and must be a valid year";
+      }
 
-    // Only save scholarship awards if there are records
-    if (scholarshipAwards.length > 0) {
-      promises.push(
+      if (Object.keys(recordErrors).length > 0) {
+        scholarshipErrors[record.id] = recordErrors;
+      }
+    });
+
+      otherQualifications.forEach((record) => {
+      const recordErrors: { [field: string]: string } = {};
+
+      if (!record.organization.trim()) {
+        recordErrors.organization = "Required";
+      }
+      if (!record.course.trim()) {
+        recordErrors.course = "Required";
+      }
+      if (!record.certificate.trim()) {
+        recordErrors.certificate = "Required";
+      }
+      if (!record.fromMonth) {
+        recordErrors.fromMonth = "Required";
+      }
+      if (!record.fromYear || isNaN(Number(record.fromYear))) {
+        recordErrors.fromYear = "Required and must be a valid year";
+      }
+      if (!record.toMonth) {
+        recordErrors.toMonth = "Required";
+      }
+      if (!record.toYear || isNaN(Number(record.toYear))) {
+        recordErrors.toYear = "Required and must be a valid year";
+      }
+
+      if (Object.keys(recordErrors).length > 0) {
+        qualificationErrors[record.id] = recordErrors;
+      }
+    });
+
+    setEducationValidationErrors(educationErrors);
+    setScholarshipValidationErrors(scholarshipErrors);
+    setQualificationValidationErrors(qualificationErrors);
+    return Object.keys(educationErrors).length === 0 && 
+          Object.keys(scholarshipErrors).length === 0 && 
+          Object.keys(qualificationErrors).length === 0;
+  };
+
+  // -------------------- Save/Update Handlers --------------------
+
+  /**
+   * Save all records as draft (is_draft: "Y").
+   * Updates backend IDs on success.
+   */
+  const handleSaveDraft = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
+      
+      console.log("Before save - education records:", educationRecords);
+      console.log("Before save - scholarship awards:", scholarshipAwards);
+      console.log("Before save - other qualifications:", otherQualifications);
+      // Create promises array - only include scholarship awards if they exist
+      const promises = [
         axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/save-scholarship-awards`,
-          { scholarshipRecords: scholarshipAwards.map(mapScholarshipToBackend), is_draft: "Y" },
+          `${import.meta.env.VITE_BACKEND_URL}/save-education`,
+          { educationRecords: educationRecords.map(mapToBackend), is_draft: "Y" },
           { headers: { Authorization: `Bearer ${token}` } }
         )
-      );
-    }
+      ];
 
-    if (otherQualifications.length > 0) {
-      promises.push(
+      // Only save scholarship awards if there are records
+      if (scholarshipAwards.length > 0) {
+        promises.push(
+          axios.post(
+            `${import.meta.env.VITE_BACKEND_URL}/save-scholarship-awards`,
+            { scholarshipRecords: scholarshipAwards.map(mapScholarshipToBackend), is_draft: "Y" },
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        );
+      }
+
+      if (otherQualifications.length > 0) {
+        promises.push(
+          axios.post(
+            `${import.meta.env.VITE_BACKEND_URL}/save-other-qualifications`,
+            { qualificationRecords: otherQualifications.map(mapOtherQualificationToBackend), is_draft: "Y" },
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        );
+      }
+
+      const responses = await Promise.all(promises);
+      const educationResponse = responses[0];
+      const scholarshipResponse = responses[1]; // Will be undefined if no scholarship records
+      const qualificationResponse = otherQualifications.length > 0 ? responses[responses.length - 1] : undefined;
+
+      // Update education records with backend IDs
+      if (educationResponse.data.success && educationResponse.data.data) {
+        const updatedRecords = educationRecords.map((frontendRecord, index) => ({
+          ...frontendRecord,
+          education_id: educationResponse.data.data[index].education_id
+        }));
+        setEducationRecords(updatedRecords);
+      }
+
+      // Update scholarship awards with backend IDs (only if response exists)
+      if (scholarshipResponse && scholarshipResponse.data.success && scholarshipResponse.data.data) {
+        const updatedScholarships = scholarshipAwards.map((frontendRecord, index) => ({
+          ...frontendRecord,
+          scholarship_id: scholarshipResponse.data.data[index].scholarship_id
+        }));
+        setScholarshipAwards(updatedScholarships);
+      }
+
+      // Update other qualifications with backend IDs (only if response exists)
+      if (qualificationResponse && qualificationResponse.data.success && qualificationResponse.data.data) {
+        const updatedQualifications = otherQualifications.map((frontendRecord, index) => ({
+          ...frontendRecord,
+          qualification_id: qualificationResponse.data.data[index].qualification_id
+        }));
+        setOtherQualifications(updatedQualifications);
+      }
+      window.dispatchEvent(new Event("profile-completeness-updated"));
+      alert("Draft saved!");
+    } catch (error) {
+      console.error("Save draft error:", error);
+      alert("Failed to save draft.");
+    }
+  };
+
+  /**
+   * Update all records (is_draft: "N") after validation.
+   * Updates backend IDs on success.
+   */
+  const handleUpdate = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+
+    const isValid = validateRecords();
+    if (!isValid) {
+      alert("Please fill in all required fields before updating.");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      
+      console.log("Before update - education records:", educationRecords);
+      console.log("Before update - scholarship awards:", scholarshipAwards);
+      console.log("Before update - other qualifications:", otherQualifications);
+      
+      // Create promises array - only include scholarship awards if they exist
+      const promises = [
         axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/save-other-qualifications`,
-          { qualificationRecords: otherQualifications.map(mapOtherQualificationToBackend), is_draft: "Y" },
+          `${import.meta.env.VITE_BACKEND_URL}/save-education`,
+          { educationRecords: educationRecords.map(mapToBackend), is_draft: "N" },
           { headers: { Authorization: `Bearer ${token}` } }
         )
-      );
-    }
+      ];
 
-    const responses = await Promise.all(promises);
-    const educationResponse = responses[0];
-    const scholarshipResponse = responses[1]; // Will be undefined if no scholarship records
-    const qualificationResponse = otherQualifications.length > 0 ? responses[responses.length - 1] : undefined;
+      // Only save scholarship awards if there are records
+      if (scholarshipAwards.length > 0) {
+        promises.push(
+          axios.post(
+            `${import.meta.env.VITE_BACKEND_URL}/save-scholarship-awards`,
+            { scholarshipRecords: scholarshipAwards.map(mapScholarshipToBackend), is_draft: "N" },
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        );
+      }
 
-    // Update education records with backend IDs
-    if (educationResponse.data.success && educationResponse.data.data) {
-      const updatedRecords = educationRecords.map((frontendRecord, index) => ({
-        ...frontendRecord,
-        education_id: educationResponse.data.data[index].education_id
-      }));
-      setEducationRecords(updatedRecords);
-    }
+      if (otherQualifications.length > 0) {
+        promises.push(
+          axios.post(
+            `${import.meta.env.VITE_BACKEND_URL}/save-other-qualifications`,
+            { qualificationRecords: otherQualifications.map(mapOtherQualificationToBackend), is_draft: "N" },
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        );
+      }
 
-    // Update scholarship awards with backend IDs (only if response exists)
-    if (scholarshipResponse && scholarshipResponse.data.success && scholarshipResponse.data.data) {
-      const updatedScholarships = scholarshipAwards.map((frontendRecord, index) => ({
-        ...frontendRecord,
-        scholarship_id: scholarshipResponse.data.data[index].scholarship_id
-      }));
-      setScholarshipAwards(updatedScholarships);
-    }
+      const responses = await Promise.all(promises);
+      const educationResponse = responses[0];
+      const scholarshipResponse = responses[1]; // Will be undefined if no scholarship records
+      const qualificationResponse = otherQualifications.length > 0 ? responses[responses.length - 1] : undefined;
+      
+      // Update education records with backend IDs
+      if (educationResponse.data.success && educationResponse.data.data) {
+        const updatedRecords = educationRecords.map((frontendRecord, index) => ({
+          ...frontendRecord,
+          education_id: educationResponse.data.data[index].education_id
+        }));
+        setEducationRecords(updatedRecords);
+      }
 
-    // Update other qualifications with backend IDs (only if response exists)
-    if (qualificationResponse && qualificationResponse.data.success && qualificationResponse.data.data) {
-      const updatedQualifications = otherQualifications.map((frontendRecord, index) => ({
-        ...frontendRecord,
-        qualification_id: qualificationResponse.data.data[index].qualification_id
-      }));
-      setOtherQualifications(updatedQualifications);
-    }
-    window.dispatchEvent(new Event("profile-completeness-updated"));
-    alert("Draft saved!");
-  } catch (error) {
-    console.error("Save draft error:", error);
-    alert("Failed to save draft.");
-  }
-};
+      // Update scholarship awards with backend IDs (only if response exists)
+      if (scholarshipResponse && scholarshipResponse.data.success && scholarshipResponse.data.data) {
+        const updatedScholarships = scholarshipAwards.map((frontendRecord, index) => ({
+          ...frontendRecord,
+          scholarship_id: scholarshipResponse.data.data[index].scholarship_id
+        }));
+        setScholarshipAwards(updatedScholarships);
+      }
 
-const handleUpdate = async (e?: React.MouseEvent) => {
-  if (e) e.preventDefault();
-
-  const isValid = validateRecords();
-  if (!isValid) {
-    alert("Please fill in all required fields before updating.");
-    return;
-  }
-  try {
-    const token = localStorage.getItem("token");
-    
-    console.log("Before update - education records:", educationRecords);
-    console.log("Before update - scholarship awards:", scholarshipAwards);
-    console.log("Before update - other qualifications:", otherQualifications);
-    
-    // Create promises array - only include scholarship awards if they exist
-    const promises = [
-      axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/save-education`,
-        { educationRecords: educationRecords.map(mapToBackend), is_draft: "N" },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-    ];
-
-    // Only save scholarship awards if there are records
-    if (scholarshipAwards.length > 0) {
-      promises.push(
-        axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/save-scholarship-awards`,
-          { scholarshipRecords: scholarshipAwards.map(mapScholarshipToBackend), is_draft: "N" },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-      );
+      if (qualificationResponse && qualificationResponse.data.success && qualificationResponse.data.data) {
+        const updatedQualifications = otherQualifications.map((frontendRecord, index) => ({
+          ...frontendRecord,
+          qualification_id: qualificationResponse.data.data[index].qualification_id
+        }));
+        setOtherQualifications(updatedQualifications);
+      }
+      window.dispatchEvent(new Event("profile-completeness-updated"));
+      alert("Education background updated!");
+    } catch (error) {
+      console.error("Update error:", error);
+      alert("Failed to update education background.");
     }
-
-    if (otherQualifications.length > 0) {
-      promises.push(
-        axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/save-other-qualifications`,
-          { qualificationRecords: otherQualifications.map(mapOtherQualificationToBackend), is_draft: "N" },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-      );
-    }
-
-    const responses = await Promise.all(promises);
-    const educationResponse = responses[0];
-    const scholarshipResponse = responses[1]; // Will be undefined if no scholarship records
-    const qualificationResponse = otherQualifications.length > 0 ? responses[responses.length - 1] : undefined;
-    
-    // Update education records with backend IDs
-    if (educationResponse.data.success && educationResponse.data.data) {
-      const updatedRecords = educationRecords.map((frontendRecord, index) => ({
-        ...frontendRecord,
-        education_id: educationResponse.data.data[index].education_id
-      }));
-      setEducationRecords(updatedRecords);
-    }
-
-    // Update scholarship awards with backend IDs (only if response exists)
-    if (scholarshipResponse && scholarshipResponse.data.success && scholarshipResponse.data.data) {
-      const updatedScholarships = scholarshipAwards.map((frontendRecord, index) => ({
-        ...frontendRecord,
-        scholarship_id: scholarshipResponse.data.data[index].scholarship_id
-      }));
-      setScholarshipAwards(updatedScholarships);
-    }
-
-    if (qualificationResponse && qualificationResponse.data.success && qualificationResponse.data.data) {
-      const updatedQualifications = otherQualifications.map((frontendRecord, index) => ({
-        ...frontendRecord,
-        qualification_id: qualificationResponse.data.data[index].qualification_id
-      }));
-      setOtherQualifications(updatedQualifications);
-    }
-    window.dispatchEvent(new Event("profile-completeness-updated"));
-    alert("Education background updated!");
-  } catch (error) {
-    console.error("Update error:", error);
-    alert("Failed to update education background.");
-  }
-};
-
-const validateRecords = (): boolean => {
-  const educationErrors: ValidationErrors = {};
-  const scholarshipErrors: ValidationErrors = {};
-  const qualificationErrors: ValidationErrors = {};
-
-  // Validate Education Records
-  educationRecords.forEach((record) => {
-    const recordErrors: { [field: string]: string } = {};
-
-    if (!record.isHighestQualification) {
-      recordErrors.isHighestQualification = "Required";
-    }
-    if (!record.levelOfQualification) {
-      recordErrors.levelOfQualification = "Required";
-    }
-    if (!record.institute.trim()) {
-      recordErrors.institute = "Required";
-    }
-    if (!record.qualificationAttained.trim()) {
-      recordErrors.qualificationAttained = "Required";
-    }
-    if (!record.yearFrom || isNaN(Number(record.yearFrom))) {
-      recordErrors.yearFrom = "Required and must be a valid year";
-    }
-    if (!record.yearTo || isNaN(Number(record.yearTo))) {
-      recordErrors.yearTo = "Required and must be a valid year";
-    }
-
-    if (Object.keys(recordErrors).length > 0) {
-      educationErrors[record.id] = recordErrors;
-    }
-  });
-
-  // **ADD: Validate Scholarship Awards (only if records exist)**
-  scholarshipAwards.forEach((record) => {
-    const recordErrors: { [field: string]: string } = {};
-
-    if (!record.organization.trim()) {
-      recordErrors.organization = "Required";
-    }
-    if (!record.description.trim()) {
-      recordErrors.description = "Required";
-    }
-    if (!record.certificate.trim()) {
-      recordErrors.certificate = "Required";
-    }
-    if (!record.fromMonth) {
-      recordErrors.fromMonth = "Required";
-    }
-    if (!record.fromYear || isNaN(Number(record.fromYear))) {
-      recordErrors.fromYear = "Required and must be a valid year";
-    }
-    if (!record.toMonth) {
-      recordErrors.toMonth = "Required";
-    }
-    if (!record.toYear || isNaN(Number(record.toYear))) {
-      recordErrors.toYear = "Required and must be a valid year";
-    }
-
-    if (Object.keys(recordErrors).length > 0) {
-      scholarshipErrors[record.id] = recordErrors;
-    }
-  });
-
-    otherQualifications.forEach((record) => {
-    const recordErrors: { [field: string]: string } = {};
-
-    if (!record.organization.trim()) {
-      recordErrors.organization = "Required";
-    }
-    if (!record.course.trim()) {
-      recordErrors.course = "Required";
-    }
-    if (!record.certificate.trim()) {
-      recordErrors.certificate = "Required";
-    }
-    if (!record.fromMonth) {
-      recordErrors.fromMonth = "Required";
-    }
-    if (!record.fromYear || isNaN(Number(record.fromYear))) {
-      recordErrors.fromYear = "Required and must be a valid year";
-    }
-    if (!record.toMonth) {
-      recordErrors.toMonth = "Required";
-    }
-    if (!record.toYear || isNaN(Number(record.toYear))) {
-      recordErrors.toYear = "Required and must be a valid year";
-    }
-
-    if (Object.keys(recordErrors).length > 0) {
-      qualificationErrors[record.id] = recordErrors;
-    }
-  });
-
-  setEducationValidationErrors(educationErrors);
-  setScholarshipValidationErrors(scholarshipErrors);
-  setQualificationValidationErrors(qualificationErrors);
-  return Object.keys(educationErrors).length === 0 && 
-         Object.keys(scholarshipErrors).length === 0 && 
-         Object.keys(qualificationErrors).length === 0;
-};
-
+  };
 
   const addEducationRecord = () => {
     const newId = Math.max(...educationRecords.map(r => r.id)) + 1;
@@ -371,357 +541,252 @@ const validateRecords = (): boolean => {
     }]);
   };
 
-const deleteEducationRecord = async (id: number) => {
-  // Find the record to get the education_id
-  const recordToDelete = educationRecords.find(record => record.id === id);
-  
-  if (educationRecords.length > 1 && id !== 1) {
-    // **ADD CONFIRMATION POPUP**
+  const deleteEducationRecord = async (id: number) => {
+    // Find the record to get the education_id
+    const recordToDelete = educationRecords.find(record => record.id === id);
+    
+    if (educationRecords.length > 1 && id !== 1) {
+      // **ADD CONFIRMATION POPUP**
+      const confirmDelete = window.confirm(
+        "Are you sure you want to delete this education record? This action cannot be undone."
+      );
+      
+      if (!confirmDelete) {
+        return; // User clicked "Cancel", so don't delete
+      }
+
+      try {
+        // If the record has an education_id (exists in database), delete from backend
+        if (recordToDelete?.education_id) {
+          const token = localStorage.getItem("token");
+          
+          const response = await axios.delete(
+            `${import.meta.env.VITE_BACKEND_URL}/delete-education`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+              data: { education_id: recordToDelete.education_id }
+            }
+          );
+
+          if (response.data.success) {
+            console.log("Record deleted from database successfully");
+          }
+        }
+        
+        // Remove from frontend state regardless
+        setEducationRecords(educationRecords.filter(record => record.id !== id));
+        
+        // Also clear any validation errors for this record
+        if (educationValidationErrors[id]) {
+          setEducationValidationErrors((prev) => {
+            const updated = { ...prev };
+            delete updated[id];
+            return updated;
+          });
+        }
+        
+      } catch (error) {
+        console.error("Failed to delete education record:", error);
+        alert("Failed to delete record from database, but removed from form.");
+        
+        // Still remove from frontend even if backend delete fails
+        setEducationRecords(educationRecords.filter(record => record.id !== id));
+      }
+    }
+  };
+
+  const updateEducationRecord = (id: number, field: string, value: string) => {
+    if (field === 'isHighestQualification' && value === 'Yes') {
+      const updatedRecords = educationRecords.map(record =>
+        record.id === id
+          ? { ...record, isHighestQualification: 'Yes' }
+          : { ...record, isHighestQualification: 'No' }
+      );
+      setEducationRecords(updatedRecords);
+    } else {
+      setEducationRecords(educationRecords.map(record =>
+        record.id === id ? { ...record, [field]: value } : record
+      ));
+    }
+
+    if (educationValidationErrors[id]?.[field] && value.trim() !== "") {
+      setEducationValidationErrors((prev) => {
+        const updated = { ...prev };
+        if (updated[id]) {
+          delete updated[id][field];
+          // If no more errors for this record, remove the record key entirely
+          if (Object.keys(updated[id]).length === 0) {
+            delete updated[id];
+          }
+        }
+        return updated;
+      });
+    }
+  };
+
+
+  const addScholarshipAward = () => {
+    // Generate ID based on existing records or start from 1
+    const newId = scholarshipAwards.length > 0 ? Math.max(...scholarshipAwards.map(r => r.id)) + 1 : 1;
+    setScholarshipAwards([
+      ...scholarshipAwards,
+      {
+        id: newId,
+        scholarship_id: undefined,
+        organization: "",
+        description: "",
+        certificate: "",
+        fromMonth: "",
+        fromYear: "",
+        toMonth: "",
+        toYear: "",
+      }
+    ]);
+  };
+
+  const deleteScholarshipAward = async (id: number) => {
+    const recordToDelete = scholarshipAwards.find(record => record.id === id);
+    
+    // Remove the length check - allow deletion of any record
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete this education record? This action cannot be undone."
+      "Are you sure you want to delete this scholarship/award record? This action cannot be undone."
     );
     
     if (!confirmDelete) {
-      return; // User clicked "Cancel", so don't delete
+      return;
     }
 
     try {
-      // If the record has an education_id (exists in database), delete from backend
-      if (recordToDelete?.education_id) {
+      // If the record has a scholarship_id (exists in database), delete from backend
+      if (recordToDelete?.scholarship_id) {
         const token = localStorage.getItem("token");
         
         const response = await axios.delete(
-          `${import.meta.env.VITE_BACKEND_URL}/delete-education`,
+          `${import.meta.env.VITE_BACKEND_URL}/delete-scholarship-awards`,
           {
             headers: { Authorization: `Bearer ${token}` },
-            data: { education_id: recordToDelete.education_id }
+            data: { scholarship_id: recordToDelete.scholarship_id }
           }
         );
 
         if (response.data.success) {
-          console.log("Record deleted from database successfully");
+          console.log("Scholarship record deleted from database successfully");
         }
       }
       
-      // Remove from frontend state regardless
-      setEducationRecords(educationRecords.filter(record => record.id !== id));
-      
-      // Also clear any validation errors for this record
-      if (educationValidationErrors[id]) {
-        setEducationValidationErrors((prev) => {
-          const updated = { ...prev };
-          delete updated[id];
-          return updated;
-        });
-      }
+      // Remove from frontend state
+      setScholarshipAwards(scholarshipAwards.filter(record => record.id !== id));
       
     } catch (error) {
-      console.error("Failed to delete education record:", error);
+      console.error("Failed to delete scholarship record:", error);
       alert("Failed to delete record from database, but removed from form.");
       
       // Still remove from frontend even if backend delete fails
-      setEducationRecords(educationRecords.filter(record => record.id !== id));
+      setScholarshipAwards(scholarshipAwards.filter(record => record.id !== id));
     }
-  }
-};
+  };
 
-const updateEducationRecord = (id: number, field: string, value: string) => {
-  if (field === 'isHighestQualification' && value === 'Yes') {
-    const updatedRecords = educationRecords.map(record =>
-      record.id === id
-        ? { ...record, isHighestQualification: 'Yes' }
-        : { ...record, isHighestQualification: 'No' }
-    );
-    setEducationRecords(updatedRecords);
-  } else {
-    setEducationRecords(educationRecords.map(record =>
+  const updateScholarshipAward = (id: number, field: string, value: string) => {
+    setScholarshipAwards(scholarshipAwards.map(record =>
       record.id === id ? { ...record, [field]: value } : record
     ));
-  }
 
-  if (educationValidationErrors[id]?.[field] && value.trim() !== "") {
-    setEducationValidationErrors((prev) => {
-      const updated = { ...prev };
-      if (updated[id]) {
-        delete updated[id][field];
-        // If no more errors for this record, remove the record key entirely
-        if (Object.keys(updated[id]).length === 0) {
-          delete updated[id];
+    // **ADD: Clear validation error when user starts typing**
+    if (scholarshipValidationErrors[id]?.[field] && value.trim() !== "") {
+      setScholarshipValidationErrors((prev) => {
+        const updated = { ...prev };
+        if (updated[id]) {
+          delete updated[id][field];
+          // If no more errors for this record, remove the record key entirely
+          if (Object.keys(updated[id]).length === 0) {
+            delete updated[id];
+          }
+        }
+        return updated;
+      });
+    }
+  };
+
+  const addOtherQualifications = () => {
+    // Generate ID based on existing records or start from 1
+    const newId = otherQualifications.length > 0 ? Math.max(...otherQualifications.map(r => r.id)) + 1 : 1;
+    setOtherQualifications([
+      ...otherQualifications,
+      {
+        id: newId,
+        qualification_id: undefined,
+        organization: "",
+        course: "",
+        certificate: "",
+        fromMonth: "",
+        fromYear: "",
+        toMonth: "",
+        toYear: "",
+      }
+    ]);
+  };
+
+  const deleteOtherQualifications = async (id: number) => {
+    const recordToDelete = otherQualifications.find(record => record.id === id);
+    
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this qualification record? This action cannot be undone."
+    );
+    
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      // If the record has a qualification_id (exists in database), delete from backend
+      if (recordToDelete?.qualification_id) {
+        const token = localStorage.getItem("token");
+        
+        const response = await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL}/delete-other-qualifications`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            data: { qualification_id: recordToDelete.qualification_id }
+          }
+        );
+
+        if (response.data.success) {
+          console.log("Other qualification record deleted from database successfully");
         }
       }
-      return updated;
-    });
-  }
-};
-
-// Add this type definition near the top with other types
-type ScholarshipRecord = {
-  id: number;
-  scholarship_id?: number; // if existing record from backend
-  organization: string;
-  description: string;
-  certificate: string;
-  fromMonth: string;
-  fromYear: string;
-  toMonth: string;
-  toYear: string;
-};
-
-// Update the existing scholarshipAwards state to include scholarship_id
-const [scholarshipAwards, setScholarshipAwards] = useState<ScholarshipRecord[]>([]);
-
-// Add this function near your existing mapToBackend function
-const mapScholarshipToBackend = (record: ScholarshipRecord) => ({
-  scholarship_id: record.scholarship_id,
-  organization: record.organization,
-  description: record.description,
-  certificate: record.certificate,
-  from_month: record.fromMonth,
-  from_year: record.fromYear,
-  to_month: record.toMonth,
-  to_year: record.toYear,
-});
-
-// Add this function near your fetchEducationRecords function
-const fetchScholarshipAwards = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-scholarship-awards`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
-      const records = res.data.data.map((rec: any) => ({
-        id: rec.scholarship_id,
-        scholarship_id: rec.scholarship_id,
-        organization: rec.organization || "",
-        description: rec.description || "",
-        certificate: rec.certificate || "",
-        fromMonth: rec.from_month || "",
-        fromYear: rec.from_year || "",
-        toMonth: rec.to_month || "",
-        toYear: rec.to_year || "",
-      }));
-      setScholarshipAwards(records);
-    }
-  } catch (error) {
-    console.error("Failed to fetch scholarship awards", error);
-  }
-};
-
-const addScholarshipAward = () => {
-  // Generate ID based on existing records or start from 1
-  const newId = scholarshipAwards.length > 0 ? Math.max(...scholarshipAwards.map(r => r.id)) + 1 : 1;
-  setScholarshipAwards([
-    ...scholarshipAwards,
-    {
-      id: newId,
-      scholarship_id: undefined,
-      organization: "",
-      description: "",
-      certificate: "",
-      fromMonth: "",
-      fromYear: "",
-      toMonth: "",
-      toYear: "",
-    }
-  ]);
-};
-
-const deleteScholarshipAward = async (id: number) => {
-  const recordToDelete = scholarshipAwards.find(record => record.id === id);
-  
-  // Remove the length check - allow deletion of any record
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this scholarship/award record? This action cannot be undone."
-  );
-  
-  if (!confirmDelete) {
-    return;
-  }
-
-  try {
-    // If the record has a scholarship_id (exists in database), delete from backend
-    if (recordToDelete?.scholarship_id) {
-      const token = localStorage.getItem("token");
       
-      const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/delete-scholarship-awards`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          data: { scholarship_id: recordToDelete.scholarship_id }
-        }
-      );
-
-      if (response.data.success) {
-        console.log("Scholarship record deleted from database successfully");
-      }
-    }
-    
-    // Remove from frontend state
-    setScholarshipAwards(scholarshipAwards.filter(record => record.id !== id));
-    
-  } catch (error) {
-    console.error("Failed to delete scholarship record:", error);
-    alert("Failed to delete record from database, but removed from form.");
-    
-    // Still remove from frontend even if backend delete fails
-    setScholarshipAwards(scholarshipAwards.filter(record => record.id !== id));
-  }
-};
-
-const updateScholarshipAward = (id: number, field: string, value: string) => {
-  setScholarshipAwards(scholarshipAwards.map(record =>
-    record.id === id ? { ...record, [field]: value } : record
-  ));
-
-  // **ADD: Clear validation error when user starts typing**
-  if (scholarshipValidationErrors[id]?.[field] && value.trim() !== "") {
-    setScholarshipValidationErrors((prev) => {
-      const updated = { ...prev };
-      if (updated[id]) {
-        delete updated[id][field];
-        // If no more errors for this record, remove the record key entirely
-        if (Object.keys(updated[id]).length === 0) {
-          delete updated[id];
-        }
-      }
-      return updated;
-    });
-  }
-};
-
-type OtherQualificationRecord = {
-  id: number;
-  qualification_id?: number;
-  organization: string;
-  course: string;
-  certificate: string;
-  fromMonth: string;
-  fromYear: string;
-  toMonth: string;
-  toYear: string;
-};
-
-const [otherQualifications, setOtherQualifications] = useState<OtherQualificationRecord[]>([]);
-
-const mapOtherQualificationToBackend = (record: OtherQualificationRecord) => ({
-  qualification_id: record.qualification_id,
-  organization: record.organization,
-  course: record.course,
-  certificate: record.certificate,
-  from_month: record.fromMonth,
-  from_year: record.fromYear,
-  to_month: record.toMonth,
-  to_year: record.toYear,
-});
-
-
-const fetchOtherQualifications = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/get-other-qualifications`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
-      const records = res.data.data.map((rec: any) => ({
-        id: rec.qualification_id,
-        qualification_id: rec.qualification_id,
-        organization: rec.organization || "",
-        course: rec.course || "",
-        certificate: rec.certificate || "",
-        fromMonth: rec.from_month || "",
-        fromYear: rec.from_year || "",
-        toMonth: rec.to_month || "",
-        toYear: rec.to_year || "",
-      }));
-      setOtherQualifications(records);
-    }
-  } catch (error) {
-    console.error("Failed to fetch other qualifications", error);
-  }
-};
-
-const addOtherQualifications = () => {
-  // Generate ID based on existing records or start from 1
-  const newId = otherQualifications.length > 0 ? Math.max(...otherQualifications.map(r => r.id)) + 1 : 1;
-  setOtherQualifications([
-    ...otherQualifications,
-    {
-      id: newId,
-      qualification_id: undefined,
-      organization: "",
-      course: "",
-      certificate: "",
-      fromMonth: "",
-      fromYear: "",
-      toMonth: "",
-      toYear: "",
-    }
-  ]);
-};
-
-const deleteOtherQualifications = async (id: number) => {
-  const recordToDelete = otherQualifications.find(record => record.id === id);
-  
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this qualification record? This action cannot be undone."
-  );
-  
-  if (!confirmDelete) {
-    return;
-  }
-
-  try {
-    // If the record has a qualification_id (exists in database), delete from backend
-    if (recordToDelete?.qualification_id) {
-      const token = localStorage.getItem("token");
+      // Remove from frontend state
+      setOtherQualifications(otherQualifications.filter(record => record.id !== id));
       
-      const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/delete-other-qualifications`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          data: { qualification_id: recordToDelete.qualification_id }
-        }
-      );
-
-      if (response.data.success) {
-        console.log("Other qualification record deleted from database successfully");
-      }
+    } catch (error) {
+      console.error("Failed to delete qualification record:", error);
+      alert("Failed to delete record from database, but removed from form.");
+      
+      // Still remove from frontend even if backend delete fails
+      setOtherQualifications(otherQualifications.filter(record => record.id !== id));
     }
-    
-    // Remove from frontend state
-    setOtherQualifications(otherQualifications.filter(record => record.id !== id));
-    
-  } catch (error) {
-    console.error("Failed to delete qualification record:", error);
-    alert("Failed to delete record from database, but removed from form.");
-    
-    // Still remove from frontend even if backend delete fails
-    setOtherQualifications(otherQualifications.filter(record => record.id !== id));
-  }
-};
+  };
 
-const updateOtherQualifications = (id: number, field: string, value: string) => {
-  setOtherQualifications(otherQualifications.map(record =>
-    record.id === id ? { ...record, [field]: value } : record
-  ));
+  const updateOtherQualifications = (id: number, field: string, value: string) => {
+    setOtherQualifications(otherQualifications.map(record =>
+      record.id === id ? { ...record, [field]: value } : record
+    ));
 
-  // Clear validation error when user starts typing
-  if (qualificationValidationErrors[id]?.[field] && value.trim() !== "") {
-    setQualificationValidationErrors((prev) => {
-      const updated = { ...prev };
-      if (updated[id]) {
-        delete updated[id][field];
-        // If no more errors for this record, remove the record key entirely
-        if (Object.keys(updated[id]).length === 0) {
-          delete updated[id];
+    // Clear validation error when user starts typing
+    if (qualificationValidationErrors[id]?.[field] && value.trim() !== "") {
+      setQualificationValidationErrors((prev) => {
+        const updated = { ...prev };
+        if (updated[id]) {
+          delete updated[id][field];
+          // If no more errors for this record, remove the record key entirely
+          if (Object.keys(updated[id]).length === 0) {
+            delete updated[id];
+          }
         }
-      }
-      return updated;
-    });
-  }
-};
-
+        return updated;
+      });
+    }
+  };
 
   return (
     <div className={styles.mainPanel}>

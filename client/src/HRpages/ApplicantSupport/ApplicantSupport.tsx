@@ -1,3 +1,33 @@
+/**
+ * ApplicantSupport Page
+ *
+ * This component displays the applicant's references and attachments for HR review in a read-only format.
+ *
+ * Features:
+ * - Fetches and displays references and attachment records from the backend using the applicationId from the URL.
+ * - Parses JSON fields from the backend response.
+ * - Displays all records in collapsible sections, with all fields disabled (read-only).
+ * - Handles empty states and ensures minimum required records for each section.
+ * - Provides navigation to previous and next sections of the applicant's details.
+ * - Shows download/view links for uploaded files.
+ *
+ * Usage:
+ * - Used as a route page: `/hr/applicant-details/support?applicationId=...`
+ *
+ * State:
+ * - references: List of reference records (minimum 2).
+ * - attachments: List of attachment records (minimum 1, Resume compulsory).
+ * - Collapsed/expanded state for each section.
+ *
+ * Dependencies:
+ * - axios for HTTP requests.
+ * - react-router-dom for navigation and query params.
+ * - lucide-react for icons.
+ * - Education.module.css and Support.module.css for styling.
+ *
+ * @component
+ */
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronUp, ChevronDown } from "lucide-react";
@@ -5,35 +35,36 @@ import axios from "axios";
 import styles from "../../pages/Education/Education.module.css"; 
 import supportStyles from "../../pages/Support/Support.module.css";
 
+// Type definitions
+type ReferenceRecord = {
+  id: number;
+  reference_id?: number;
+  name: string;
+  occupation: string;
+  contactNo: string;
+  relationship: string;
+};
+
+type AttachmentRecord = {
+  id: number;
+  attachment_id?: number;
+  documentType: string;
+  documentName: string;
+  file: File | null;
+  file_name?: string;
+  file_path?: string;
+  file_size?: number;
+  file_type?: string;
+  server_file_name?: string;
+};
+
 const ApplicantSupport: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
   const applicationId = searchParams.get('applicationId');
   const [showReferences, setShowReferences] = useState(true);
   const [showAttachments, setShowAttachments] = useState(true);
-
-  // Type definitions
-  type ReferenceRecord = {
-    id: number;
-    reference_id?: number;
-    name: string;
-    occupation: string;
-    contactNo: string;
-    relationship: string;
-  };
-
-  type AttachmentRecord = {
-    id: number;
-    attachment_id?: number;
-    documentType: string;
-    documentName: string;
-    file: File | null;
-    file_name?: string;
-    file_path?: string;
-    file_size?: number;
-    file_type?: string;
-    server_file_name?: string;
-  };
 
   // State with first 2 records being compulsory
   const [references, setReferences] = useState<ReferenceRecord[]>([
