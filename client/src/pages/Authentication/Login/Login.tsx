@@ -1,38 +1,33 @@
 /**
  * Login Page
- * 
- * This component renders the login page for the EAIM portal.
- * 
+ *
+ * This component provides the login interface for all users (Applicants, HR, and Managers).
+ * It supports both standard email/password login for applicants and a two-step verification
+ * process for HR/Manager accounts, which requires a verification code sent to their email.
+ *
  * Features:
- * - Allows users to log in using email or username and password.
- * - Validates required fields using react-hook-form.
- * - Shows/hides password with a toggle button.
- * - Displays loading spinner and disables the submit button during login.
- * - Shows server messages for success or error.
- * - Provides links to registration and forgot password pages.
- * - Supports dark mode toggle.
- * 
- * Usage:
- * - Used as a route page: `/login`
- * - On successful login, redirects users based on their role:
- *   - Applicant: `/home`
- *   - HR: `/hr/dashboard`
- *   - Manager: `/manager/available-jobs`
- * 
+ * - Applicant login with email and password.
+ * - HR/Manager login with username and password, followed by email verification code.
+ * - Dynamic form: shows verification code field only after initial HR/Manager credentials are validated.
+ * - Handles dark and light mode themes.
+ * - Displays server messages and loading states.
+ * - Redirects users to their respective dashboards upon successful login.
+ *
  * State:
  * - showPassword: Toggles password visibility.
- * - isLoading: Indicates if the login request is in progress.
- * - serverMessage: Message to display after submitting the form.
- * - messageType: Type of server message ('success' or 'error').
- * - darkMode: Tracks the current theme mode.
- * 
+ * - isLoading: Indicates loading state during authentication.
+ * - serverMessage, messageType: For displaying feedback to the user.
+ * - darkMode: Tracks current theme.
+ * - showCodeField, isHRManager, codeSent: Manage two-step verification flow for HR/Manager.
+ * - pendingLoginData: Stores credentials for HR/Manager before code verification.
+ *
  * Dependencies:
- * - react-hook-form for form handling and validation.
+ * - react-hook-form for form management.
  * - axios for HTTP requests.
- * - react-router-dom for navigation and links.
  * - lucide-react for icons.
- * - AuthStyles.module.css and Login.module.css for styling.
- * 
+ * - React Router for navigation.
+ * - Custom CSS modules for styling.
+ *
  * @component
  */
 
@@ -43,10 +38,9 @@ import styles from "./Login.module.css";
 import EAIM from "../../../assets/EAIM.png";
 import background from "../../../assets/background4.jpg";
 import axios from "axios";
-import { Eye, EyeOff, Mail, Lock, Sun, Moon, Send } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Sun, Moon, CheckCircle2 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-// Define the type for login form inputs
 type LoginFormInputs = {
   emailOrUsername: string;
   password: string;
@@ -54,7 +48,7 @@ type LoginFormInputs = {
 };
 
 const Login = () => {
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<LoginFormInputs>();
+  const { register, handleSubmit, formState: { errors }} = useForm<LoginFormInputs>();
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -63,12 +57,11 @@ const Login = () => {
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
 
-  // New state for code sending
-  const [isSendingCode, setIsSendingCode] = useState(false);
+  // New state for HR/Manager verification flow
+  const [showCodeField, setShowCodeField] = useState(false);
+  const [isHRManager, setIsHRManager] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
-
-  // Watch emailOrUsername field to determine if it's a username
-  const emailOrUsername = watch("emailOrUsername");
+  const [pendingLoginData, setPendingLoginData] = useState<{ emailOrUsername: string; password: string } | null>(null);
 
   useEffect(() => {
     setDarkMode(document.documentElement.classList.contains('dark'));
@@ -81,53 +74,73 @@ const Login = () => {
     document.documentElement.classList.toggle('dark', newDarkMode);
   };
 
-  // Handle sending verification code for HR/Manager login
-  const handleSendCode = async () => {
-    setIsSendingCode(true);
+  // Step 1: Handle initial sign in attempt
+  const handleInitialSignIn = async (data: LoginFormInputs) => {
+    setIsLoading(true);
     setServerMessage("");
-    setMessageType("success");
+    setShowCodeField(false);
+    setIsHRManager(false);
+    setCodeSent(false);
+
     try {
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/request-login-code`, {
-        emailOrUsername,
-      });
+      // Try applicant login if input is email
+      if (data.emailOrUsername.includes("@")) {
+        // Try applicant login directly
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/login`, {
+          emailOrUsername: data.emailOrUsername,
+          password: data.password,
+        });
+        if (response.data.success) {
+          localStorage.setItem("token", response.data.token);
+          setServerMessage("Login successful! Redirecting...");
+          setMessageType('success');
+          setTimeout(() => {
+            navigate("/home");
+          }, 1000);
+          return;
+        } else {
+          setServerMessage("Login failed: " + response.data.message);
+          setMessageType('error');
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // If code sent, show code field and set pending login data
+      setShowCodeField(true);
+      setIsHRManager(true);
       setCodeSent(true);
+      setPendingLoginData({ emailOrUsername: data.emailOrUsername, password: data.password });
       setMessageType("success");
+      setIsLoading(false);
     } catch (error: any) {
-      setServerMessage(
-        error.response?.data?.message || "Failed to send verification code."
-      );
-      setMessageType("error");
-    } finally {
-      setIsSendingCode(false);
+      if (error.response && error.response.data && error.response.data.message) {
+        setServerMessage("Login failed: " + error.response.data.message);
+      } else {
+        setServerMessage("Server error. Please try again.");
+      }
+      setMessageType('error');
+      setIsLoading(false);
     }
   };
 
-  // Helper to check if input is a username (not an email)
-  const isUsername = emailOrUsername && !emailOrUsername.includes("@");
-
-  // Handle form submission
-  const onSubmit = async (data: LoginFormInputs) => {
+  // Step 2: Handle verification code submit for HR/Manager
+  const handleVerifyCode = async (data: LoginFormInputs) => {
     setIsLoading(true);
     setServerMessage("");
     try {
-      // Send login request to backend
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/login`, {
-        emailOrUsername: data.emailOrUsername,
-        password: data.password,
-        code: data.code
+        emailOrUsername: pendingLoginData?.emailOrUsername,
+        password: pendingLoginData?.password,
+        code: data.code,
       });
-
       if (response.data.success) {
-        // Store JWT token in localStorage
         localStorage.setItem("token", response.data.token);
         setServerMessage("Login successful! Redirecting...");
         setMessageType('success');
-        // Redirect user based on role after a short delay
         setTimeout(() => {
           const role = response.data.role;
-          if (role === "Applicant") {
-            navigate("/home");
-          } else if (role === "HR") {
+          if (role === "HR") {
             navigate("/hr/dashboard");
           } else if (role === "Manager") {
             navigate("/manager/available-jobs");
@@ -138,7 +151,7 @@ const Login = () => {
         setMessageType('error');
       }
     } catch (error: any) {
-      if (error.response && error.response.data) {
+      if (error.response && error.response.data && error.response.data.message) {
         setServerMessage("Login failed: " + error.response.data.message);
       } else {
         setServerMessage("Server error. Please try again.");
@@ -167,7 +180,14 @@ const Login = () => {
           {darkMode ? <Moon size={20} /> : <Sun size={20} />}
         </button>
         {/* Login Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className={authStyles.authForm}>
+        <form
+          onSubmit={
+            showCodeField && isHRManager
+              ? handleSubmit(handleVerifyCode)
+              : handleSubmit(handleInitialSignIn)
+          }
+          className={authStyles.authForm}
+        >
           {/* Email or Username Input */}
           <div className={authStyles.formGroup}>
             <label htmlFor="emailOrUsername" className={authStyles.label}>
@@ -181,9 +201,9 @@ const Login = () => {
                 placeholder="Enter your email or username"
                 {...register("emailOrUsername", { required: "Email or username is required" })}
                 className={`${authStyles.input} ${errors.emailOrUsername ? authStyles.inputError : ''}`}
+                disabled={showCodeField && isHRManager}
               />
             </div>
-            {/* Show validation error if present */}
             {errors.emailOrUsername && <p className={authStyles.errorMessage}>{errors.emailOrUsername.message}</p>}
           </div>
           {/* Password Input */}
@@ -197,12 +217,10 @@ const Login = () => {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
-                {...register("password", { 
-                  required: "Password is required",
-                })}
+                {...register("password", { required: "Password is required" })}
                 className={`${authStyles.input} ${styles.passwordInput} ${errors.password ? authStyles.inputError : ''}`}
+                disabled={showCodeField && isHRManager}
               />
-              {/* Password visibility toggle */}
               <button
                 type="button"
                 className={styles.passwordToggle}
@@ -211,14 +229,13 @@ const Login = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            {/* Show validation error if present */}
             {errors.password && <p className={authStyles.errorMessage}>{errors.password.message}</p>}
           </div>
           {/* Verification Code Input for HR/Manager */}
-          {isUsername && (
+          {showCodeField && isHRManager && (
             <div className={authStyles.formGroup}>
               <label htmlFor="code" className={authStyles.label}>
-                <Send size={18} />
+                <CheckCircle2 size={18} />
                 Verification Code
               </label>
               <div className={authStyles.inputWrapper}>
@@ -231,15 +248,6 @@ const Login = () => {
                   maxLength={6}
                   autoComplete="one-time-code"
                 />
-                <button
-                  type="button"
-                  className={styles.sendCodeBtn}
-                  onClick={handleSendCode}
-                  disabled={isSendingCode || !emailOrUsername}
-                  style={{ marginLeft: "0.5em" }}
-                >
-                  {isSendingCode ? "Sending..." : "Send Code"}
-                </button>
               </div>
               {errors.code && <p className={authStyles.errorMessage}>{errors.code.message}</p>}
               {codeSent && (
@@ -258,7 +266,7 @@ const Login = () => {
             {isLoading ? (
               <div className={authStyles.spinner}></div>
             ) : (
-              'Sign In'
+              showCodeField && isHRManager ? "Verify & Sign In" : "Sign In"
             )}
           </button>
           {/* Server Message */}
