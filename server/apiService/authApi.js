@@ -15,6 +15,53 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const requestLoginCode = async (req, res) => {
+  const { emailOrUsername } = req.body;
+
+  try {
+    // Find HR/Manager in vw_staff by username or email
+    const staffRows = await db.executeQuery(
+      `SELECT * FROM vw_staff WHERE user_name = ? LIMIT 1`,
+      [emailOrUsername]
+    );
+    if (!staffRows.length) {
+      return res.status(404).json({ success: false, message: "Account not found" });
+    }
+    const staff = staffRows[0];
+    if (staff.staff_status !== "Active") {
+      return res.status(403).json({ success: false, message: "Account is not active." });
+    }
+
+    // Generate 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // Calculate Singapore time + 10 minutes for expires_at
+    const now = new Date();
+    // Add 10 minutes to current UTC time, then convert to Singapore time
+    const expiresAt = new Date(now.getTime() + (8 * 60 + 10) * 60 * 1000);
+
+    // Upsert code for this email
+    await db.executeQuery(
+      `INSERT INTO tbl_pending_login_code (email, code, expires_at)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE code = VALUES(code), expires_at = VALUES(expires_at)`,
+      [staff.email, code, expiresAt]
+    );
+
+    // Send code to staff email
+    await transporter.sendMail({
+      from: `"EAIM Job Portal" <${process.env.SMTP_USER}>`,
+      to: staff.email,
+      subject: "Your EAIM Login Verification Code",
+      html: `<p>Your login verification code is: <b>${code}</b></p><p>This code will expire in 10 minutes.</p>`,
+    });
+
+    return res.json({ success: true, message: "Verification code sent to your email." });
+  } catch (e) {
+    console.error("Error sending login code:", e);
+    return res.status(500).json({ success: false, message: "Failed to send verification code." });
+  }
+};
+
 const requestRegisterCode = async (req, res) => {
   const { email } = req.body;
 
@@ -35,7 +82,7 @@ const requestRegisterCode = async (req, res) => {
 
   // Upsert code for this email
   const upsertSql = `
-    INSERT INTO tbl_pending_code (email, code, expires_at)
+    INSERT INTO tbl_pending_register_code (email, code, expires_at)
     VALUES (?, ?, ?)
     ON DUPLICATE KEY UPDATE code = VALUES(code), expires_at = VALUES(expires_at)
   `;
@@ -54,7 +101,7 @@ const requestRegisterCode = async (req, res) => {
 
 const verifyRegisterCode = async (req, res) => {
   const { email, code } = req.body;
-  const sql = `SELECT code, expires_at FROM tbl_pending_code WHERE email = ?`;
+  const sql = `SELECT code, expires_at FROM tbl_pending_register_code WHERE email = ?`;
   const rows = await db.executeQuery(sql, [email]);
   if (
     !rows.length ||
@@ -90,7 +137,7 @@ const register = async (req, res) => {
   const { email, password, first_name, last_name, nationality, code } = req.body;
 
   // Check code in DB
-  const sql = `SELECT code, expires_at FROM tbl_pending_code WHERE email = ?`;
+  const sql = `SELECT code, expires_at FROM tbl_pending_register_code WHERE email = ?`;
   const rows = await db.executeQuery(sql, [email]);
   if (
     !rows.length ||
@@ -101,7 +148,7 @@ const register = async (req, res) => {
   }
 
   // Remove code after use
-  await db.executeQuery(`DELETE FROM tbl_pending_code WHERE email = ?`, [email]);
+  await db.executeQuery(`DELETE FROM tbl_pending_register_code WHERE email = ?`, [email]);
 
   try {
     const checkSql = `SELECT * FROM tbl_users WHERE email = ?`;
@@ -122,7 +169,7 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { emailOrUsername, password } = req.body;
+  const { emailOrUsername, password, code } = req.body;
   try {
     // If input contains '@', treat as applicant (tbl_users)
     if (emailOrUsername.includes("@")) {
@@ -177,6 +224,24 @@ const login = async (req, res) => {
       if (staff.user_password !== sha1Password) {
         return res.status(401).json({ success: false, message: "Invalid password" });
       }
+
+      // Require and check verification code
+      if (!code) {
+        return res.status(400).json({ success: false, message: "Verification code required" });
+      }
+      const codeRows = await db.executeQuery(
+        `SELECT code, expires_at FROM tbl_pending_login_code WHERE email = ?`,
+        [staff.email]
+      );
+
+      if (
+        !codeRows.length ||
+        String(codeRows[0].code) !== code ||
+        new Date() > new Date(codeRows[0].expires_at)
+      ) {
+        return res.status(400).json({ success: false, message: "Invalid or expired verification code." });
+      }
+
       const payload = {
         user_id: staff.emp_no,
         email: staff.user_name,
@@ -268,6 +333,7 @@ const resetPassword = async (req, res) => {
 module.exports = {
   register,
   login,
+  requestLoginCode,
   changePassword,
   authenticateToken,
   requestRegisterCode,

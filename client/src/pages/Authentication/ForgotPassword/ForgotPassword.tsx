@@ -1,17 +1,3 @@
-import { useForm } from "react-hook-form";
-import { useNavigate, Link } from "react-router-dom";
-import authStyles from "../AuthStyles.module.css";
-import EAIM from "../../../assets/EAIM.png";
-import background from "../../../assets/background4.jpg";
-import axios from "axios";
-import { Mail, Sun, Moon } from "lucide-react";
-import { useState } from "react";
-
-// Define the type for form inputs
-type ForgotPasswordInputs = {
-  email: string;
-};
-
 /**
  * ForgotPassword Page
  * 
@@ -45,6 +31,20 @@ type ForgotPasswordInputs = {
  * 
  * @component
  */
+
+import { useForm } from "react-hook-form";
+import { useNavigate, Link } from "react-router-dom";
+import authStyles from "../AuthStyles.module.css";
+import EAIM from "../../../assets/EAIM.png";
+import background from "../../../assets/background4.jpg";
+import axios from "axios";
+import { Mail, Sun, Moon } from "lucide-react";
+import { useState } from "react";
+
+// Define the type for form inputs
+type ForgotPasswordInputs = {
+  email: string;
+};
 
 const ForgotPassword: React.FC = () => {
   // Initialize react-hook-form for form validation and handling

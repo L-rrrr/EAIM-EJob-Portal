@@ -43,43 +43,67 @@ import styles from "./Login.module.css";
 import EAIM from "../../../assets/EAIM.png";
 import background from "../../../assets/background4.jpg";
 import axios from "axios";
-import { Eye, EyeOff, Mail, Lock, Sun, Moon } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Sun, Moon, Send } from "lucide-react";
 import { useState, useEffect } from "react";
 
 // Define the type for login form inputs
 type LoginFormInputs = {
   emailOrUsername: string;
   password: string;
+  code?: string;
 };
 
 const Login = () => {
-  // Initialize react-hook-form for validation and form handling
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>();
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<LoginFormInputs>();
   const navigate = useNavigate();
 
-  // State for showing/hiding password
   const [showPassword, setShowPassword] = useState(false);
-  // State for loading spinner during login request
   const [isLoading, setIsLoading] = useState(false);
-  // State for server response message
   const [serverMessage, setServerMessage] = useState("");
-  // State for message type (success or error)
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
-  // State for dark mode toggle
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
 
-  // Sync dark mode state with document class on mount
+  // New state for code sending
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+
+  // Watch emailOrUsername field to determine if it's a username
+  const emailOrUsername = watch("emailOrUsername");
+
   useEffect(() => {
     setDarkMode(document.documentElement.classList.contains('dark'));
   }, []);
 
-  // Toggle dark mode and persist preference in localStorage
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
     localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
     document.documentElement.classList.toggle('dark', newDarkMode);
   };
+
+  // Handle sending verification code for HR/Manager login
+  const handleSendCode = async () => {
+    setIsSendingCode(true);
+    setServerMessage("");
+    setMessageType("success");
+    try {
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/request-login-code`, {
+        emailOrUsername,
+      });
+      setCodeSent(true);
+      setMessageType("success");
+    } catch (error: any) {
+      setServerMessage(
+        error.response?.data?.message || "Failed to send verification code."
+      );
+      setMessageType("error");
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  // Helper to check if input is a username (not an email)
+  const isUsername = emailOrUsername && !emailOrUsername.includes("@");
 
   // Handle form submission
   const onSubmit = async (data: LoginFormInputs) => {
@@ -90,6 +114,7 @@ const Login = () => {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/login`, {
         emailOrUsername: data.emailOrUsername,
         password: data.password,
+        code: data.code
       });
 
       if (response.data.success) {
@@ -189,6 +214,41 @@ const Login = () => {
             {/* Show validation error if present */}
             {errors.password && <p className={authStyles.errorMessage}>{errors.password.message}</p>}
           </div>
+          {/* Verification Code Input for HR/Manager */}
+          {isUsername && (
+            <div className={authStyles.formGroup}>
+              <label htmlFor="code" className={authStyles.label}>
+                <Send size={18} />
+                Verification Code
+              </label>
+              <div className={authStyles.inputWrapper}>
+                <input
+                  id="code"
+                  type="text"
+                  placeholder="Enter the 6-digit code"
+                  {...register("code", { required: "Verification code is required" })}
+                  className={`${authStyles.input} ${errors.code ? authStyles.inputError : ''}`}
+                  maxLength={6}
+                  autoComplete="one-time-code"
+                />
+                <button
+                  type="button"
+                  className={styles.sendCodeBtn}
+                  onClick={handleSendCode}
+                  disabled={isSendingCode || !emailOrUsername}
+                  style={{ marginLeft: "0.5em" }}
+                >
+                  {isSendingCode ? "Sending..." : "Send Code"}
+                </button>
+              </div>
+              {errors.code && <p className={authStyles.errorMessage}>{errors.code.message}</p>}
+              {codeSent && (
+                <p className={authStyles.serverMessage + " " + authStyles.success}>
+                  Code sent! The code is valid for 10 minutes. Please check your email.
+                </p>
+              )}
+            </div>
+          )}
           {/* Submit Button */}
           <button 
             type="submit" 

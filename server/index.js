@@ -34,6 +34,7 @@ app.post("/api/reset-password", authApi.resetPassword);
 // Email verification endpoints
 app.post("/api/request-register-code", authApi.requestRegisterCode);
 app.post("/api/verify-register-code", authApi.verifyRegisterCode);
+app.post("/api/request-login-code", authApi.requestLoginCode);
 
 //Jobs endpoints
 app.post("/api/post-jobs", authenticateToken, accountApi.postJobs);
@@ -222,10 +223,5 @@ app.get("/api/user-email/:userId", authenticateToken, accountApi.getUserEmailByI
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
 });
-
-
-// // Sample/test
-// app.get("/api/test", accountapi.testFunc);
-// app.get("/api/test2", accountapi.testSelect);
 
 

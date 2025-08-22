@@ -2824,10 +2824,13 @@ const getApplicants = async (req, res) => {
         pp.email,
         j.title as job_title,
         j.job_category,
-        a.assessment_done
+        a.assessment_done,
+        a.assigned_manager_id,
+        s.display_name as assigned_manager_name
       FROM tbl_application a
       LEFT JOIN tbl_personal_particulars pp ON a.user_id = pp.user_id
       LEFT JOIN tbl_jobs j ON a.job_id = j.job_id
+      LEFT JOIN vw_staff s ON a.assigned_manager_id = s.emp_no
       WHERE a.application_status IS NOT NULL
       ORDER BY a.applied_date DESC
     `;
@@ -2846,7 +2849,9 @@ const getApplicants = async (req, res) => {
       applied: formatDate(applicant.applied_date),
       interview: formatDate(applicant.interview_date),
       status: applicant.application_status || 'Pending review',
-      assessment_done: applicant.assessment_done === "Yes"
+      assessment_done: applicant.assessment_done === "Yes",
+      assigned_manager_id: applicant.assigned_manager_id,
+      assigned_manager_name: applicant.assigned_manager_name
     }));
 
     return res.status(200).json({ 
@@ -3998,6 +4003,12 @@ const assignManagerToApplication = async (req, res) => {
     if (!application_id || !manager_id) {
       return res.status(400).json({ success: false, message: "Missing application_id or manager_id" });
     }
+
+    // Get current HR's emp_no (assume req.user.user_id is HR's user_id)
+    const hrSql = `SELECT emp_no FROM vw_staff WHERE emp_no = ? LIMIT 1`;
+    const hrRows = await db.executeQuery(hrSql, [req.user.user_id]);
+    const assignedBy = hrRows.length ? hrRows[0].emp_no : null;
+
     // Check if manager exists in vw_staff and meets criteria
     const checkSql = `
       SELECT * FROM vw_staff 
@@ -4015,11 +4026,11 @@ const assignManagerToApplication = async (req, res) => {
     // Update the application
     const updateSql = `
       UPDATE tbl_application
-      SET assigned_manager_id = ?
+      SET assigned_manager_id = ?, assigned_by = ?
       WHERE application_id = ?
     `;
-    await db.executeQuery(updateSql, [manager_id, application_id]);
-    
+    await db.executeQuery(updateSql, [manager_id, assignedBy, application_id]);
+
     // Get manager's email and name (if you want to send email, you may need to join with tbl_users or use vw_staff.email)
     const managerEmail = managers[0].email || null;
     const managerName = managers[0].display_name || "Manager";

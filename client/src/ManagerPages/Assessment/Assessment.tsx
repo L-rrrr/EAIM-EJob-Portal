@@ -378,6 +378,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 <th>Candidate Name</th>
                 <th>Applied Job</th>
                 <th>Interview Date</th>
+                <th>Assigned by</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -387,6 +388,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <td>{app.candidate_name}</td>
                   <td>{app.job_title}</td>
                   <td>{app.interview_date ? app.interview_date.slice(0, 10) : "—"}</td>
+                  <td>{app.assigned_by || "—"}</td>
                   <td>
                     <button
                       className={styles.selectBtn}

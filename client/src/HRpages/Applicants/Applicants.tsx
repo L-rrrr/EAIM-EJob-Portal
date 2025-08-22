@@ -1842,52 +1842,58 @@ const Applicants = () => {
                               View Assessment
                             </button>
                           ) : applicant.status === "Reviewing" ? (
-                            <div className={styles.managerAssignRow}>
-                              <select
-                                className={styles.managerSelect}
-                                value={applicant.assigned_manager_id || ""}
-                                onChange={e => {
-                                  const newManagerId = e.target.value;
-                                  setFilteredApplicants(prev =>
-                                    prev.map(a =>
-                                      a.application_id === applicant.application_id
-                                        ? { ...a, assigned_manager_id: newManagerId }
-                                        : a
-                                    )
-                                  );
-                                }}
-                              >
-                                <option value="">Select Manager</option>
-                                {managers.map(m => (
-                                  <option key={m.emp_no} value={m.emp_no}>
-                                    {m.display_name}
-                                  </option>
-                                ))}
-                              </select>
-                              <button
-                                className={styles.assignBtn}
-                                disabled={!applicant.assigned_manager_id}
-                                style={{ marginLeft: 0 }}
-                                onClick={async () => {
-                                  try {
-                                    const token = localStorage.getItem("token");
-                                    await axios.post(
-                                      `${import.meta.env.VITE_BACKEND_URL}/assign-manager-to-application`,
-                                      {
-                                        application_id: applicant.application_id,
-                                        manager_id: applicant.assigned_manager_id,
-                                      },
-                                      { headers: { Authorization: `Bearer ${token}` } }
+                            applicant.assigned_manager_id ? (
+                              <span>
+                                Assigned to {applicant.assigned_manager_name || "Manager"}
+                              </span>
+                            ) : (
+                              <div className={styles.managerAssignRow}>
+                                <select
+                                  className={styles.managerSelect}
+                                  value={applicant.assigned_manager_id || ""}
+                                  onChange={e => {
+                                    const newManagerId = e.target.value;
+                                    setFilteredApplicants(prev =>
+                                      prev.map(a =>
+                                        a.application_id === applicant.application_id
+                                          ? { ...a, assigned_manager_id: newManagerId }
+                                          : a
+                                      )
                                     );
-                                    alert("Manager assigned for assessment!");
-                                  } catch {
-                                    alert("Failed to assign manager.");
-                                  }
-                                }}
-                              >
-                                Send
-                              </button>
-                            </div>
+                                  }}
+                                >
+                                  <option value="">Select Manager</option>
+                                  {managers.map(m => (
+                                    <option key={m.emp_no} value={m.emp_no}>
+                                      {m.display_name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <button
+                                  className={styles.assignBtn}
+                                  disabled={!applicant.assigned_manager_id}
+                                  style={{ marginLeft: 0 }}
+                                  onClick={async () => {
+                                    try {
+                                      const token = localStorage.getItem("token");
+                                      await axios.post(
+                                        `${import.meta.env.VITE_BACKEND_URL}/assign-manager-to-application`,
+                                        {
+                                          application_id: applicant.application_id,
+                                          manager_id: applicant.assigned_manager_id,
+                                        },
+                                        { headers: { Authorization: `Bearer ${token}` } }
+                                      );
+                                      alert("Manager assigned for assessment!");
+                                    } catch {
+                                      alert("Failed to assign manager.");
+                                    }
+                                  }}
+                                >
+                                  Send
+                                </button>
+                              </div>
+                            )
                           ) : (
                             <span style={{ color: "#888" }}>N/A</span>
                           )}
