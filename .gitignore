@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+
+MIDDLEWARE_EXPLAINED.md
+INTERVIEW_PREP.md
