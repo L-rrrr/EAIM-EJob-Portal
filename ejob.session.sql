@@ -1,0 +1,2 @@
+INSERT INTO vw_staff (emp_no, user_name, email, staff_name, staff_status, dept_code, display_name, supervisor, user_password)
+VALUES ('EMP2001', 'manager1', 'ruiliuljwzxx@gmail.com', 'Manager Test', 'Active', 'DEP-09', 'Manager Test', NULL, SHA1('ManagerPass123'));

@@ -1,4 +1,4 @@
-const db = require("../dbConn");
+const db = require("../db");
 const axios = require("axios");
 const OpenAI = require('openai');
 const client = new OpenAI();

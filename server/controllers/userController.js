@@ -1,4 +1,4 @@
-const db = require("../dbConn");
+const db = require("../db");
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');

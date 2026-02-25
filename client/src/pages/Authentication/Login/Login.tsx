@@ -60,7 +60,6 @@ const Login = () => {
   // New state for HR/Manager verification flow
   const [showCodeField, setShowCodeField] = useState(false);
   const [isHRManager, setIsHRManager] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
   const [pendingLoginData, setPendingLoginData] = useState<{ emailOrUsername: string; password: string } | null>(null);
 
   useEffect(() => {
@@ -80,7 +79,6 @@ const Login = () => {
     setServerMessage("");
     setShowCodeField(false);
     setIsHRManager(false);
-    setCodeSent(false);
 
     try {
       // Try applicant login if input is email
@@ -106,13 +104,33 @@ const Login = () => {
         }
       }
 
-      // If code sent, show code field and set pending login data
-      setShowCodeField(true);
-      setIsHRManager(true);
-      setCodeSent(true);
-      setPendingLoginData({ emailOrUsername: data.emailOrUsername, password: data.password });
-      setMessageType("success");
-      setIsLoading(false);
+      // For HR/Manager (username without @) request a login code from backend
+      try {
+        const resp = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/request-login-code`, {
+          emailOrUsername: data.emailOrUsername,
+          password: data.password,
+        });
+
+        if (resp.data && resp.data.success) {
+          setShowCodeField(true);
+          setIsHRManager(true);
+          setPendingLoginData({ emailOrUsername: data.emailOrUsername, password: data.password });
+          setServerMessage(resp.data.message || 'Code sent!');
+          setMessageType('success');
+        } else {
+          setServerMessage(resp.data?.message || 'Failed to request code');
+          setMessageType('error');
+        }
+      } catch (err: any) {
+        if (err.response && err.response.data && err.response.data.message) {
+          setServerMessage('Login failed: ' + err.response.data.message);
+        } else {
+          setServerMessage('Server error. Please try again.');
+        }
+        setMessageType('error');
+      } finally {
+        setIsLoading(false);
+      }
     } catch (error: any) {
       if (error.response && error.response.data && error.response.data.message) {
         setServerMessage("Login failed: " + error.response.data.message);
@@ -250,11 +268,7 @@ const Login = () => {
                 />
               </div>
               {errors.code && <p className={authStyles.errorMessage}>{errors.code.message}</p>}
-              {codeSent && (
-                <p className={authStyles.serverMessage + " " + authStyles.success}>
-                  Code sent! The code is valid for 10 minutes. Please check your email.
-                </p>
-              )}
+              {/* Server message will show confirmation; avoid duplicate client message. */}
             </div>
           )}
           {/* Submit Button */}

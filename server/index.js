@@ -5,10 +5,10 @@ const compression = require("compression");
 require("dotenv").config();
 
 const PORT = process.env.PORT;
-const accountApi = require("./apiService/accountApi");
-const authApi = require("./apiService/authApi");
-const openaiApi = require("./apiService/openaiApi");
-const authenticateToken = require("./apiService/authApi").authenticateToken;
+const accountApi = require("./controllers/userController");
+const authApi = require("./controllers/authController");
+const openaiApi = require("./controllers/openAiController");
+const authenticateToken = require("./controllers/authController").authenticateToken;
 
 
 const app = express();

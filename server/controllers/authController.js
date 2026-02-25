@@ -1,22 +1,29 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const db = require("../dbConn");
+const db = require("../db");
 const nodemailer = require("nodemailer");
 
 const secretKey = crypto.randomBytes(32).toString("hex");
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: false,
+  port: Number(process.env.SMTP_PORT) || 587,
+  secure: Number(process.env.SMTP_PORT) === 465, // true for SMTPS (port 465)
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
 });
 
+// Verify transporter at startup to surface connection/auth issues early
+transporter.verify().then(() => {
+  console.log('SMTP transporter verified');
+}).catch((err) => {
+  console.error('SMTP transporter verify failed:', err && err.message ? err.message : err);
+});
+
 const requestLoginCode = async (req, res) => {
-  const { emailOrUsername } = req.body;
+  const { emailOrUsername, password } = req.body;
 
   try {
     // Find HR/Manager in vw_staff by username or email
@@ -30,6 +37,15 @@ const requestLoginCode = async (req, res) => {
     const staff = staffRows[0];
     if (staff.staff_status !== "Active") {
       return res.status(403).json({ success: false, message: "Account is not active." });
+    }
+
+    // Require password verification before issuing a login code
+    if (!password) {
+      return res.status(400).json({ success: false, message: "Password required to request login code." });
+    }
+    const sha1Password = crypto.createHash("sha1").update(password).digest("hex");
+    if (staff.user_password !== sha1Password) {
+      return res.status(401).json({ success: false, message: "Invalid password" });
     }
 
     // Generate 6-digit code
@@ -48,12 +64,18 @@ const requestLoginCode = async (req, res) => {
     );
 
     // Send code to staff email
-    await transporter.sendMail({
-      from: `"EAIM Job Portal" <${process.env.SMTP_USER}>`,
-      to: staff.email,
-      subject: "Your EAIM Login Verification Code",
-      html: `<p>Your login verification code is: <b>${code}</b></p><p>This code will expire in 10 minutes.</p>`,
-    });
+    try {
+      const info = await transporter.sendMail({
+        from: `"EAIM Job Portal" <${process.env.SMTP_USER}>`,
+        to: staff.email,
+        subject: "Your EAIM Login Verification Code",
+        html: `<p>Your login verification code is: <b>${code}</b></p><p>This code will expire in 10 minutes.</p>`,
+      });
+      console.log('Nodemailer sent (login code):', info && info.messageId ? info.messageId : info);
+    } catch (e) {
+      console.error('Nodemailer error (login code):', e);
+      return res.status(500).json({ success: false, message: 'Failed to send login verification code', error: e.message });
+    }
 
     return res.json({ success: true, message: "Verification code sent to your email." });
   } catch (e) {
@@ -89,12 +111,18 @@ const requestRegisterCode = async (req, res) => {
   await db.executeQuery(upsertSql, [email, code, expiresAt]);
 
   // Send code
-  await transporter.sendMail({
-    from: `"EAIM Job Portal" <${process.env.SMTP_USER}>`,
-    to: email,
-    subject: "Your EAIM Registration Verification Code",
-    html: `<p>Your verification code is: <b>${code}</b></p><p>This code will expire in 10 minutes.</p>`,
-  });
+  try {
+    const info = await transporter.sendMail({
+      from: `"EAIM Job Portal" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Your EAIM Registration Verification Code",
+      html: `<p>Your verification code is: <b>${code}</b></p><p>This code will expire in 10 minutes.</p>`,
+    });
+    console.log('Nodemailer sent (register code):', info && info.messageId ? info.messageId : info);
+  } catch (e) {
+    console.error('Nodemailer error (register code):', e);
+    return res.status(500).json({ success: false, message: 'Failed to send registration verification code', error: e.message });
+  }
 
   return res.json({ success: true, message: "Verification code sent to your email." });
 };
