@@ -1,6 +1,13 @@
 var mysql = require("mysql2");
 require("dotenv").config();
 
+const resolveMySqlTimezone = () => {
+  const raw = (process.env.DB_TIMEZONE || "").trim();
+  if (!raw) return "+08:00";
+  if (raw.toUpperCase() === "SGT") return "+08:00";
+  return raw;
+};
+
 var conStr = {
   // Live
   host: process.env.DB_HOST,
@@ -9,7 +16,7 @@ var conStr = {
   database: process.env.DB_DATABASE,
   connectionLimit: 10,
   port: 3306,
-  timezone: "SGT",
+  timezone: resolveMySqlTimezone(),
 };
 var pool = mysql.createPool(conStr);
 
