@@ -7,8 +7,18 @@ const path = require("path");
 const createApp = () => {
   const app = express();
 
+  const allowedOrigins = (process.env.FRONTEND_URL)
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   const corsOptions = {
-    origin: [process.env.FRONTEND_URL],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,

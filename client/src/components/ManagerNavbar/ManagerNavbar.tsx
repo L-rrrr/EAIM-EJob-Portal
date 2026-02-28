@@ -10,9 +10,10 @@ import {
   EyeOff,
 } from "lucide-react";
 import logo from "../../assets/EAIM-logo.png";
+import { useTheme } from "../../hooks/useTheme";
 
 const ManagerNavbar: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const { isDark: darkMode, toggleTheme } = useTheme();
   const [showProfile, setShowProfile] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("current-password");
@@ -22,11 +23,6 @@ const ManagerNavbar: React.FC = () => {
   const navigate = useNavigate();
 
   const email = "manager@eaim.edu.sg";
-
-  useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setDarkMode(isDark);
-  }, []);
 
 
   useEffect(() => {
@@ -41,13 +37,6 @@ const ManagerNavbar: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
-    document.documentElement.classList.toggle('dark', newDarkMode);
-  };
-
   return (
     <nav className={styles.navbar}>
       <div className={styles.navbarLeft}>
@@ -60,7 +49,7 @@ const ManagerNavbar: React.FC = () => {
       <div className={styles.navbarRight}>
         <button
           className={`${styles.iconButton} ${darkMode ? styles.dark : ""}`}
-          onClick={toggleDarkMode}
+          onClick={toggleTheme}
           aria-label="Toggle dark mode"
         >
           {darkMode ? <Moon /> : <Sun />}

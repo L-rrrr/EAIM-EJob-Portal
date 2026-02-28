@@ -48,6 +48,7 @@ import axios from "axios";
 import { User, Mail, Lock, Globe, Eye, EyeOff, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import countries from "../../../utils/Countries"; 
+import { useTheme } from "../../../hooks/useTheme";
 
 // Define the type for registration form inputs
 type RegisterFormInputs = {
@@ -80,10 +81,7 @@ const Register: React.FC = () => {
   // Whether the verification code has been sent
   const [codeSent, setCodeSent] = useState(false);
 
-  // State for dark mode toggle
-  const [darkMode, setDarkMode] = useState(() => {
-    return document.documentElement.classList.contains('dark');
-  });
+  const { isDark: darkMode, toggleTheme: toggleDarkMode } = useTheme();
 
   /**
    * Handles sending the verification code and verifying it.
@@ -125,14 +123,6 @@ const Register: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Toggle dark mode and persist preference in localStorage
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
-    document.documentElement.classList.toggle('dark', newDarkMode);
   };
 
   return (

@@ -13,19 +13,14 @@ import {
 import logo from "../../assets/EAIM-logo.png";
 import styles from "./Navbar.module.css";
 import axios from "axios";
+import { useTheme } from "../../hooks/useTheme";
 
 const Navbar: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const { isDark: darkMode, toggleTheme } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<string[]>([]);
   const notificationRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-
-  // Initialize dark mode from localStorage or system preference
-  useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setDarkMode(isDark);
-  }, []);
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -65,15 +60,6 @@ const Navbar: React.FC = () => {
     }
   }, [showNotifications]);
 
-
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
-    document.documentElement.classList.toggle('dark', newDarkMode);
-  };
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -107,7 +93,7 @@ const Navbar: React.FC = () => {
       <div className={styles.navbarRight}>
         <button
           className={`${styles.iconButton} ${darkMode ? styles.dark : ""}`}
-          onClick={toggleDarkMode}
+          onClick={toggleTheme}
           aria-label="Toggle dark mode"
         >
           {darkMode ? <Moon /> : <Sun />}

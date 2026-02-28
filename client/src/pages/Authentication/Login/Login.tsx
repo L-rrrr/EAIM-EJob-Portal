@@ -39,7 +39,8 @@ import EAIM from "../../../assets/EAIM.png";
 import background from "../../../assets/background4.jpg";
 import axios from "axios";
 import { Eye, EyeOff, Mail, Lock, Sun, Moon, CheckCircle2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useTheme } from "../../../hooks/useTheme";
 
 type LoginFormInputs = {
   emailOrUsername: string;
@@ -55,23 +56,12 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverMessage, setServerMessage] = useState("");
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
-  const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
+  const { isDark: darkMode, toggleTheme: toggleDarkMode } = useTheme();
 
   // New state for HR/Manager verification flow
   const [showCodeField, setShowCodeField] = useState(false);
   const [isHRManager, setIsHRManager] = useState(false);
   const [pendingLoginData, setPendingLoginData] = useState<{ emailOrUsername: string; password: string } | null>(null);
-
-  useEffect(() => {
-    setDarkMode(document.documentElement.classList.contains('dark'));
-  }, []);
-
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
-    document.documentElement.classList.toggle('dark', newDarkMode);
-  };
 
   // Step 1: Handle initial sign in attempt
   const handleInitialSignIn = async (data: LoginFormInputs) => {

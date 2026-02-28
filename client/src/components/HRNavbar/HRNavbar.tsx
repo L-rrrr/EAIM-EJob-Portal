@@ -9,9 +9,10 @@ import {
 } from "lucide-react";
 import logo from "../../assets/EAIM-logo.png";
 import styles from "./HRNavbar.module.css";
+import { useTheme } from "../../hooks/useTheme";
 
 const HRNavbar: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const { isDark: darkMode, toggleTheme } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -19,20 +20,6 @@ const HRNavbar: React.FC = () => {
   const navigate = useNavigate();
 
   const email = "user@eaim.edu.sg";
-
-  // Initialize dark mode from localStorage or system preference
-  useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setDarkMode(isDark);
-  }, []);
-
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
-    document.documentElement.classList.toggle('dark', newDarkMode);
-  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -66,7 +53,7 @@ const HRNavbar: React.FC = () => {
       <div className={styles.navbarRight}>
         <button
           className={`${styles.iconButton} ${darkMode ? styles.dark : ""}`}
-          onClick={toggleDarkMode}
+          onClick={toggleTheme}
           aria-label="Toggle dark mode"
         >
           {darkMode ? <Moon /> : <Sun />}

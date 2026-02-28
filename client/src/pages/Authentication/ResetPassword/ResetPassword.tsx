@@ -41,6 +41,7 @@ import background from "../../../assets/background4.jpg";
 import EAIM from "../../../assets/EAIM.png";
 import { Lock, Sun, Moon } from "lucide-react";
 import axios from "axios";
+import { useTheme } from "../../../hooks/useTheme";
 
 // Define the type for form inputs
 type ResetInputs = {
@@ -60,20 +61,11 @@ const ResetPassword: React.FC = () => {
   const [serverMessage, setServerMessage] = useState("");
   // State for message type (success or error)
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
-  // State for dark mode toggle
-  const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
+  const { isDark: darkMode, toggleTheme: toggleDarkMode } = useTheme();
 
   // Get token from URL query string
   const params = new URLSearchParams(location.search);
   const token = params.get("token");
-
-  // Toggle dark mode and persist preference in localStorage
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
-    document.documentElement.classList.toggle('dark', newDarkMode);
-  };
 
   // Handle form submission
   const onSubmit = async (data: ResetInputs) => {

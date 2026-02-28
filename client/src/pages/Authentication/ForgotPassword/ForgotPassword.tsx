@@ -40,6 +40,7 @@ import background from "../../../assets/background4.jpg";
 import axios from "axios";
 import { Mail, Sun, Moon } from "lucide-react";
 import { useState } from "react";
+import { useTheme } from "../../../hooks/useTheme";
 
 // Define the type for form inputs
 type ForgotPasswordInputs = {
@@ -57,16 +58,7 @@ const ForgotPassword: React.FC = () => {
   const [serverMessage, setServerMessage] = useState("");
   // State for message type (success or error)
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
-  // State for dark mode toggle
-  const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
-
-  // Toggle dark mode and persist preference in localStorage
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
-    document.documentElement.classList.toggle('dark', newDarkMode);
-  };
+  const { isDark: darkMode, toggleTheme: toggleDarkMode } = useTheme();
 
   // Handle form submission
   const onSubmit = async (data: ForgotPasswordInputs) => {
